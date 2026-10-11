@@ -1,0 +1,16 @@
+<?php
+
+namespace App\Middlewares{namespace_suffix};
+
+use Core\Request;
+use Closure;
+
+class {className}
+{
+    public function handle(Request $request, Closure $next)
+    {
+        // TODO: Add middleware logic here
+
+        return $next($request);
+    }
+}

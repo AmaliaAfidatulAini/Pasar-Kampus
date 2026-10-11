@@ -1,0 +1,347 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Pasar Kampus Helper Script CLI
+ */
+
+if (php_sapi_name() !== 'cli') {
+    exit("This script can only be run from the command line.\n");
+}
+
+$baseDir = __DIR__;
+
+require_once $baseDir . '/vendor/autoload.php';
+
+if (file_exists($baseDir . '/.env')) {
+    $dotenv = Dotenv\Dotenv::createImmutable($baseDir);
+    $dotenv->safeLoad();
+}
+
+// Helper CLI colors
+function color(string $text, string $colorCode): string {
+    return "\033[{$colorCode}m{$text}\033[0m";
+}
+
+function success(string $msg): void {
+    echo color("SUCCESS: ", "32;1") . $msg . "\n";
+}
+
+function info(string $msg): void {
+    echo color("INFO: ", "36;1") . $msg . "\n";
+}
+
+function error(string $msg): void {
+    echo color("ERROR: ", "31;1") . $msg . "\n";
+}
+
+// Command arguments parsing
+$args = array_slice($argv, 1);
+$command = $args[0] ?? 'help';
+$nameArg = $args[1] ?? null;
+
+switch ($command) {
+    case 'make:controller':
+        makeController($nameArg, $baseDir);
+        break;
+    case 'make:model':
+        makeModel($nameArg, $baseDir);
+        break;
+    case 'make:middleware':
+        makeMiddleware($nameArg, $baseDir);
+        break;
+    case 'make:all':
+        makeAll($nameArg, $baseDir);
+        break;
+    case 'make:database':
+        makeDatabase($nameArg, $baseDir);
+        break;
+    case 'db:create':
+        dbCreate($nameArg, $baseDir);
+        break;
+    case 'db:seed':
+        dbSeed($nameArg, $baseDir);
+        break;
+    case 'db:drop':
+        dbDrop($nameArg, $baseDir);
+        break;
+    case 'help':
+    case '-h':
+    case '--help':
+    case 'list':
+        showHelp();
+        break;
+    default:
+        error("Unknown command '{$command}'");
+        showHelp();
+        break;
+}
+
+function askInput(string $prompt): string {
+    echo color($prompt, "33") . " ";
+    $handle = fopen("php://stdin", "r");
+    $line = fgets($handle);
+    fclose($handle);
+    return trim($line);
+}
+
+function normalizeName(string $name, string $suffix): array {
+    $name = str_replace('\\', '/', trim($name));
+    $parts = explode('/', $name);
+    $className = array_pop($parts);
+
+    if (!str_ends_with(strtolower($className), strtolower($suffix))) {
+        $className .= $suffix;
+    }
+
+    $className = ucfirst($className);
+    $subDir = implode('/', array_map('ucfirst', $parts));
+    $namespaceSuffix = $subDir ? '\\' . str_replace('/', '\\', $subDir) : '';
+
+    return [
+        'className' => $className,
+        'subDir' => $subDir,
+        'namespaceSuffix' => $namespaceSuffix,
+        'baseName' => preg_replace('/' . preg_quote($suffix, '/') . '$/i', '', $className)
+    ];
+}
+
+function createDirectory(string $path): void {
+    if (!is_dir($path)) {
+        mkdir($path, 0755, true);
+    }
+}
+
+function renderTemplate(string $templateFile, array $vars, string $baseDir): string {
+    $path = $baseDir . '/templates/' . $templateFile;
+    if (!file_exists($path)) {
+        error("Template file missing: {$path}");
+        exit(1);
+    }
+
+    $content = file_get_contents($path);
+    foreach ($vars as $key => $val) {
+        $content = str_replace('{' . $key . '}', $val, $content);
+    }
+
+    return $content;
+}
+
+function makeController(?string $name, string $baseDir): bool {
+    if (!$name) {
+        $name = askInput("Enter controller name (e.g. User or Admin/User):");
+        if (!$name) {
+            error("Controller name is required!");
+            return false;
+        }
+    }
+
+    $info = normalizeName($name, 'Controller');
+    $targetDir = $baseDir . '/app/controllers' . ($info['subDir'] ? '/' . $info['subDir'] : '');
+    $targetFile = $targetDir . '/' . $info['className'] . '.php';
+
+    if (file_exists($targetFile)) {
+        error("Controller already exists: {$targetFile}");
+        return false;
+    }
+
+    createDirectory($targetDir);
+
+    $viewPath = strtolower(preg_replace('/(?<!^)[A-Z]/', '-$0', $info['baseName']));
+    $humanName = ucfirst($info['baseName']);
+
+    $template = renderTemplate('{name}Controller.php.tmp', [
+        'namespace_suffix' => $info['namespaceSuffix'],
+        'className' => $info['className'],
+        'baseName' => $info['baseName'],
+        'viewPath' => $viewPath,
+        'humanName' => $humanName
+    ], $baseDir);
+
+    file_put_contents($targetFile, $template);
+    success("Controller created successfully: app/controllers/" . ($info['subDir'] ? $info['subDir'] . '/' : '') . $info['className'] . '.php');
+    return true;
+}
+
+function makeModel(?string $name, string $baseDir): bool {
+    if (!$name) {
+        $name = askInput("Enter model name (e.g. User or Admin/User):");
+        if (!$name) {
+            error("Model name is required!");
+            return false;
+        }
+    }
+
+    $info = normalizeName($name, 'Model');
+    $targetDir = $baseDir . '/app/models' . ($info['subDir'] ? '/' . $info['subDir'] : '');
+    $targetFile = $targetDir . '/' . $info['className'] . '.php';
+
+    if (file_exists($targetFile)) {
+        error("Model already exists: {$targetFile}");
+        return false;
+    }
+
+    createDirectory($targetDir);
+
+    $tableName = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $info['baseName']));
+
+    $template = renderTemplate('{name}Model.php.tmp', [
+        'namespace_suffix' => $info['namespaceSuffix'],
+        'className' => $info['className'],
+        'baseName' => $info['baseName'],
+        'tableName' => $tableName
+    ], $baseDir);
+
+    file_put_contents($targetFile, $template);
+    success("Model created successfully: app/models/" . ($info['subDir'] ? $info['subDir'] . '/' : '') . $info['className'] . '.php');
+    return true;
+}
+
+function makeMiddleware(?string $name, string $baseDir): bool {
+    if (!$name) {
+        $name = askInput("Enter middleware name (e.g. Auth or Admin/Auth):");
+        if (!$name) {
+            error("Middleware name is required!");
+            return false;
+        }
+    }
+
+    $info = normalizeName($name, 'Middleware');
+    $targetDir = $baseDir . '/app/middlewares' . ($info['subDir'] ? '/' . $info['subDir'] : '');
+    $targetFile = $targetDir . '/' . $info['className'] . '.php';
+
+    if (file_exists($targetFile)) {
+        error("Middleware already exists: {$targetFile}");
+        return false;
+    }
+
+    createDirectory($targetDir);
+
+    $template = renderTemplate('{name}Middleware.php.tmp', [
+        'namespace_suffix' => $info['namespaceSuffix'],
+        'className' => $info['className'],
+        'baseName' => $info['baseName']
+    ], $baseDir);
+
+    file_put_contents($targetFile, $template);
+    success("Middleware created successfully: app/middlewares/" . ($info['subDir'] ? $info['subDir'] . '/' : '') . $info['className'] . '.php');
+    return true;
+}
+
+function makeAll(?string $name, string $baseDir): void {
+    if (!$name) {
+        $name = askInput("Enter resource name (e.g. Product):");
+        if (!$name) {
+            error("Resource name is required!");
+            return;
+        }
+    }
+
+    info("Generating boilerplate set for '{$name}'...");
+    makeController($name, $baseDir);
+    makeModel($name, $baseDir);
+    makeMiddleware($name, $baseDir);
+}
+
+function makeDatabase(?string $name, string $baseDir): bool {
+    if (!$name) {
+        $name = askInput("Enter object name (e.g. User):");
+        if (!$name) {
+            error("Object name is required!");
+            return false;
+        }
+    }
+
+    $objectName = ucfirst(trim($name));
+    $targetDir = $baseDir . '/database/' . $objectName;
+
+    createDirectory($targetDir);
+
+    $files = ['schema.sql', 'seeds.sql', 'destroy.sql'];
+    foreach ($files as $file) {
+        $filePath = $targetDir . '/' . $file;
+        if (!file_exists($filePath)) {
+            file_put_contents($filePath, '');
+        }
+    }
+
+    success("Database migration files created successfully in database/{$objectName}");
+    return true;
+}
+
+function dbCreate(?string $name, string $baseDir): void {
+    try {
+        $migration = \App\Core\Migration::resolveSchema($baseDir . '/database');
+        if ($name) {
+            info("Executing schema creation for '{$name}'...");
+            $migration->executeObject($name, 'create');
+            success("Database creation for '{$name}' completed.");
+        } else {
+            info("Executing schema creation from Schema.php...");
+            $migration->create();
+            success("Database creation completed.");
+        }
+    } catch (\Throwable $e) {
+        error("Database creation failed: " . $e->getMessage());
+    }
+}
+
+function dbSeed(?string $name, string $baseDir): void {
+    try {
+        $migration = \App\Core\Migration::resolveSchema($baseDir . '/database');
+        if ($name) {
+            info("Executing database seeding for '{$name}'...");
+            $migration->executeObject($name, 'seed');
+            success("Database seeding for '{$name}' completed.");
+        } else {
+            info("Executing database seeding from Schema.php...");
+            $migration->seed();
+            success("Database seeding completed.");
+        }
+    } catch (\Throwable $e) {
+        error("Database seeding failed: " . $e->getMessage());
+    }
+}
+
+function dbDrop(?string $name, string $baseDir): void {
+    try {
+        $migration = \App\Core\Migration::resolveSchema($baseDir . '/database');
+        if ($name) {
+            info("Executing database drop for '{$name}'...");
+            $migration->executeObject($name, 'drop');
+            success("Database drop for '{$name}' completed.");
+        } else {
+            info("Executing database drop from Schema.php...");
+            $migration->drop();
+            success("Database drop completed.");
+        }
+    } catch (\Throwable $e) {
+        error("Database drop failed: " . $e->getMessage());
+    }
+}
+
+function showHelp(): void {
+    echo "\033[36;1m" . "Pasar Kampus CLI Helper" . "\033[0m\n";
+    echo "Usage: ./helpme <command> [name]\n";
+    echo "   or: php helpme <command> [name]\n\n";
+    echo "\033[33mAvailable Commands:\033[0m\n";
+    echo "  \033[32mmake:controller <Name>\033[0m   Create a new Controller class\n";
+    echo "  \033[32mmake:model <Name>\033[0m        Create a new Model class\n";
+    echo "  \033[32mmake:middleware <Name>\033[0m   Create a new Middleware class\n";
+    echo "  \033[32mmake:database <Name>\033[0m     Create database migration files (schema, seeds, destroy)\n";
+    echo "  \033[32mmake:all <Name>\033[0m          Create Controller, Model, and Middleware at once\n";
+    echo "  \033[32mdb:create [Name]\033[0m         Execute database schema creation\n";
+    echo "  \033[32mdb:seed [Name]\033[0m           Execute database seeders\n";
+    echo "  \033[32mdb:drop [Name]\033[0m           Execute database drop / destroy\n";
+    echo "  \033[32mhelp\033[0m                     Display this help message\n\n";
+    echo "\033[33mExamples:\033[0m\n";
+    echo "  ./helpme make:controller ProductController\n";
+    echo "  ./helpme make:model Product\n";
+    echo "  ./helpme make:middleware AuthMiddleware\n";
+    echo "  ./helpme make:all Product\n";
+    echo "  ./helpme make:database User\n";
+    echo "  ./helpme db:create\n";
+    echo "  ./helpme db:create User\n";
+    echo "  ./helpme db:seed\n";
+    echo "  ./helpme db:drop\n";
+}

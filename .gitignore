@@ -1,0 +1,9 @@
+public/uploads/*
+vendor/*
+
+composer.lock
+.env
+
+docker/*
+docker-compose.yml
+Dockerfile
