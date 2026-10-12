@@ -56,8 +56,8 @@ switch ($command) {
     case 'make:database':
         makeDatabase($nameArg, $baseDir);
         break;
-    case 'db:create':
-        dbCreate($nameArg, $baseDir);
+    case 'db:migrate':
+        dbMigrate($nameArg, $baseDir);
         break;
     case 'db:seed':
         dbSeed($nameArg, $baseDir);
@@ -269,9 +269,9 @@ function makeDatabase(?string $name, string $baseDir): bool {
     return true;
 }
 
-function dbCreate(?string $name, string $baseDir): void {
+function dbMigrate(?string $name, string $baseDir): void {
     try {
-        $migration = \App\Core\Migration::resolveSchema($baseDir . '/database');
+        $migration = \Core\Migration::resolveSchema($baseDir . '/database');
         if ($name) {
             info("Executing schema creation for '{$name}'...");
             $migration->executeObject($name, 'create');
@@ -288,7 +288,7 @@ function dbCreate(?string $name, string $baseDir): void {
 
 function dbSeed(?string $name, string $baseDir): void {
     try {
-        $migration = \App\Core\Migration::resolveSchema($baseDir . '/database');
+        $migration = \Core\Migration::resolveSchema($baseDir . '/database');
         if ($name) {
             info("Executing database seeding for '{$name}'...");
             $migration->executeObject($name, 'seed');
@@ -305,7 +305,7 @@ function dbSeed(?string $name, string $baseDir): void {
 
 function dbDrop(?string $name, string $baseDir): void {
     try {
-        $migration = \App\Core\Migration::resolveSchema($baseDir . '/database');
+        $migration = \Core\Migration::resolveSchema($baseDir . '/database');
         if ($name) {
             info("Executing database drop for '{$name}'...");
             $migration->executeObject($name, 'drop');
@@ -330,7 +330,7 @@ function showHelp(): void {
     echo "  \033[32mmake:middleware <Name>\033[0m   Create a new Middleware class\n";
     echo "  \033[32mmake:database <Name>\033[0m     Create database migration files (schema, seeds, destroy)\n";
     echo "  \033[32mmake:all <Name>\033[0m          Create Controller, Model, and Middleware at once\n";
-    echo "  \033[32mdb:create [Name]\033[0m         Execute database schema creation\n";
+    echo "  \033[32mdb:migrate [Name]\033[0m        Execute database schema migration\n";
     echo "  \033[32mdb:seed [Name]\033[0m           Execute database seeders\n";
     echo "  \033[32mdb:drop [Name]\033[0m           Execute database drop / destroy\n";
     echo "  \033[32mhelp\033[0m                     Display this help message\n\n";
@@ -340,8 +340,8 @@ function showHelp(): void {
     echo "  ./helpme make:middleware AuthMiddleware\n";
     echo "  ./helpme make:all Product\n";
     echo "  ./helpme make:database User\n";
-    echo "  ./helpme db:create\n";
-    echo "  ./helpme db:create User\n";
+    echo "  ./helpme db:migrate\n";
+    echo "  ./helpme db:migrate User\n";
     echo "  ./helpme db:seed\n";
     echo "  ./helpme db:drop\n";
 }
