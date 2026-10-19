@@ -1,16 +1,24 @@
-<IfModule mod_rewrite.c>
-    Options -Indexes
-    RewriteEngine On
+Options -Indexes
+RewriteEngine On
 
-    # Prevent direct access to sensitive folders
-    RewriteRule ^app/ - [F,L]
+# Block sensitive project and deployment files.
+RewriteRule ^(?:\.env(?:\..*)?|\.git(?:ignore)?|\.dockerignore|\.htaccess|composer\.(?:json|lock)|Dockerfile|docker-compose\.yml)(?:/|$) index.php?url=/404 [QSA,END]
 
-    # Serve public assets without exposing the public directory in the URL
-    RewriteRule ^assets/(.*)$ public/assets/$1 [L]
-    RewriteRule ^uploads/(.*)$ public/uploads/$1 [L]
+# Avoid filesystem access
+RewriteRule ^pages(?:/(.*))?$ index.php?url=/pages/$1 [QSA,END]
+RewriteRule ^core(?:/(.*))?$ index.php?url=/core/$1 [QSA,END]
+RewriteRule ^database(?:/(.*))?$ index.php?url=/database/$1 [QSA,END]
+RewriteRule ^components(?:/(.*))?$ index.php?url=/components/$1 [QSA,END]
+RewriteRule ^vendor(?:/(.*))?$ index.php?url=/vendor/$1 [QSA,END]
 
-    # If the request is NOT a real file or directory, send to index.php
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
-</IfModule>
+# Public asset URLs map to the existing public directories.
+RewriteRule ^assets/(.*)$ public/assets/$1 [END]
+RewriteRule ^uploads/(.*)$ public/uploads/$1 [END]
+
+# Existing root files and directories keep their normal Apache behavior.
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [END]
+
+# Everything else is resolved by the filesystem front controller.
+RewriteRule ^(.*)$ index.php?url=$1 [QSA,END]

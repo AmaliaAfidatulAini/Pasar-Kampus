@@ -1,14 +1,5 @@
 {
-    "autoload": {
-        "psr-4": {
-            "Core\\": "core/",
-            "App\\Controllers\\": "app/controllers/",
-            "App\\Models\\": "app/models/",
-            "App\\Middlewares\\": "app/middlewares/"
-        }
-    },
     "require": {
-        "vlucas/phpdotenv": "^5.7",
-        "azolee/validator": "^3.2"
+        "vlucas/phpdotenv": "^5.7"
     }
 }
