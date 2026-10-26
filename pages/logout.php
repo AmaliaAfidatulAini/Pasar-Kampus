@@ -1,6 +1,9 @@
 <?php
-session_include();
+session_start();
 
-destroy_session();
+$_SESSION = [];
 
-redirect('login', 303);
+session_destroy();
+
+header("Location: login.php");
+exit;

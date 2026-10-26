@@ -1,67 +1,85 @@
 <?php
-session_exclude();
+require_once __DIR__ . '/../core/database.php';
 
-$error = null;
+$message = '';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name = $_POST['name'] ?? '';
-    $email = $_POST['email'] ?? '';
-    $password = $_POST['password'] ?? '';
-    $passwordConfirmation = $_POST['password_confirmation'] ?? '';
-    $name = is_string($name) ? trim($name) : '';
-    $email = is_string($email) ? trim($email) : '';
-    $password = is_string($password) ? $password : '';
-    $passwordConfirmation = is_string($passwordConfirmation) ? $passwordConfirmation : '';
+    $email       = $_POST['email'] ?? '';
+    $password    = password_hash($_POST['password'] ?? '', PASSWORD_BCRYPT);
+    $role        = 'user'; 
 
-    if ($name === '' || $email === '' || $password === '') {
-        $error = 'All fields are required.';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = 'Enter a valid email address.';
-    } elseif (strlen($password) < 8) {
-        $error = 'Password must be at least 8 characters.';
-    } elseif ($password !== $passwordConfirmation) {
-        $error = 'Passwords do not match.';
-    } else {
-        try {
-            executeQuery(
-                'INSERT INTO users (name, email, password) VALUES (:name, :email, :password)',
-                [
-                    'name' => $name,
-                    'email' => $email,
-                    'password' => password_hash($password, PASSWORD_DEFAULT),
-                ]
-            );
-            redirect('/login?registered=1', 303);
-        } catch (PDOException $exception) {
-            $error = $exception->getCode() === '23505'
-                ? 'That email address is already registered.'
-                : 'Registration failed. Please try again.';
-        }
+
+    $name        = $_POST['name'] ?? '';
+    $phone       = $_POST['phone'] ?? '';
+    $campus      = $_POST['campus'] ?? '';
+    $subdistrict = $_POST['subdistrict'] ?? '';
+    $district    = $_POST['district'] ?? '';
+    $preferences = $_POST['preferences'] ?? '';
+
+    global $pdo; 
+
+    try {
+        $pdo->beginTransaction();
+
+        $stmtUser = executeQuery("INSERT INTO users (email, password, role) VALUES (?, ?, ?) RETURNING user_id", [$email, $password, $role]);
+        $userId = fetchColumn($stmtUser)[0] ?? $stmtUser->fetchColumn();
+
+        executeQuery("INSERT INTO user_profiles (user_id, name, phone, campus, subdistrict, district, preferences) VALUES (?, ?, ?, ?, ?, ?, ?)", [
+            $userId,
+            $name,
+            $phone,
+            $campus,
+            $subdistrict,
+            $district,
+            $preferences
+        ]);
+
+        $pdo->commit();
+        header("Location: login.php?success=1");
+        exit;
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        $message = "Registrasi gagal: " . $e->getMessage();
     }
 }
-
-include_component('header', ['title' => 'Register']);
 ?>
 
-<h1>Register</h1>
-<?php if ($error !== null): ?><p><?= esc($error) ?></p><?php endif; ?>
-<form method="post" action="<?= esc(route('/register')) ?>">
-    <label for="name">Name</label>
-    <input id="name" name="name" value="<?= esc($name ?? '') ?>" required>
+<!DOCTYPE html>
+<html lang="id">
 
-    <br \>
-    <label for="email">Email</label>
-    <input id="email" name="email" type="email" value="<?= esc($email ?? '') ?>" required>
+<head>
+    <meta charset="UTF-8">
+    <title>Register - Pasar Kampus</title>
+</head>
 
-    <br \>
-    <label for="password">Password</label>
-    <input id="password" name="password" type="password" required>
+<body>
+    <h2>Daftar Akun Pasar Kampus</h2>
+    <?php if ($message): ?><p style="color: red;"><?= $message ?></p><?php endif; ?>
 
-    <br \>
-    <label for="password_confirmation">Confirm password</label>
-    <input id="password_confirmation" name="password_confirmation" type="password" required>
+    <form action="register.php" method="POST">
+        <h3>Informasi Akun</h3>
+        <label>Email:</label><br>
+        <input type="email" name="email" required><br>
+        <label>Password:</label><br>
+        <input type="password" name="password" required><br><br>
 
-    <br \>
-    <button type="submit">Register</button>
-</form>
+        <h3>Biodata & Kampus</h3>
+        <label>Nama Lengkap:</label><br>
+        <input type="text" name="name" required><br>
+        <label>No Telepon:</label><br>
+        <input type="text" name="phone"><br>
+        <label>Asal Kampus (cth: POLINEMA):</label><br>
+        <input type="text" name="campus"><br>
+        <label>Kecamatan:</label><br>
+        <input type="text" name="subdistrict"><br>
+        <label>Kabupaten/Kota (District):</label><br>
+        <input type="text" name="district"><br>
+        <label>Preferensi Barang:</label><br>
+        <input type="text" name="preferences" placeholder="Buku, Elektronik, dll"><br><br>
 
-<?php include_component('footer'); ?>
+        <button type="submit">Daftar Sekarang</button>
+    </form>
+    <p>Sudah punya akun? <a href="login.php">Login disini</a></p>
+</body>
+
+</html>

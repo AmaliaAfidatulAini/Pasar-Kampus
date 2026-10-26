@@ -1,53 +1,56 @@
-<?php
-session_exclude();
+<?php 
 
-$error = null;
-$registered = ($_GET['registered'] ?? null) === '1';
+session_start();
+require_once __DIR__ . '/../core/database.php';
+
+$error = '';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = $_POST['email'] ?? '';
-    $password = $_POST['password'] ?? '';
-    $email = is_string($email) ? trim($email) : '';
-    $password = is_string($password) ? $password : '';
+$email = $_POST['email'] ?? '';
+$password = $_POST['password'] ?? '';
 
-    if ($email === '' || $password === '') {
-        $error = 'Email and password are required.';
-    } else {
-        $account = executeQuery(
-            'SELECT id, name, email, password, role FROM users WHERE email = :email',
-            ['email' => $email],
-            'fetch'
-        );
 
-        if (!is_array($account) || !password_verify($password, $account['password'])) {
-            $error = 'Invalid email or password.';
+$stmt = executeQuery("SELECT u.*, p.name FROM users u LEFT JOIN user_profiles p ON u.user_id = p.user_id WHERE u.email = ? AND u.deleted_at = FALSE", [$email]);
+$user = fetch($stmt);
+
+if ($user && password_verify($password, $user['password'])) {
+
+$_SESSION['user_id'] = $user['user_id'];
+$_SESSION['email'] = $user['email'];
+$_SESSION['role'] = $user['role']; 
+$_SESSION['name'] = $user['name'] ?? 'Pengguna';
+
+header("Location: index.php");
+    exit;
         } else {
-            create_session([
-                'id' => $account['id'],
-                'user' => $account['name'],
-                'email' => $account['email'],
-                'role' => $account['role'],
-            ]);
-            redirect($account['role'] === 'admin' ? '/dashboard' : '/barang', 303);
+        $error = "Email atau password salah!";
         }
     }
-}
-
-include_component('header', ['title' => 'Login']);
 ?>
 
-<h1>Login</h1>
-<?php if ($registered): ?><p>Registration successful. You can now log in.</p><?php endif; ?>
-<?php if ($error !== null): ?><p><?= esc($error) ?></p><?php endif; ?>
-<form method="post" action="<?= esc(route('/login')) ?>">
-    <label for="email">Email</label>
-    <input id="email" name="email" type="email" value="<?= esc($email ?? '') ?>" required>
-    <br \>
-    <label for="password">Password</label>
-    <input id="password" name="password" type="password" required>
-    
-    <br \>
-    <button type="submit">Log in</button>
-</form>
-<p><a href="<?= esc(route('/register')) ?>">Create an account</a></p>
+<!DOCTYPE html>
+<html lang="id">
 
-<?php include_component('footer'); ?>
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Pasar Kampus</title>
+</head>
+
+<body>
+    <h2>Login Pasar Kampus</h2>
+    <?php if (isset($_GET['success'])): ?><p style="color: green;">Registrasi berhasil, silakan login!</p><?php endif; ?>
+    <?php if ($error): ?><p style="color: red;"><?= $error ?></p><?php endif; ?>
+
+    <form action="login.php" method="POST">
+        <label>Email:</label><br>
+        <input type="email" name="email" required><br><br>
+
+        <label>Password:</label><br>
+        <input type="password" name="password" required><br><br>
+
+        <button type="submit">Login</button>
+    </form>
+    <p>Belum punya akun? <a href="register.php">Daftar disini</a></p>
+</body>
+
+</html>
