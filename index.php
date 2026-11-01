@@ -27,8 +27,12 @@ define('BASEURL', (string) $appUrl);
 require_once BASE_PATH . '/core/debug.php';
 require_once BASE_PATH . '/core/utils.php';
 require_once BASE_PATH . '/core/session.php';
+require_once BASE_PATH . '/core/flash.php';
 require_once BASE_PATH . '/core/database.php';
 require_once BASE_PATH . '/core/storage.php';
+
+// Start session
+session_start();
 
 // Routing Logic
 $notFound = static function (): never {

@@ -1,0 +1,161 @@
+/* =========================================================
+   FLASHER — components/flasher.php
+   Self-contained: shared by landing pages and auth pages.
+   ========================================================= */
+.lp-flasher {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    max-width: min(420px, calc(100vw - 32px));
+    pointer-events: none;
+}
+
+.lp-flash {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 100%;
+    position: relative;
+    overflow: hidden;
+    pointer-events: auto;
+    padding: 10px 10px 10px 14px;
+    background: #FFFFFF;
+    border-radius: 8px;
+    box-shadow: 0 12px 24px -8px rgb(15 23 42 / 0.18), 0 2px 6px -2px rgb(15 23 42 / 0.08);
+    animation: lpFlashIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.lp-flash[data-state="leaving"] {
+    opacity: 0;
+    transform: translateY(6px);
+    pointer-events: none;
+}
+
+@keyframes lpFlashIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.lp-flash-icon {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.lp-flash-icon svg {
+    display: block;
+}
+
+.lp-flash-message {
+    min-width: 0;
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #1E293B;
+}
+
+.lp-flash-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    background: none;
+    border: 0;
+    border-radius: 6px;
+    color: #94A3B8;
+    cursor: pointer;
+}
+
+.lp-flash-close svg {
+    display: block;
+}
+
+.lp-flash-close:hover {
+    background: #F1F5F9;
+    color: #1D356D;
+}
+
+.lp-flash-close:focus-visible {
+    outline: 2px solid #1D356D;
+    outline-offset: 2px;
+}
+
+.lp-flash-progress {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    background: #08132c;
+    transform-origin: left center;
+    animation: lpFlashDrain var(--lp-flash-lifetime, 6000ms) linear forwards;
+}
+
+.lp-flash:hover .lp-flash-progress,
+.lp-flash:focus-within .lp-flash-progress {
+    animation-play-state: paused;
+}
+
+@keyframes lpFlashDrain {
+    from { transform: scaleX(1); }
+    to { transform: scaleX(0); }
+}
+
+.lp-flash-success {
+    border-left: 4px solid #16A34A;
+    .lp-flash-icon {
+        color: #15803D;
+    }
+    .lp-flash-progress {
+        background: #7dffaa;
+    }
+}
+
+.lp-flash-warning {
+    border-left: 4px solid #D97706;
+    .lp-flash-icon {
+        color: #B45309;
+    }
+    .lp-flash-progress {
+        background: #ffdd53;
+    }
+}
+
+.lp-flash-error {
+    border-left: 4px solid #DC2626;
+    .lp-flash-icon {
+        color: #B91C1C;
+    }
+    .lp-flash-progress {
+        background: #ff6c6c;
+    }
+}
+
+
+@media (max-width: 480px) {
+    .lp-flasher {
+        bottom: 16px;
+        left: 16px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .lp-flash {
+        animation: none;
+        transition: none;
+    }
+    .lp-flash-progress {
+        display: none;
+    }
+}

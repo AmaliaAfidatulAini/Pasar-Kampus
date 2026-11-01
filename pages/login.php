@@ -69,17 +69,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $error = 'Gagal memverifikasi login: ' . $e->getMessage();
             }
+<?php 
+
+use Azolee\Validator\Validator;
+
+$email = $_POST['email'] ?? '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $validation = Validator::make([
+        'email' => 'bail|required|string|email|max:50',
+        'password' => 'bail|required|string',
+    ], $_POST);
+
+    if ($validation->isFailed()) {
+        flash('error', implode(' ', parse_errors($validation)));
+    } else {
+        $result = (object) $validation->validated();
+
+        $user = executeQuery(
+            "SELECT u.*, p.name FROM users u 
+            LEFT JOIN user_profiles p ON u.user_id = p.user_id 
+            WHERE u.email = :email AND u.deleted_at = FALSE", 
+            ["email" => $result->email],
+            "fetch"
+        );
+
+        if ($user && password_verify($result->password, $user['password'])) {
+            create_session($user);
+            redirect("/", 302);
         }
+
+        flash('error', 'Email atau Password Salah!');
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Log in - Pasar Kampus</title>
-    <!-- Google Fonts Inter -->
+    <title>PasarKampus - Login</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -304,14 +334,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             margin-left: 4px;
         }
     </style>
+    <link rel="stylesheet" href="<?= asset("css/auth.css") ?>">
+    <link rel="stylesheet" href="<?= asset("css/flasher.css") ?>">
 </head>
-<body class="pbl-login-page">
 
     <main class="pbl-login-card">
         <!-- Close Button (X) back to index -->
         <a href="<?= route('/') ?>" class="pbl-login-close" title="Kembali ke Beranda">&times;</a>
+<body data-auth-page="login">
+    <?php include_component('flasher'); ?>
 
-        <h1 class="pbl-login-title">Log in</h1>
+    <main>
+        <header>
+            <h1>Masuk</h1>
+        </header>
 
         <?php if ($success): ?>
             <div class="pbl-alert pbl-alert-success">
@@ -347,7 +383,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <span>Tetap Login</span>
                     </label>
                     <a href="#" onclick="alert('Silakan hubungi administrator kampus jika lupa kata sandi.'); return false;" class="pbl-forgot-link">Lupa Password?</a>
+        <form id="loginForm" method="POST" action="<?= route('login') ?>">
+            <fieldset>
+                <legend>Login details</legend>
+                <div>
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="email@example.com" value="<?= esc($email) ?>" required>
                 </div>
+
+                <div>
+                    <label for="password">Password</label>
+                    <div data-password-wrap>
+                        <input type="password" id="password" name="password" minlength="8" placeholder="Password" required>
+                        <button type="button" id="password-toggle">
+                            <img src="<?= asset("img/eye-closed.jpg") ?>" alt="Toggle Password">
+                        </button>
+                    </div>
+                    <div data-auth-meta>
+                        <label>
+                            <input type="checkbox" id="loginRemember" checked>
+                            <span>Tetap Login</span>
+                        </label>
+                        <a href="#" onclick="alert('Fitur reset password (Demo)'); return false;">Lupa Password?</a>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div data-submit>
+                <button type="submit">Masuk</button>
             </div>
 
             <!-- Submit Button (Full Width) -->
@@ -408,5 +471,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             window.location.href = '<?= $loggedInUser['role'] === 'admin' ? route('/dashboard-admin.php') : route('/') ?>';
         <?php endif; ?>
     </script>
+            <footer>
+                Belum punya akun? <a href="<?= route("register") ?>">Daftar</a>
+            </footer>
+        </form>
+    </main>
+
+    <script src="<?= asset("js/auth.js") ?>"></script>
 </body>
 </html>

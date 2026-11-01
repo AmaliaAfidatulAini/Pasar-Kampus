@@ -7,7 +7,12 @@ function route(string $route): string
 
 function asset(string $target_dir): string
 {
-    return rtrim(BASEURL, '/') . '/public/' . ltrim($target_dir, '/');
+    return rtrim(BASEURL, '/') . '/public/assets/' . ltrim($target_dir, '/');
+}
+
+function upload(string $target_dir): string
+{
+    return rtrim(BASEURL, '/') . '/public/uploads/' . ltrim($target_dir, '/');
 }
 
 function redirect(string $route, int $response_code = 301): void
@@ -20,6 +25,37 @@ function redirect(string $route, int $response_code = 301): void
 function esc(string $string): string
 {
     return htmlspecialchars($string, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+
+function parse_errors(object $result): array
+{
+    static $messages = [
+        'required' => ':label wajib diisi.',
+        'string' => ':label harus berupa teks.',
+        'email' => 'Format :label tidak valid.',
+        'min' => ':label minimal :value karakter.',
+        'max' => ':label maksimal :value karakter.',
+    ];
+
+    $errors = [];
+
+    foreach ($result->getFailedRules() as $failed) {
+        $field = (string) ($failed['key'] ?? '');
+        $rule = (string) ($failed['rule'] ?? '');
+        $message = (string) ($failed['message'] ?? 'Data tidak valid.');
+
+        if (isset($messages[$rule])) {
+            $message = str_replace(
+                [':label', ':value'],
+                [ucfirst($field), (string) ($failed['extraParams']['value'] ?? '')],
+                $messages[$rule]
+            );
+        }
+
+        $errors[$field] = $message;
+    }
+
+    return $errors;
 }
 
 function include_component(string $name, ?array $data = null): void
