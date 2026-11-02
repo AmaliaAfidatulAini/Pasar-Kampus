@@ -232,7 +232,11 @@ function switchAdminTab(tabName) {
     // Activate selected panel & link
     const targetPanel = document.getElementById(`view-${tabName}`);
     const targetLink = document.getElementById(`nav-${tabName}`);
-    if (targetPanel) targetPanel.classList.add('active');
+    if (targetPanel) {
+        targetPanel.classList.add('active');
+    } else if (panels.length === 1) {
+        panels[0].classList.add('active');
+    }
     if (targetLink) targetLink.classList.add('active');
 
     // Update breadcrumb
@@ -252,13 +256,13 @@ function switchAdminTab(tabName) {
     // Save active tab
     localStorage.setItem(STORAGE_KEYS.CURRENT_TAB, tabName);
 
-    // Refresh view specific data
-    if (tabName === 'dashboard') renderDashboardView();
-    if (tabName === 'users') renderUsersTable();
-    if (tabName === 'barang') renderBarangTable();
-    if (tabName === 'pengajuan') renderPengajuanTable();
-    if (tabName === 'report') renderReportTable();
-    if (tabName === 'kategori') renderKategoriTable();
+    // Refresh view specific data (render if tab matches or element exists on current page)
+    if (tabName === 'dashboard' || document.getElementById('statTotalBarang')) renderDashboardView();
+    if (tabName === 'users' || document.getElementById('userTableBody')) renderUsersTable();
+    if (tabName === 'barang' || document.getElementById('barangTableBody')) renderBarangTable();
+    if (tabName === 'pengajuan' || document.getElementById('pengajuanTableBody')) renderPengajuanTable();
+    if (tabName === 'report' || document.getElementById('reportTableBody')) renderReportTable();
+    if (tabName === 'kategori' || document.getElementById('kategoriTableBody')) renderKategoriTable();
 
     // Close mobile sidebar if open
     const sidebar = document.getElementById('adminSidebar');
@@ -892,7 +896,7 @@ function showAdminToast(msg) {
 function handleAdminLogout() {
     if (confirm('Apakah Anda yakin ingin keluar dari Portal Superadmin?')) {
         localStorage.removeItem('pk_admin_logged_in');
-        window.location.href = 'login-admin.php';
+        window.location.href = '/login-admin.php';
     }
 }
 
@@ -907,7 +911,16 @@ window.addEventListener('click', (e) => {
 window.addEventListener('DOMContentLoaded', () => {
     initAdminStorage();
     
-    // Check active tab from storage or default to dashboard
-    const savedTab = localStorage.getItem(STORAGE_KEYS.CURRENT_TAB) || 'dashboard';
-    switchAdminTab(savedTab);
+    // Determine active tab: from explicit window setting, or existing panel on the page, or savedTab
+    let currentTab = window.CURRENT_ADMIN_PAGE;
+    if (!currentTab) {
+        const activePanel = document.querySelector('.admin-view-panel.active') || document.querySelector('.admin-view-panel');
+        if (activePanel && activePanel.id) {
+            currentTab = activePanel.id.replace('view-', '');
+        }
+    }
+    if (!currentTab) {
+        currentTab = localStorage.getItem(STORAGE_KEYS.CURRENT_TAB) || 'dashboard';
+    }
+    switchAdminTab(currentTab);
 });
