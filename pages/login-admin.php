@@ -1,7 +1,7 @@
 <?php
 $session = get_session();
 if ($session && ($session['role'] ?? '') === 'admin') {
-    redirect('/dashboard-admin.php');
+    redirect('/dashboard/index.php');
 }
 
 $error = '';
@@ -352,7 +352,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 nama: <?= json_encode($loggedInAdmin['name']) ?>,
                 role: 'admin'
             }));
-            window.location.href = '<?= route('/dashboard-admin.php') ?>';
+            window.location.href = '<?= route('/dashboard/index.php') ?>';
         <?php endif; ?>
     </script>
 </body>

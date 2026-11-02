@@ -711,7 +711,7 @@ $userRole = $session['role'] ?? 'user';
                     <div id="dashDropdown" style="position: absolute; top: calc(100% + 14px); right: 0; width: 220px; background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; box-shadow: 0 12px 30px rgba(15,23,42,0.18); display: none; padding: 8px 0; z-index: 1000;">
                         <div style="position: absolute; top: -6px; right: 13px; width: 12px; height: 12px; background: #FFFFFF; border-left: 1px solid #E2E8F0; border-top: 1px solid #E2E8F0; transform: rotate(45deg);"></div>
                         <?php if ($userRole === 'admin'): ?>
-                            <a href="<?= route('/dashboard-admin.php') ?>" style="color: #1E293B; display: flex; align-items: center; gap: 10px; padding: 11px 18px; text-decoration: none; font-size: 0.86rem; font-weight: 600;">
+                            <a href="<?= route('/dashboard/index.php') ?>" style="color: #1E293B; display: flex; align-items: center; gap: 10px; padding: 11px 18px; text-decoration: none; font-size: 0.86rem; font-weight: 600;">
                                 <span>⚙️</span>
                                 <span>Portal Admin</span>
                             </a>
