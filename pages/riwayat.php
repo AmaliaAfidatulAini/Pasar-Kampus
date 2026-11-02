@@ -408,6 +408,217 @@ $userName = $session['name'] ?? 'Pengguna';
                 max-width: 200px;
             }
         }
+
+        /* ================= MODAL POP-UP STYLES ================= */
+        .pk-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(15, 23, 42, 0.45); /* Background Dimmed */
+            backdrop-filter: blur(4px); /* Blur halus latar belakang */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.25s ease, visibility 0.25s ease;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .pk-modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .pk-modal-container {
+            background: #FFFFFF;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 580px;
+            padding: 36px 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+            position: relative;
+            transform: translateY(20px) scale(0.95);
+            transition: transform 0.25s ease;
+            box-sizing: border-box;
+        }
+
+.pk-modal-overlay.active .pk-modal-container {
+    transform: translateY(0) scale(1);
+}
+
+/* Tombol Silang (Close) */
+.pk-modal-close {
+    position: absolute;
+    top: 28px;
+    right: 28px;
+    background: none;
+    border: none;
+    color: #EF4444;
+    font-size: 1.5rem;
+    font-weight: 700;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px;
+    transition: transform 0.15s, opacity 0.15s;
+}
+
+.pk-modal-close:hover {
+    transform: scale(1.15);
+    opacity: 0.8;
+}
+
+.pk-modal-header {
+    margin-bottom: 28px;
+}
+
+.pk-modal-title {
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: var(--pk-navy);
+    margin: 0;
+    letter-spacing: -0.4px;
+}
+
+/* Kustom tombol aksi di dalam pop-up */
+.pk-btn-wa-modal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-color: #5CE67A;
+    color: #FFFFFF;
+    font-size: 0.92rem;
+    font-weight: 700;
+    padding: 10px 22px;
+    border-radius: 9999px;
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(92, 230, 122, 0.3);
+    transition: background-color 0.2s, transform 0.15s;
+}
+
+.pk-btn-wa-modal:hover {
+    background-color: #4BD468;
+    transform: translateY(-1px);
+}
+
+.pk-btn-katalog-modal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--pk-navy);
+    color: #FFFFFF;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 9px 20px;
+    border-radius: 9999px;
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(29, 53, 109, 0.2);
+    transition: background-color 0.2s, transform 0.15s;
+}
+
+.pk-btn-katalog-modal:hover {
+    background-color: #162850;
+    transform: translateY(-1px);
+}
+
+/* ================= FOOTER STYLES ================= */
+        .lp-footer {
+            background-color: var(--pk-navy); /* Background Biru Pekat (#1D356D) */
+            color: #FFFFFF;
+            padding: 48px 0 28px;
+            margin-top: 48px;
+            font-family: inherit;
+        }
+
+        .lp-container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            box-sizing: border-box;
+        }
+
+        .lp-footer-grid {
+            display: grid;
+            grid-template-columns: 2.2fr 1fr 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .lp-footer-col p {
+            color: #94A3B8;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin: 12px 0 0 0;
+            max-width: 320px;
+        }
+
+        .lp-logo {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #FFFFFF;
+            text-decoration: none;
+            display: inline-block;
+            letter-spacing: -0.5px;
+        }
+
+        .lp-footer-col h4 {
+            color: #F59E0B; /* Warna Emas/Kuning Header Kolom */
+            font-size: 0.85rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin: 0 0 18px 0;
+        }
+
+        .lp-footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .lp-footer-links a {
+            color: #E2E8F0;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s, opacity 0.2s;
+        }
+
+        .lp-footer-links a:hover {
+            color: #FFFFFF;
+            text-decoration: underline;
+        }
+
+        .lp-footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.15); /* Garis Pembatas Tipis */
+            padding-top: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #94A3B8;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            .lp-footer-grid {
+                grid-template-columns: 1fr;
+                gap: 28px;
+            }
+            .lp-footer-bottom {
+                flex-direction: column;
+                gap: 12px;
+                text-align: center;
+            }
+        }
     </style>
 </head>
 <body class="pk-riwayat-body">
@@ -475,24 +686,25 @@ $userName = $session['name'] ?? 'Pengguna';
             </div>
         </section>
 
-        <!-- ================= VIEW 2: DETAIL PENGAJUAN (Screenshots 085422, 085525, 085609, 085652) ================= -->
-        <section id="viewDetailRiwayat" class="pk-view-section">
-            <!-- Header Row -->
-            <div class="pk-page-header">
-                <h1 id="detailHeaderTitle" class="pk-page-title">Detail Pengajuan #12</h1>
-                <a href="javascript:void(0)" onclick="showTableView()" class="pk-back-btn">
-                    &larr; Kembali
-                </a>
+        <!-- ================= MODAL POP-UP DETAIL PENGAJUAN ================= -->
+    <div id="detailModal" class="pk-modal-overlay" onclick="handleOverlayClick(event)">
+        <div class="pk-modal-container">
+            <!-- Tombol Silang Close -->
+            <button type="button" class="pk-modal-close" onclick="closeDetailModal()" aria-label="Tutup">&times;</button>
+            
+            <!-- Header Pop-up -->
+            <div class="pk-modal-header">
+                <h2 id="modalHeaderTitle" class="pk-modal-title">Detail Pengajuan #--</h2>
             </div>
-
-            <!-- Card with Item Info -->
-            <div class="pk-card-wrapper" id="detailContentCard">
-                <!-- Injected dynamically based on item ID and status -->
+            
+            <!-- Body Pop-up (Dinamis via JS) -->
+            <div id="modalBodyContent">
+                <!-- Data injected dynamically based on status -->
             </div>
-        </section>
+        </div>
+    </div>
 
     </main>
-
     <!-- ================= 3. FOOTER ================= -->
     <footer class="lp-footer" style="margin-top: 48px;">
         <div class="lp-container">
@@ -552,268 +764,254 @@ $userName = $session['name'] ?? 'Pengguna';
     </footer>
 
     <!-- JavaScript logic -->
-    <script>
-        // Seed default items corresponding precisely to the user's design screenshots
-        const defaultRiwayatList = [
-            {
-                id: 12,
-                namaBarang: "Buku kalkulus",
-                penjual: "Budi", // In table screenshot Arif, in detail screenshot Budi
-                penjualDisplay: "Arif",
-                tanggal: "12 Oktober 2026",
-                tanggalSelesai: "13 Oktober 2026",
-                harga: 50000,
-                status: "Selesai",
-                teleponPenjual: "081234567890"
-            },
-            {
-                id: 13,
-                namaBarang: "Jas Lab",
-                penjual: "Naya",
-                penjualDisplay: "Naya",
-                tanggal: "16 Oktober 2026",
-                tanggalDisetujui: "16 Oktober 2026",
-                harga: 80000,
-                status: "Proses",
-                teleponPenjual: "081234567891"
-            },
-            {
-                id: 14,
-                namaBarang: "Sepatu",
-                penjual: "James",
-                penjualDisplay: "James",
-                tanggal: "22 Oktober 2026",
-                harga: 100000,
-                status: "Pending",
-                teleponPenjual: "081234567892"
-            },
-            {
-                id: 15,
-                namaBarang: "Kipas angin",
-                penjual: "Citra",
-                penjualDisplay: "Citra",
-                tanggal: "12 November 2026",
-                harga: 65000,
-                status: "Ditolak",
-                teleponPenjual: "081234567893"
-            }
-        ];
+   <script>
+    // Data Seed Default
+    const defaultRiwayatList = [
+        {
+            id: 12,
+            namaBarang: "Buku kalkulus",
+            penjual: "Budi",
+            penjualDisplay: "Arif",
+            tanggal: "12 Oktober 2026",
+            tanggalSelesai: "13 Oktober 2026",
+            harga: 50000,
+            status: "Selesai",
+            teleponPenjual: "081234567890"
+        },
+        {
+            id: 13,
+            namaBarang: "Jas lab",
+            penjual: "Naya",
+            penjualDisplay: "Naya",
+            tanggal: "16 Oktober 2026",
+            tanggalDisetujui: "16 Oktober 2026",
+            harga: 80000,
+            status: "Proses",
+            teleponPenjual: "081234567891"
+        },
+        {
+            id: 14,
+            namaBarang: "Sepatu",
+            penjual: "James",
+            penjualDisplay: "James",
+            tanggal: "22 Oktober 2026",
+            harga: 100000,
+            status: "Pending",
+            teleponPenjual: "081234567892"
+        },
+        {
+            id: 15,
+            namaBarang: "Kipas angin",
+            penjual: "Citra",
+            penjualDisplay: "Citra",
+            tanggal: "12 November 2026",
+            harga: 65000,
+            status: "Ditolak",
+            teleponPenjual: "081234567893"
+        }
+    ];
 
-        function getRiwayatData() {
-            const stored = localStorage.getItem('pk_user_riwayat');
-            if (stored) {
-                try {
-                    return JSON.parse(stored);
-                } catch(e) {
-                    console.error('Error parsing pk_user_riwayat', e);
-                }
-            }
-            // Initialize with default seed
-            localStorage.setItem('pk_user_riwayat', JSON.stringify(defaultRiwayatList));
-            return defaultRiwayatList;
+    function getRiwayatData() {
+        const stored = localStorage.getItem('pk_user_riwayat');
+        if (stored) {
+            try { return JSON.parse(stored); } catch(e) {}
+        }
+        localStorage.setItem('pk_user_riwayat', JSON.stringify(defaultRiwayatList));
+        return defaultRiwayatList;
+    }
+
+    function saveRiwayatData(data) {
+        localStorage.setItem('pk_user_riwayat', JSON.stringify(data));
+    }
+
+    function formatRupiah(num) {
+        return new Intl.NumberFormat('id-ID').format(num);
+    }
+
+    function renderTable() {
+        const list = getRiwayatData();
+        const tbody = document.getElementById('riwayatTableBody');
+        if (!tbody) return;
+
+        if (list.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="padding: 24px; color: #94A3B8;">Belum ada riwayat pengajuan pembelian.</td></tr>`;
+            return;
         }
 
-        function saveRiwayatData(data) {
-            localStorage.setItem('pk_user_riwayat', JSON.stringify(data));
+        tbody.innerHTML = list.map(item => `
+            <tr>
+                <td style="font-weight: 700;">${item.id}</td>
+                <td>${item.namaBarang}</td>
+                <td>${item.penjualDisplay || item.penjual}</td>
+                <td>${item.tanggal}</td>
+                <td>${item.status}</td>
+                <td>
+                    <button type="button" class="pk-btn-detail" onclick="showDetail(${item.id})">Lihat Detail</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // FUNGSI UTAMA: MENAMPILKAN POP-UP MODAL
+    function showDetail(id) {
+        const list = getRiwayatData();
+        const item = list.find(r => r.id === parseInt(id));
+        if (!item) {
+            alert('Data pengajuan tidak ditemukan.');
+            return;
         }
 
-        function formatRupiah(num) {
-            return new Intl.NumberFormat('id-ID').format(num);
-        }
+        // Set Judul Modal
+        document.getElementById('modalHeaderTitle').innerText = `Detail Pengajuan #${item.id}`;
 
-        function renderTable() {
-            const list = getRiwayatData();
-            const tbody = document.getElementById('riwayatTableBody');
-            if (!tbody) return;
+        const container = document.getElementById('modalBodyContent');
+        let statusBadge = '';
+        let extraInfo = '';
+        let bottomActions = '';
 
-            if (list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="padding: 24px; color: #94A3B8;">Belum ada riwayat pengajuan pembelian.</td></tr>`;
-                return;
-            }
+        const statusLower = item.status.toLowerCase();
 
-            tbody.innerHTML = list.map(item => `
-                <tr>
-                    <td style="font-weight: 700;">${item.id}</td>
-                    <td>${item.namaBarang}</td>
-                    <td>${item.penjualDisplay || item.penjual}</td>
-                    <td>${item.tanggal}</td>
-                    <td>${item.status}</td>
-                    <td>
-                        <button type="button" class="pk-btn-detail" onclick="showDetail(${item.id})">Lihat Detail</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function showDetail(id) {
-            const list = getRiwayatData();
-            const item = list.find(r => r.id === parseInt(id));
-            if (!item) {
-                alert('Data pengajuan tidak ditemukan.');
-                return;
-            }
-
-            // Update title
-            document.getElementById('detailHeaderTitle').innerText = `Detail Pengajuan #${item.id}`;
-
-            // Render detail card content based on status
-            const card = document.getElementById('detailContentCard');
-            let statusBadge = '';
-            let extraInfo = '';
-            let bottomActions = '';
-
-            const statusLower = item.status.toLowerCase();
-
-            if (statusLower === 'selesai') {
-                statusBadge = `<span class="pk-badge-selesai">SELESAI</span>`;
-                extraInfo = `
-                    <div class="pk-detail-row">
-                        <span class="pk-detail-label">Tanggal selesai :</span>
-                        <span class="pk-detail-val">${item.tanggalSelesai || '13 Oktober 2026'}</span>
-                    </div>
-                `;
-                bottomActions = `
-                    <div class="pk-detail-message-box">
-                        <p style="margin: 0 0 6px 0;">Transaksi berhasil diselesaikan.</p>
-                        <p style="margin: 0;">Terima kasih telah bertransaksi secara aman di Pasar Kampus!</p>
-                    </div>
-                `;
-            } else if (statusLower === 'proses') {
-                statusBadge = `<span class="pk-badge-proses">Proses</span>`;
-                extraInfo = `
-                    <div class="pk-detail-row">
-                        <span class="pk-detail-label">Tanggal disetujui :</span>
-                        <span class="pk-detail-val">${item.tanggalDisetujui || '16 Oktober 2026'}</span>
-                    </div>
-                `;
-                const waPhone = (item.teleponPenjual || '081234567890').replace(/^0/, '62');
-                const waText = encodeURIComponent(`Halo ${item.penjual}, saya ingin berkoordinasi terkait pengajuan pembelian #${item.id} (${item.namaBarang}) via Pasar Kampus.`);
-                bottomActions = `
-                    <div class="pk-detail-message-box">
-                        <p style="margin: 0 0 6px 0;">Pengajuan telah disetujui penjual!</p>
-                        <p style="margin: 0 0 20px 0;">Segera hubungi penjual via WhatsApp untuk menyepakati lokasi &amp; waktu COD.</p>
-                    </div>
-                    <div>
-                        <a href="https://wa.me/${waPhone}?text=${waText}" target="_blank" class="pk-btn-wa">
-                            Hubungi penjual via Whatsapp
-                        </a>
-                    </div>
-                    <div>
-                        <a href="javascript:void(0)" onclick="batalkanPengajuan(${item.id})" class="pk-link-batal">
-                            Batalkan pengajuan
-                        </a>
-                    </div>
-                `;
-            } else if (statusLower === 'pending') {
-                statusBadge = `<span class="pk-badge-pending">Pending</span>`;
-                bottomActions = `
-                    <div class="pk-detail-message-box" style="margin-bottom: 24px;">
-                        <p style="margin: 0;">Menunggu konfirmasi penjual...</p>
-                    </div>
-                    <div>
-                        <a href="javascript:void(0)" onclick="batalkanPengajuan(${item.id})" class="pk-link-batal">
-                            Batalkan pengajuan
-                        </a>
-                    </div>
-                `;
-            } else if (statusLower === 'ditolak') {
-                statusBadge = `<span class="pk-badge-ditolak">Ditolak</span>`;
-                bottomActions = `
-                    <div class="pk-detail-message-box">
-                        <p style="margin: 0 0 6px 0;">Pengajuan ini telah ditolak oleh penjual.</p>
-                        <p style="margin: 0 0 28px 0;">Silakan cari barang sejenis di katalog.</p>
-                    </div>
-                    <div style="display: flex; justify-content: flex-end; margin-top: 18px;">
-                        <a href="<?= route('/dashboard.php') ?>" class="pk-btn-katalog">
-                            Cari barang lain di katalog
-                        </a>
-                    </div>
-                `;
-            } else {
-                // Generic / other status
-                statusBadge = `<span class="pk-badge-pending">${item.status}</span>`;
-            }
-
-            card.innerHTML = `
-                <div class="pk-detail-info-list">
-                    <div class="pk-detail-row">
-                        <span class="pk-detail-label">Barang :</span>
-                        <span class="pk-detail-val">${item.namaBarang}</span>
-                    </div>
-                    <div class="pk-detail-row">
-                        <span class="pk-detail-label">Penjual :</span>
-                        <span class="pk-detail-val">${item.penjual}</span>
-                    </div>
-                    <div class="pk-detail-row">
-                        <span class="pk-detail-label">Harga :</span>
-                        <span class="pk-detail-val">Rp. ${formatRupiah(item.harga)}</span>
-                    </div>
-                    <div class="pk-detail-row">
-                        <span class="pk-detail-label">Status :</span>
-                        <div>${statusBadge}</div>
-                    </div>
-                    ${extraInfo}
+        // Rendering konten sesuai status (Tampilan disesuaikan dengan desain screenshot pop-up)
+        if (statusLower === 'selesai') {
+            statusBadge = `<span class="pk-badge-selesai">SELESAI</span>`;
+            extraInfo = `
+                <div class="pk-detail-row">
+                    <span class="pk-detail-label">Tanggal selesai :</span>
+                    <span class="pk-detail-val">${item.tanggalSelesai || '13 Oktober 2026'}</span>
                 </div>
-                ${bottomActions}
             `;
-
-            // Switch views
-            document.getElementById('viewTableRiwayat').classList.remove('active');
-            document.getElementById('viewDetailRiwayat').classList.add('active');
-
-            // Update URL hash/query without page reload
-            history.pushState({ detailId: item.id }, '', `?id=${item.id}`);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            bottomActions = `
+                <div class="pk-detail-message-box" style="margin-top: 28px;">
+                    <p style="margin: 0 0 6px 0;">Transaksi berhasil diselesaikan.</p>
+                    <p style="margin: 0;">Terima kasih telah bertransaksi secara aman di Pasar Kampus!</p>
+                </div>
+            `;
+        } else if (statusLower === 'proses') {
+            statusBadge = `<span class="pk-badge-proses">Proses</span>`;
+            extraInfo = `
+                <div class="pk-detail-row">
+                    <span class="pk-detail-label">Tanggal disetujui :</span>
+                    <span class="pk-detail-val">${item.tanggalDisetujui || '16 Oktober 2026'}</span>
+                </div>
+            `;
+            const waPhone = (item.teleponPenjual || '081234567890').replace(/^0/, '62');
+            const waText = encodeURIComponent(`Halo ${item.penjual}, saya ingin berkoordinasi terkait pengajuan pembelian #${item.id} (${item.namaBarang}) via Pasar Kampus.`);
+            bottomActions = `
+                <div class="pk-detail-message-box" style="margin-top: 28px;">
+                    <p style="margin: 0 0 4px 0;">Pengajuan telah disetujui penjual!</p>
+                    <p style="margin: 0 0 20px 0;">Segera hubungi penjual via WhatsApp untuk menyepakati lokasi &amp; waktu COD.</p>
+                </div>
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <a href="https://wa.me/${waPhone}?text=${waText}" target="_blank" class="pk-btn-wa-modal">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+                        </svg>
+                        Hubungi penjual
+                    </a>
+                    <a href="javascript:void(0)" onclick="batalkanPengajuan(${item.id})" class="pk-link-batal" style="margin-top: 0;">
+                        Batalkan pengajuan
+                    </a>
+                </div>
+            `;
+        } else if (statusLower === 'pending') {
+            statusBadge = `<span class="pk-badge-pending">Pending</span>`;
+            bottomActions = `
+                <div class="pk-detail-message-box" style="margin-top: 28px; margin-bottom: 20px;">
+                    <p style="margin: 0;">Menunggu konfirmasi penjual...</p>
+                </div>
+                <div>
+                    <a href="javascript:void(0)" onclick="batalkanPengajuan(${item.id})" class="pk-link-batal" style="margin-top: 0;">
+                        Batalkan pengajuan
+                    </a>
+                </div>
+            `;
+        } else if (statusLower === 'ditolak') {
+            statusBadge = `<span class="pk-badge-ditolak">Ditolak</span>`;
+            bottomActions = `
+                <div class="pk-detail-message-box" style="margin-top: 28px;">
+                    <p style="margin: 0 0 4px 0;">Pengajuan ini telah ditolak oleh penjual.</p>
+                    <p style="margin: 0 0 24px 0;">Silakan cari barang sejenis di katalog.</p>
+                </div>
+                <div>
+                    <a href="<?= route('/dashboard.php') ?>" class="pk-btn-katalog-modal">
+                        Cari barang lain di katalog
+                    </a>
+                </div>
+            `;
         }
 
-        function showTableView() {
-            document.getElementById('viewDetailRiwayat').classList.remove('active');
-            document.getElementById('viewTableRiwayat').classList.add('active');
-            history.pushState({}, '', window.location.pathname);
-            renderTable();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        container.innerHTML = `
+            <div class="pk-detail-info-list">
+                <div class="pk-detail-row">
+                    <span class="pk-detail-label">Barang :</span>
+                    <span class="pk-detail-val">${item.namaBarang}</span>
+                </div>
+                <div class="pk-detail-row">
+                    <span class="pk-detail-label">Penjual :</span>
+                    <span class="pk-detail-val">${item.penjual}</span>
+                </div>
+                <div class="pk-detail-row">
+                    <span class="pk-detail-label">Harga :</span>
+                    <span class="pk-detail-val">Rp. ${formatRupiah(item.harga)}</span>
+                </div>
+                <div class="pk-detail-row">
+                    <span class="pk-detail-label">Status :</span>
+                    <div>${statusBadge}</div>
+                </div>
+                ${extraInfo}
+            </div>
+            ${bottomActions}
+        `;
 
-        function batalkanPengajuan(id) {
-            if (confirm(`Apakah Anda yakin ingin membatalkan pengajuan #${id}?`)) {
-                let list = getRiwayatData();
-                const item = list.find(r => r.id === id);
-                if (item) {
-                    item.status = "Dibatalkan";
-                    saveRiwayatData(list);
-                    alert(`Pengajuan #${id} berhasil dibatalkan.`);
-                    showTableView();
-                }
+        // Buka Pop-up & Kunci scroll halaman belakang
+        document.getElementById('detailModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    // FUNGSI PENUTUP MODAL
+    function closeDetailModal() {
+        document.getElementById('detailModal').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    function handleOverlayClick(event) {
+        if (event.target.id === 'detailModal') {
+            closeDetailModal();
+        }
+    }
+
+    // Tutup modal jika pengguna menekan tombol ESC
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeDetailModal();
+        }
+    });
+
+    function batalkanPengajuan(id) {
+        if (confirm(`Apakah Anda yakin ingin membatalkan pengajuan #${id}?`)) {
+            let list = getRiwayatData();
+            const item = list.find(r => r.id === id);
+            if (item) {
+                item.status = "Dibatalkan";
+                saveRiwayatData(list);
+                closeDetailModal();
+                renderTable();
+                alert(`Pengajuan #${id} berhasil dibatalkan.`);
             }
         }
+    }
 
-        function goBackFromTable() {
-            if (window.history.length > 1) {
-                window.history.back();
-            } else {
-                window.location.href = '<?= route('/dashboard.php') ?>';
-            }
+    function goBackFromTable() {
+        if (window.history.length > 1) {
+            window.history.back();
+        } else {
+            window.location.href = '<?= route('/dashboard.php') ?>';
         }
+    }
 
-        // Handle URL params or popstate (e.g. ?id=12)
-        function checkUrlParams() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const id = urlParams.get('id');
-            if (id) {
-                showDetail(id);
-            } else {
-                showTableView();
-            }
-        }
-
-        window.addEventListener('popstate', (e) => {
-            checkUrlParams();
-        });
-
-        document.addEventListener('DOMContentLoaded', () => {
-            renderTable();
-            checkUrlParams();
-        });
-    </script>
+    document.addEventListener('DOMContentLoaded', () => {
+        renderTable();
+    });
+</script>
 </body>
 </html>
