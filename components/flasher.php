@@ -1,10 +1,6 @@
 <?php
 $flashes = flash_pull();
 
-if ($flashes === []) {
-	return;
-}
-
 $variants = [
 	'success' => [
 		'role' => 'status',
@@ -20,22 +16,25 @@ $variants = [
 	],
 ];
 ?>
-<div class="lp-flasher" data-flasher>
-	<?php foreach ($flashes as $flash): ?>
-		<?php
-		$status = isset($variants[$flash['status'] ?? '']) ? $flash['status'] : 'error';
-		$variant = $variants[$status];
-		?>
-		<div class="lp-flash lp-flash-<?= $status ?>" role="<?= $variant['role'] ?>">
-			<span class="lp-flash-icon" aria-hidden="true">
-				<svg width="24" height="24" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><?= $variant['icon'] ?></svg>
-			</span>
-			<p class="lp-flash-message"><?= esc((string) ($flash['message'] ?? '')) ?></p>
-			<button type="button" class="lp-flash-close" data-flash-close aria-label="Tutup notifikasi">
-				<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l8 8"/><path d="M12 4l-8 8"/></svg>
-			</button>
-			<span class="lp-flash-progress" aria-hidden="true"></span>
-		</div>
-	<?php endforeach; ?>
-</div>
-<script src="<?= asset('js/flasher.js') ?>" defer></script>
+
+<?php if ($flashes !== []): ?>
+	<div class="lp-flasher" data-flasher>
+		<?php foreach ($flashes as $flash): ?>
+			<?php
+			$status = isset($variants[$flash['status'] ?? '']) ? $flash['status'] : 'error';
+			$variant = $variants[$status];
+			?>
+			<div class="lp-flash lp-flash-<?= $status ?>" role="<?= $variant['role'] ?>">
+				<span class="lp-flash-icon" aria-hidden="true">
+					<svg width="24" height="24" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><?= $variant['icon'] ?></svg>
+				</span>
+				<p class="lp-flash-message"><?= esc((string) ($flash['message'] ?? '')) ?></p>
+				<button type="button" class="lp-flash-close" data-flash-close aria-label="Tutup notifikasi">
+					<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l8 8"/><path d="M12 4l-8 8"/></svg>
+				</button>
+				<span class="lp-flash-progress" aria-hidden="true"></span>
+			</div>
+		<?php endforeach; ?>
+	</div>
+	<script src="<?= asset('js/flasher.js') ?>" defer></script>
+<?php endif; ?>
