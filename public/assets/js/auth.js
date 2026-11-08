@@ -10,11 +10,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
 		if (field.type === "password") {
 			field.type = "text";
-			eyeIcon.src = "public/assets/img/eye-open.jpg";
+			eyeIcon.src = eyeIcon.src.replace("eye-closed", "eye-open");
 			eyeIcon.alt = "Sembunyikan password";
 		} else {
 			field.type = "password";
-			eyeIcon.src = "public/assets/img/eye-closed.jpg";
+			eyeIcon.src = eyeIcon.src.replace("eye-open", "eye-closed");
 			eyeIcon.alt = "Lihat password";
 		}
 	});

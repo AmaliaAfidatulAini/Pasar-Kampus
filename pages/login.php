@@ -2,6 +2,15 @@
 
 use Azolee\Validator\Validator;
 
+$session = get_session();
+if ($session) {
+    if (($session['role'] ?? '') === 'admin') {
+        redirect('/dashboard/index.php', 302);
+    } else {
+        redirect('/dashboard-utama.php', 302);
+    }
+}
+
 $email = $_POST['email'] ?? '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -18,14 +27,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = executeQuery(
             "SELECT u.*, p.name FROM users u 
             LEFT JOIN user_profiles p ON u.user_id = p.user_id 
-            WHERE u.email = :email AND u.deleted_at = FALSE", 
+            WHERE u.email = :email AND (u.deleted_at IS FALSE OR u.deleted_at IS NULL)", 
             ["email" => $result->email],
             "fetch"
         );
 
         if ($user && password_verify($result->password, $user['password'])) {
+            unset($user['password']);
             create_session($user);
-            redirect("/", 302);
+
+            if (($user['role'] ?? '') === 'admin') {
+                redirect('/dashboard/index.php', 302);
+            } else {
+                redirect('/dashboard-utama.php', 302);
+            }
         }
 
         flash('error', 'Email atau Password Salah!');

@@ -12,7 +12,7 @@
             <p class="lp-hero-desc">
                 Pasar Kampus hadir sebagai solusi marketplace eksklusif bagi mahasiswa. Temukan barang kebutuhan kampus dengan mudah, harga terjangkau, dan transaksi langsung yang aman antar sesama mahasiswa.
             </p>
-            <a href="<?= route('/dashboard.php') ?>" class="lp-btn lp-btn-primary lp-btn-lg">
+            <a href="<?= route('/barang') ?>" class="lp-btn lp-btn-primary lp-btn-lg">
                 Mulai belanja &rarr;
             </a>
 
