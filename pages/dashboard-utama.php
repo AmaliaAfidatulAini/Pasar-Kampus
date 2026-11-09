@@ -183,6 +183,32 @@ $allProducts = get_catalog_products();
             max-width: 480px;
         }
 
+        .pk-hero-btn-wrap {
+            margin-bottom: 20px;
+        }
+
+        .pk-hero-btn-belanja {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background-color: var(--pk-amber);
+            color: #1E293B;
+            font-weight: 700;
+            font-size: 0.92rem;
+            padding: 11px 24px;
+            border-radius: 9999px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+        }
+
+        .pk-hero-btn-belanja:hover {
+            background-color: var(--pk-amber-dark);
+            color: #FFFFFF;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(217, 119, 6, 0.45);
+        }
+
         .pk-hero-pills {
             display: flex;
             flex-wrap: wrap;
@@ -794,6 +820,11 @@ $allProducts = get_catalog_products();
                     <p class="pk-hero-desc">
                         Temukan buku kuliah, elektronik, perlengkapan kost, ATK, hingga pakaian preloved dari teman sekampus dan sekitar domisili Anda dengan aman &amp; mudah.
                     </p>
+                    <div class="pk-hero-btn-wrap">
+                        <a href="<?= route('/barang') ?>#catalogGrid" class="pk-hero-btn-belanja">
+                            Mulai Belanja &rarr;
+                        </a>
+                    </div>
                     <div class="pk-hero-pills">
                         <div class="pk-pill-badge">🎓 100% Khusus Mahasiswa</div>
                         <div class="pk-pill-badge">🤝 Aman COD Area Kampus</div>

@@ -55,10 +55,10 @@ $initial = strtoupper(substr($displayName, 0, 1));
                             </button>
 
                             <div id="lpProfileDropdown" class="lp-profile-dropdown">
-                                <a href="<?= route('/barang') ?>" class="lp-dropdown-item">
+                                <a href="<?= route('/dashboard-penjual.php') ?>" class="lp-dropdown-item">
                                     <span>Daftar Barang Saya</span>
                                 </a>
-                                <a href="<?= route('/laporan') ?>" class="lp-dropdown-item">
+                                <a href="<?= route('/riwayat.php') ?>" class="lp-dropdown-item">
                                     <span>Riwayat Pengajuan</span>
                                 </a>
                                 <button type="button" class="lp-dropdown-item" onclick="openProfileModal()">

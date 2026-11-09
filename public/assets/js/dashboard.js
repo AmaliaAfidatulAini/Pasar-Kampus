@@ -317,8 +317,17 @@ function loadUserProfile() {
         }
     }
 
-    // Check category in query parameter
+    // Check query parameters
     const urlParams = new URLSearchParams(window.location.search);
+    const searchQuery = urlParams.get('q');
+    if (searchQuery) {
+        const searchInput = document.getElementById('dashSearch');
+        if (searchInput) {
+            searchInput.value = searchQuery;
+            applyFilters();
+            return;
+        }
+    }
     const cat = urlParams.get('category');
     if (cat) {
         const catMap = {

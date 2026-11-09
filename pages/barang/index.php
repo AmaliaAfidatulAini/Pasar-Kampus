@@ -725,7 +725,7 @@ if (count($recommendations) < 4) {
                             <span class="pk-spec-label">Metode</span>
                             <span class="pk-spec-colon">:</span>
                             <span class="pk-spec-value"><?= esc($product['method']) ?></span>
-                        </div>
+                        </div>beta-test-advance-2026.git
                         <div class="pk-spec-row">
                             <span class="pk-spec-label">Lokasi</span>
                             <span class="pk-spec-colon">:</span>
@@ -854,7 +854,7 @@ if (count($recommendations) < 4) {
 
     <!-- JAVASCRIPT FOR GALLERY CAROUSEL & ACTIONS -->
     <script>
-        const galleryImages = <?= json_encode($product['gallery']) ?>;
+        const galleryImages = <?= json_encode($product['gallery']) ?>;beta-test-advance-2026.git
         let activeIdx = 0;
 
         function switchThumb(imgUrl, el) {
@@ -871,7 +871,7 @@ if (count($recommendations) < 4) {
             updateActiveThumb();
         }
 
-        function nextThumb() {
+        function nextThumb() {beta-test-advance-2026.git
             activeIdx = (activeIdx + 1) % galleryImages.length;
             updateActiveThumb();
         }
