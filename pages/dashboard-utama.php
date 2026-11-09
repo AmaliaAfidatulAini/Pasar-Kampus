@@ -2,60 +2,72 @@
 $session = get_session();
 $isLoggedIn = !empty($session);
 $userName = $session['name'] ?? 'Pengguna';
-$userRole = $session['role'] ?? 'user';
+$allProducts = get_catalog_products();
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PasarKampus - Pusat Transaksi Mahasiswa</title>
-    <!-- Google Fonts Inter & Plus Jakarta Sans -->
+    <title>PasarKampus - Katalog & Dashboard Utama</title>
+    <!-- Google Fonts Plus Jakarta Sans & Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- CSS Stylesheet -->
-    <link rel="stylesheet" href="<?= route('/css/style.css') ?>">
     
     <style>
         :root {
-            --pk-nav-blue: #2355B8;
+            --pk-blue: #2355B8;
+            --pk-blue-hover: #1b4598;
             --pk-navy: #1D356D;
+            --pk-navy-dark: #15264F;
+            --pk-footer: #1B3260;
             --pk-amber: #F59E0B;
             --pk-amber-dark: #D97706;
-            --pk-blue-primary: #2563EB;
+            --pk-primary: #2563EB;
             --pk-border: #E2E8F0;
             --pk-bg: #F8FAFC;
+            --pk-text: #1E293B;
+            --pk-muted: #64748B;
         }
 
-        body.pk-dashboard-body {
-            background-color: var(--pk-bg);
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-            color: #1E293B;
+        }
+
+        body.pk-body {
+            background-color: var(--pk-bg);
+            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--pk-text);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
 
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
         /* 1. TOP NAVBAR */
         .pk-navbar {
-            background-color: var(--pk-nav-blue);
+            background-color: var(--pk-blue);
             height: 64px;
             display: flex;
             align-items: center;
-            padding: 0 28px;
+            padding: 0 32px;
             color: #FFFFFF;
             position: sticky;
             top: 0;
-            z-index: 900;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
         }
 
         .pk-nav-inner {
             width: 100%;
-            max-width: 1280px;
+            max-width: 1240px;
             margin: 0 auto;
             display: flex;
             align-items: center;
@@ -63,18 +75,17 @@ $userRole = $session['role'] ?? 'user';
             gap: 20px;
         }
 
-        .pk-nav-logo {
+        .pk-logo {
             font-size: 1.35rem;
             font-weight: 800;
             color: #FFFFFF;
-            text-decoration: none;
-            letter-spacing: -0.5px;
+            letter-spacing: -0.3px;
             flex-shrink: 0;
         }
 
         .pk-nav-search {
             flex: 1;
-            max-width: 360px;
+            max-width: 440px;
             position: relative;
         }
 
@@ -83,12 +94,11 @@ $userRole = $session['role'] ?? 'user';
             height: 38px;
             border-radius: 9999px;
             border: none;
-            padding: 0 16px 0 38px;
-            font-size: 0.82rem;
+            padding: 0 18px 0 40px;
+            font-size: 0.85rem;
             outline: none;
             background: #FFFFFF;
-            color: #1E293B;
-            box-sizing: border-box;
+            color: var(--pk-text);
             font-family: inherit;
         }
 
@@ -98,7 +108,7 @@ $userRole = $session['role'] ?? 'user';
 
         .pk-nav-search-icon {
             position: absolute;
-            left: 14px;
+            left: 15px;
             top: 50%;
             transform: translateY(-50%);
             color: #64748B;
@@ -107,10 +117,15 @@ $userRole = $session['role'] ?? 'user';
             align-items: center;
         }
 
+        .pk-nav-links {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
         .pk-nav-link {
             color: #FFFFFF;
-            text-decoration: none;
-            font-size: 0.88rem;
+            font-size: 0.92rem;
             font-weight: 600;
             transition: opacity 0.2s;
         }
@@ -119,44 +134,40 @@ $userRole = $session['role'] ?? 'user';
             opacity: 0.85;
         }
 
-        /* 2. MAIN LAYOUT & WHITE CONTAINER */
+        /* 2. MAIN CONTAINER */
         .pk-main-wrapper {
             flex: 1;
             padding: 24px 20px 48px;
-            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        .pk-content-card {
-            max-width: 1280px;
-            margin: 0 auto;
-            background: #FFFFFF;
-            border-radius: 20px;
-            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
-            border: 1px solid var(--pk-border);
-            padding: 28px;
-            box-sizing: border-box;
+        .pk-content-container {
+            width: 100%;
+            max-width: 1240px;
         }
 
         /* 3. HERO BANNER */
         .pk-hero-banner {
-            background-color: var(--pk-navy);
-            border-radius: 16px;
-            padding: 28px 36px;
-            color: #FFFFFF;
+            background-color: #FFFFFF;
+            border: 1px solid var(--pk-border);
+            border-radius: 20px;
+            padding: 36px 40px;
             display: grid;
-            grid-template-columns: 1.4fr 1fr;
+            grid-template-columns: 1.35fr 1fr;
             align-items: center;
-            gap: 32px;
-            margin-bottom: 24px;
-            position: relative;
-            overflow: hidden;
+            gap: 36px;
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+            margin-bottom: 28px;
         }
 
         .pk-hero-left h1 {
-            font-size: 2.1rem;
+            font-size: 2.2rem;
             font-weight: 800;
             line-height: 1.25;
-            margin: 0 0 12px 0;
+            color: #0F172A;
+            margin-bottom: 12px;
             letter-spacing: -0.5px;
         }
 
@@ -165,10 +176,10 @@ $userRole = $session['role'] ?? 'user';
         }
 
         .pk-hero-desc {
-            font-size: 0.86rem;
-            color: #CBD5E1;
-            line-height: 1.55;
-            margin: 0 0 20px 0;
+            font-size: 0.88rem;
+            color: var(--pk-muted);
+            line-height: 1.6;
+            margin-bottom: 24px;
             max-width: 480px;
         }
 
@@ -182,17 +193,16 @@ $userRole = $session['role'] ?? 'user';
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            background: rgba(255, 255, 255, 0.12);
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #FFFFFF;
-            font-size: 0.75rem;
-            font-weight: 600;
+            background: #EFF6FF;
+            border: 1px solid #BFDBFE;
+            color: var(--pk-primary);
+            font-size: 0.78rem;
+            font-weight: 700;
             padding: 6px 14px;
             border-radius: 9999px;
         }
 
-        /* HERO RIGHT */
+        /* HERO RIGHT: FEATURED CARD */
         .pk-hero-right {
             display: flex;
             flex-direction: column;
@@ -201,12 +211,12 @@ $userRole = $session['role'] ?? 'user';
 
         .pk-featured-tag {
             border: 1.5px solid var(--pk-amber);
-            color: var(--pk-amber);
-            font-size: 0.72rem;
+            color: var(--pk-amber-dark);
+            font-size: 0.76rem;
             font-weight: 800;
             padding: 4px 14px;
             border-radius: 8px;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             background: #FFFBEB;
             letter-spacing: 0.2px;
         }
@@ -217,8 +227,7 @@ $userRole = $session['role'] ?? 'user';
             border-radius: 14px;
             padding: 12px;
             width: 100%;
-            max-width: 270px;
-            box-sizing: border-box;
+            max-width: 280px;
             box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
@@ -226,7 +235,7 @@ $userRole = $session['role'] ?? 'user';
 
         .pk-featured-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
         }
 
         /* 4. FILTER TOOLBAR */
@@ -234,7 +243,7 @@ $userRole = $session['role'] ?? 'user';
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin: 20px 0 16px;
+            margin: 0 0 20px;
         }
 
         .pk-filter-btn {
@@ -244,31 +253,31 @@ $userRole = $session['role'] ?? 'user';
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            font-size: 0.92rem;
+            font-size: 0.95rem;
             font-weight: 700;
-            color: #1E293B;
+            color: var(--pk-text);
             padding: 6px 12px 6px 0;
             border-radius: 8px;
-            transition: color 0.2s;
             font-family: inherit;
+            transition: color 0.2s;
         }
 
         .pk-filter-btn:hover {
-            color: var(--pk-blue-primary);
+            color: var(--pk-primary);
         }
 
-        .pk-filter-count {
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: #1E293B;
+        .pk-toolbar-count {
+            font-size: 0.84rem;
+            font-weight: 600;
+            color: #475569;
         }
 
-        /* 5. PRODUCT GRID */
-        .pk-product-grid {
+        /* 5. PRODUCT GRID (3 COLUMNS DESKTOP) */
+        .pk-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-            margin-bottom: 32px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 36px;
         }
 
         .pk-card {
@@ -280,7 +289,7 @@ $userRole = $session['role'] ?? 'user';
             flex-direction: column;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-            box-sizing: border-box;
+            position: relative;
         }
 
         .pk-card:hover {
@@ -293,35 +302,34 @@ $userRole = $session['role'] ?? 'user';
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .pk-badge-condition {
-            background-color: var(--pk-navy);
+            background-color: var(--pk-text);
             color: #FFFFFF;
-            font-size: 0.65rem;
+            font-size: 0.72rem;
             font-weight: 700;
-            padding: 3px 8px;
-            border-radius: 5px;
+            padding: 3px 10px;
+            border-radius: 6px;
         }
 
         .pk-badge-category {
-            border: 1px solid #3B82F6;
-            color: #2563EB;
-            font-size: 0.65rem;
-            font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 5px;
-            background: #EFF6FF;
+            background-color: #EFF6FF;
+            border: 1px solid #BFDBFE;
+            color: var(--pk-primary);
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 6px;
         }
 
         .pk-card-img-wrap {
-            width: 100%;
-            height: 124px;
+            height: 180px;
             border-radius: 8px;
             overflow: hidden;
             background: #F1F5F9;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .pk-card-img-wrap img {
@@ -333,59 +341,67 @@ $userRole = $session['role'] ?? 'user';
         }
 
         .pk-card:hover .pk-card-img-wrap img {
-            transform: scale(1.05);
+            transform: scale(1.03);
         }
 
         .pk-card-location {
-            background: #BFDBFE;
-            color: var(--pk-navy);
-            font-size: 0.64rem;
-            font-weight: 700;
-            padding: 2px 7px;
-            border-radius: 4px;
-            display: inline-block;
+            font-size: 0.74rem;
+            color: #64748B;
+            display: flex;
+            align-items: center;
+            gap: 4px;
             margin-bottom: 6px;
-            align-self: flex-start;
         }
 
         .pk-card-title {
-            font-size: 0.86rem;
-            font-weight: 800;
-            color: #0F172A;
-            margin: 0 0 4px 0;
-            line-height: 1.35;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--pk-text);
+            margin-bottom: 6px;
+            white-space: nowrap;
             overflow: hidden;
-            min-height: 2.3em;
+            text-overflow: ellipsis;
         }
 
         .pk-card-desc {
-            font-size: 0.72rem;
-            color: #64748B;
+            font-size: 0.76rem;
+            color: var(--pk-muted);
             line-height: 1.45;
-            margin: 0 0 10px 0;
+            margin-bottom: 10px;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            flex-grow: 1;
+            height: 34px;
+        }
+
+        .pk-card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .pk-tag-pill {
+            background: #FEF3C7;
+            color: #D97706;
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 4px;
         }
 
         .pk-card-orig-price {
-            font-size: 0.7rem;
+            font-size: 0.74rem;
             color: #94A3B8;
             text-decoration: line-through;
-            font-weight: 600;
-            line-height: 1;
+            margin-bottom: 2px;
         }
 
         .pk-card-price {
-            font-size: 1rem;
+            font-size: 1.05rem;
             font-weight: 800;
-            color: var(--pk-blue-primary);
-            line-height: 1.3;
+            color: var(--pk-primary);
         }
 
         /* 6. PAGINATION */
@@ -394,99 +410,40 @@ $userRole = $session['role'] ?? 'user';
             align-items: center;
             justify-content: center;
             gap: 8px;
-            margin: 20px 0 36px;
+            margin: 20px 0 10px;
         }
 
         .pk-page-btn {
             min-width: 34px;
             height: 34px;
-            padding: 0 6px;
-            border-radius: 8px;
-            border: 1px solid var(--pk-border);
-            background: #FFFFFF;
-            color: #1E293B;
-            font-size: 0.82rem;
-            font-weight: 700;
-            cursor: pointer;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--pk-text);
+            cursor: pointer;
             transition: all 0.15s;
+            background: transparent;
+            border: none;
+            padding: 0 6px;
             font-family: inherit;
         }
 
         .pk-page-btn:hover {
-            border-color: var(--pk-blue-primary);
-            color: var(--pk-blue-primary);
+            background: #E2E8F0;
         }
 
         .pk-page-btn.active {
-            background-color: var(--pk-navy);
-            border-color: var(--pk-navy);
+            background: var(--pk-primary);
             color: #FFFFFF;
-        }
-
-        /* 7. KONDISI BARANG SLIDER */
-        .pk-condition-section {
-            border-top: 1px solid var(--pk-border);
-            padding-top: 24px;
-            margin-top: 16px;
-        }
-
-        .pk-condition-title {
-            font-size: 0.88rem;
-            font-weight: 800;
-            color: #1E293B;
-            margin-bottom: 12px;
-        }
-
-        .pk-condition-slider-wrap {
-            position: relative;
-            padding: 0 8px;
-        }
-
-        .pk-condition-slider {
-            width: 100%;
-            height: 6px;
             border-radius: 9999px;
-            background: #E2E8F0;
-            outline: none;
-            -webkit-appearance: none;
-            cursor: pointer;
+            width: 34px;
+            height: 34px;
         }
 
-        .pk-condition-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: var(--pk-navy);
-            border: 2px solid #FFFFFF;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-            cursor: pointer;
-        }
-
-        .pk-condition-labels {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-            font-size: 0.76rem;
-            font-weight: 700;
-            color: #64748B;
-        }
-
-        .pk-condition-labels span {
-            cursor: pointer;
-            user-select: none;
-            transition: color 0.2s;
-        }
-
-        .pk-condition-labels span:hover {
-            color: var(--pk-navy);
-        }
-
-        /* 8. FILTER DRAWER */
+        /* 7. FILTER SIDEBAR (DRAWER POP-UP) */
         .pk-sidebar-backdrop {
             position: fixed;
             top: 0;
@@ -495,7 +452,7 @@ $userRole = $session['role'] ?? 'user';
             height: 100%;
             background: rgba(15, 23, 42, 0.45);
             backdrop-filter: blur(2px);
-            z-index: 1000;
+            z-index: 998;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.25s ease;
@@ -514,10 +471,10 @@ $userRole = $session['role'] ?? 'user';
             width: 320px;
             max-width: 85vw;
             background: #FFFFFF;
-            z-index: 1001;
+            z-index: 999;
             box-shadow: 8px 0 30px rgba(15, 23, 42, 0.15);
             transform: translateX(-100%);
-            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
             display: flex;
             flex-direction: column;
         }
@@ -526,123 +483,158 @@ $userRole = $session['role'] ?? 'user';
             transform: translateX(0);
         }
 
+        /* SIDEBAR HEADER */
         .pk-sidebar-header {
-            padding: 20px 22px;
-            border-bottom: 1px solid var(--pk-border);
+            background-color: var(--pk-blue);
+            height: 60px;
+            padding: 0 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            color: #FFFFFF;
+            flex-shrink: 0;
         }
 
         .pk-sidebar-title {
-            font-size: 1.05rem;
+            font-size: 1.1rem;
             font-weight: 800;
-            color: #0F172A;
-            margin: 0;
-            letter-spacing: -0.3px;
+            color: #FBBF24; /* Yellow title */
+            letter-spacing: 0.5px;
         }
 
         .pk-sidebar-close {
             background: none;
             border: none;
-            font-size: 1.2rem;
-            color: #64748B;
+            font-size: 1.4rem;
+            color: #FBBF24; /* Yellow close icon */
             cursor: pointer;
-            padding: 4px;
+            padding: 4px 8px;
             line-height: 1;
+            transition: opacity 0.15s;
         }
 
+        .pk-sidebar-close:hover {
+            opacity: 0.8;
+        }
+
+        /* SIDEBAR BODY */
         .pk-sidebar-body {
             flex: 1;
             overflow-y: auto;
-            padding: 20px 22px;
+            padding: 24px 22px;
             display: flex;
             flex-direction: column;
             gap: 22px;
         }
 
         .pk-filter-group-title {
-            font-size: 0.72rem;
+            font-size: 0.85rem;
             font-weight: 800;
-            color: #94A3B8;
-            letter-spacing: 0.6px;
-            margin-bottom: 10px;
+            color: var(--pk-navy);
+            letter-spacing: 0.3px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
         }
 
         .pk-filter-list {
             list-style: none;
-            padding: 0;
-            margin: 0;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 8px;
         }
 
         .pk-filter-item {
             font-size: 0.84rem;
-            font-weight: 600;
+            font-weight: 500;
             color: #334155;
-            padding: 6px 10px;
-            border-radius: 6px;
             cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 6px;
             transition: all 0.15s;
             user-select: none;
         }
 
         .pk-filter-item:hover {
+            color: var(--pk-primary);
             background: #F1F5F9;
-            color: var(--pk-navy);
         }
 
         .pk-filter-item.active {
-            background: #EFF6FF;
-            color: var(--pk-blue-primary);
+            color: var(--pk-primary);
             font-weight: 700;
+            background: #EFF6FF;
         }
 
-        .pk-see-more-link {
-            font-size: 0.74rem;
-            color: var(--pk-blue-primary);
-            font-weight: 700;
-            text-decoration: none;
+        .pk-see-more {
+            font-size: 0.78rem;
+            color: #334155;
             cursor: pointer;
-            display: inline-block;
-            margin-top: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 6px;
+            user-select: none;
+            font-weight: 600;
+            transition: color 0.15s;
+        }
+
+        .pk-see-more:hover {
+            color: var(--pk-primary);
+        }
+
+        .pk-checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .pk-checkbox-item {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.8rem;
+            gap: 10px;
+            font-size: 0.84rem;
             color: #334155;
             cursor: pointer;
+            user-select: none;
         }
 
-        .pk-price-inputs {
+        .pk-checkbox-item input[type="checkbox"] {
+            width: 17px;
+            height: 17px;
+            border: 1.5px solid #CBD5E1;
+            border-radius: 4px;
+            cursor: pointer;
+            accent-color: var(--pk-navy);
+        }
+
+        .pk-price-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 12px;
         }
 
-        .pk-price-col label {
+        .pk-price-box label {
             display: block;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             font-weight: 700;
-            color: #64748B;
-            margin-bottom: 4px;
+            color: #334155;
+            margin-bottom: 5px;
         }
 
-        .pk-price-col input {
+        .pk-price-box input {
             width: 100%;
-            height: 34px;
-            border: 1px solid var(--pk-border);
+            height: 36px;
+            border: 1px solid #CBD5E1;
             border-radius: 6px;
             padding: 0 10px;
-            font-size: 0.78rem;
+            font-size: 0.82rem;
             outline: none;
             box-sizing: border-box;
             font-family: inherit;
+        }
+
+        .pk-price-box input:focus {
+            border-color: var(--pk-primary);
         }
 
         .pk-reset-btn {
@@ -650,42 +642,124 @@ $userRole = $session['role'] ?? 'user';
             color: #FFFFFF;
             border: none;
             border-radius: 8px;
-            padding: 9px 18px;
-            font-size: 0.8rem;
+            padding: 10px 22px;
+            font-size: 0.84rem;
             font-weight: 700;
             cursor: pointer;
             align-self: flex-start;
-            margin-top: 10px;
             font-family: inherit;
+            transition: background-color 0.2s;
         }
 
+        .pk-reset-btn:hover {
+            background-color: var(--pk-navy-dark);
+        }
+
+        /* 8. FOOTER */
+        .pk-footer {
+            background-color: var(--pk-footer);
+            color: #CBD5E1;
+            padding: 48px 24px 24px;
+            margin-top: auto;
+        }
+
+        .pk-footer-inner {
+            max-width: 1240px;
+            margin: 0 auto;
+        }
+
+        .pk-footer-grid {
+            display: grid;
+            grid-template-columns: 1.6fr 1fr 1fr 1fr;
+            gap: 36px;
+            margin-bottom: 36px;
+        }
+
+        .pk-footer-col h4 {
+            color: #FFFFFF;
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 14px;
+        }
+
+        .pk-footer-col p {
+            font-size: 0.84rem;
+            line-height: 1.6;
+            color: #94A3B8;
+            max-width: 320px;
+        }
+
+        .pk-footer-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .pk-footer-links a {
+            font-size: 0.84rem;
+            color: #CBD5E1;
+            transition: color 0.15s;
+        }
+
+        .pk-footer-links a:hover {
+            color: #FFFFFF;
+        }
+
+        .pk-footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.78rem;
+            color: #94A3B8;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        /* RESPONSIVE */
         @media (max-width: 1024px) {
-            .pk-product-grid { grid-template-columns: repeat(3, 1fr); }
-            .pk-hero-banner { grid-template-columns: 1fr; gap: 24px; }
-            .pk-hero-right { align-items: flex-start; }
-            .pk-featured-card { max-width: 100%; }
+            .pk-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .pk-hero-banner {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+            .pk-hero-right {
+                align-items: flex-start;
+            }
+            .pk-footer-grid {
+                grid-template-columns: 1fr 1fr;
+            }
         }
 
-        @media (max-width: 768px) {
-            .pk-product-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-            .pk-content-card { padding: 20px 16px; }
-            .pk-hero-banner { padding: 20px; }
-            .pk-hero-left h1 { font-size: 1.6rem; }
-            .pk-nav-search { max-width: 200px; }
-        }
-
-        @media (max-width: 480px) {
-            .pk-product-grid { grid-template-columns: 1fr; }
-            .pk-navbar { padding: 0 16px; }
+        @media (max-width: 640px) {
+            .pk-grid {
+                grid-template-columns: 1fr;
+            }
+            .pk-navbar {
+                padding: 0 16px;
+            }
+            .pk-hero-banner {
+                padding: 24px 20px;
+            }
+            .pk-hero-left h1 {
+                font-size: 1.7rem;
+            }
+            .pk-footer-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
-<body class="pk-dashboard-body">
+<body class="pk-body">
 
     <!-- ================= 1. TOP NAVBAR ================= -->
     <header class="pk-navbar">
         <div class="pk-nav-inner">
-            <a href="<?= route('/') ?>" class="pk-nav-logo">
+            <a href="<?= route('/dashboard-utama.php') ?>" class="pk-logo">
                 PasarKampus
             </a>
 
@@ -696,52 +770,19 @@ $userRole = $session['role'] ?? 'user';
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
                 </span>
-                <input type="text" id="dashSearch" oninput="applyFilters()" placeholder="Cari barang....">
+                <input type="text" id="dashSearch" oninput="applyCatalogFilters()" placeholder="Cari barang....">
             </div>
 
-            <div style="display: flex; align-items: center; gap: 18px;">
+            <nav class="pk-nav-links">
                 <a href="<?= route('/riwayat.php') ?>" class="pk-nav-link">Riwayat</a>
-                <a href="<?= route('/#faq') ?>" class="pk-nav-link">butuh bantuan?</a>
-                <div style="position: relative;">
-                    <button type="button" onclick="toggleDashDropdown(event)" style="background: none; border: none; cursor: pointer; padding: 0; outline: none;">
-                        <div style="width: 38px; height: 38px; border-radius: 50%; background-color: #94A3B8; border: 2px solid rgba(255,255,255,0.4); overflow: hidden; display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-weight: 700;">
-                            <img id="dashAvatarImg" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">
-                        </div>
-                    </button>
-                    <div id="dashDropdown" style="position: absolute; top: calc(100% + 14px); right: 0; width: 220px; background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; box-shadow: 0 12px 30px rgba(15,23,42,0.18); display: none; padding: 8px 0; z-index: 1000;">
-                        <div style="position: absolute; top: -6px; right: 13px; width: 12px; height: 12px; background: #FFFFFF; border-left: 1px solid #E2E8F0; border-top: 1px solid #E2E8F0; transform: rotate(45deg);"></div>
-                        <?php if ($userRole === 'admin'): ?>
-                            <a href="<?= route('/dashboard/index.php') ?>" style="color: #1E293B; display: flex; align-items: center; gap: 10px; padding: 11px 18px; text-decoration: none; font-size: 0.86rem; font-weight: 600;">
-                                <span>⚙️</span>
-                                <span>Portal Admin</span>
-                            </a>
-                        <?php endif; ?>
-                        <a href="<?= route('/dashboard-penjual.php') ?>" style="color: #1E293B; display: flex; align-items: center; gap: 10px; padding: 11px 18px; text-decoration: none; font-size: 0.86rem; font-weight: 600;">
-                            <span>📦</span>
-                            <span>Daftar Barang Saya</span>
-                        </a>
-                        <a href="<?= route('/riwayat.php') ?>" style="color: #1E293B; display: flex; align-items: center; gap: 10px; padding: 11px 18px; text-decoration: none; font-size: 0.86rem; font-weight: 600;">
-                            <span>📑</span>
-                            <span>Riwayat Pengajuan</span>
-                        </a>
-                        <a href="<?= route('/profil.php') ?>" style="color: #1E293B; display: flex; align-items: center; gap: 10px; padding: 11px 18px; text-decoration: none; font-size: 0.86rem; font-weight: 600;">
-                            <span>👤</span>
-                            <span>Profil Pengguna (<?= esc($userName) ?>)</span>
-                        </a>
-                        <div style="height: 1px; background-color: #E2E8F0; margin: 6px 0;"></div>
-                        <a href="<?= route('/logout.php') ?>" style="color: #DC2626; display: flex; align-items: center; gap: 10px; padding: 11px 18px; text-decoration: none; font-size: 0.86rem; font-weight: 600;">
-                            <span>🚪</span>
-                            <span>Logout</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
+                <a href="<?= route('/profil.php') ?>" class="pk-nav-link">Profil</a>
+            </nav>
         </div>
     </header>
 
     <!-- ================= 2. MAIN DASHBOARD CONTENT ================= -->
     <main class="pk-main-wrapper">
-        <div class="pk-content-card">
+        <div class="pk-content-container">
 
             <!-- Hero Banner -->
             <section class="pk-hero-banner">
@@ -754,35 +795,35 @@ $userRole = $session['role'] ?? 'user';
                         Temukan buku kuliah, elektronik, perlengkapan kost, ATK, hingga pakaian preloved dari teman sekampus dan sekitar domisili Anda dengan aman &amp; mudah.
                     </p>
                     <div class="pk-hero-pills">
-                        <div class="pk-pill-badge"><span>🎓</span> 100% Khusus Mahasiswa</div>
-                        <div class="pk-pill-badge"><span>🤝</span> Aman COD Area Kampus</div>
-                        <div class="pk-pill-badge"><span>💸</span> Harga terjangkau</div>
+                        <div class="pk-pill-badge">🎓 100% Khusus Mahasiswa</div>
+                        <div class="pk-pill-badge">🤝 Aman COD Area Kampus</div>
+                        <div class="pk-pill-badge">🏷️ Harga terjangkau</div>
                     </div>
                 </div>
 
                 <div class="pk-hero-right">
                     <span class="pk-featured-tag">Baru Diunggah</span>
-                    <div class="pk-featured-card" onclick="openProductDetail(1)">
+                    <div class="pk-featured-card" onclick="goToProductDetail(1)">
                         <div class="pk-card-top-badges">
                             <span class="pk-badge-condition">Layak pakai</span>
                             <span class="pk-badge-category">Elektronik</span>
                         </div>
                         <div class="pk-card-img-wrap" style="height: 130px;">
-                            <img src="https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=600" alt="Keyboard Logiac - Silver">
+                            <img src="https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800" alt="Keyboard Logiac - Silver">
                         </div>
                         <span class="pk-card-location">📍 Kecamatan Lowokwaru</span>
                         <h3 class="pk-card-title">Keyboard Logiac - Silver</h3>
-                        <p class="pk-card-desc">Keyboard wireless dengan balutan warna silver elegan dan desain slim yang hemat tempat...</p>
+                        <p class="pk-card-desc">Keyboard wireless dengan balutan warna silver elegan dan desain slim yang hemat tempat. ..</p>
                         <div class="pk-card-orig-price">Rp. 150.000</div>
                         <div class="pk-card-price">Rp. 90.000</div>
                     </div>
                 </div>
             </section>
 
-            <!-- Toolbar: Filter Button & Item Count -->
+            <!-- Toolbar: Filter Button & Count -->
             <div class="pk-toolbar">
-                <button type="button" class="pk-filter-btn" onclick="openFilterSidebar()">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <button type="button" class="pk-filter-btn" onclick="openSidebar()" title="Buka Filter">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="4" y1="21" x2="4" y2="14"></line>
                         <line x1="4" y1="10" x2="4" y2="3"></line>
                         <line x1="12" y1="21" x2="12" y2="12"></line>
@@ -795,220 +836,389 @@ $userRole = $session['role'] ?? 'user';
                     </svg>
                     <span>Filter</span>
                 </button>
-                <div class="pk-filter-count" id="catalogCount">
-                    Menampilkan katalog barang
+                <div class="pk-toolbar-count" id="itemCountDisplay">
+                    Menampilkan 1-20 dari 66 barang
                 </div>
             </div>
 
-            <!-- Product Grid -->
-            <div class="pk-product-grid" id="catalogGrid"></div>
+            <!-- Product Grid (3 Columns) -->
+            <div class="pk-grid" id="productGrid">
+                <!-- Javascript will render or fallback to initial PHP render -->
+                <?php foreach (array_slice($allProducts, 0, 12) as $item): ?>
+                    <div class="pk-card" onclick="goToProductDetail(<?= $item['id'] ?>)">
+                        <div class="pk-card-top-badges">
+                            <span class="pk-badge-condition"><?= esc($item['condition']) ?></span>
+                            <span class="pk-badge-category"><?= esc($item['category']) ?></span>
+                        </div>
+                        <div class="pk-card-img-wrap">
+                            <img src="<?= esc($item['image']) ?>" alt="<?= esc($item['title']) ?>" loading="lazy">
+                        </div>
+                        <span class="pk-card-location">📍 <?= esc($item['location']) ?></span>
+                        <h3 class="pk-card-title"><?= esc($item['title']) ?></h3>
+                        <p class="pk-card-desc"><?= esc($item['short_desc']) ?></p>
+                        <div class="pk-card-tags">
+                            <?php foreach ($item['tags'] as $tag): ?>
+                                <span class="pk-tag-pill"><?= esc($tag) ?></span>
+                            <?php endforeach; ?>
+                        </div>
+                        <div class="pk-card-orig-price"><?= format_rupiah($item['original_price']) ?></div>
+                        <div class="pk-card-price"><?= format_rupiah($item['price']) ?></div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
 
             <!-- Empty State -->
-            <div id="catalogEmpty" style="display: none; text-align: center; padding: 48px 20px; background: #FFF; border-radius: 14px; border: 1px dashed #CBD5E1; margin: 20px 0;">
+            <div id="gridEmpty" style="display: none; text-align: center; padding: 48px 20px; background: #FFF; border-radius: 14px; border: 1px dashed var(--pk-border); margin: 20px 0;">
                 <div style="font-size: 2.5rem; margin-bottom: 8px;">📦</div>
-                <h3 style="font-size: 1.1rem; font-weight: 700; color: #1D356D; margin: 0 0 6px 0;">Tidak ada barang yang sesuai filter</h3>
-                <p style="font-size: 0.8rem; color: #64748B; margin: 0 0 16px 0;">Silakan coba kata kunci lain atau reset filter pencarian.</p>
-                <button type="button" onclick="resetAllFilters()" class="pk-reset-btn" style="align-self: center;">Reset Semua Filter</button>
+                <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--pk-navy); margin: 0 0 6px 0;">Tidak ada barang yang cocok</h3>
+                <p style="font-size: 0.84rem; color: #64748B; margin: 0 0 16px 0;">Coba atur ulang filter pencarian atau gunakan kata kunci lain.</p>
+                <button type="button" onclick="resetSidebarFilters()" class="pk-reset-btn" style="align-self: center;">Reset Semua Filter</button>
             </div>
 
-            <!-- Pagination Bar -->
-            <div class="pk-pagination" id="paginationControls"></div>
-
-            <!-- Kondisi Barang Slider Section -->
-            <div class="pk-condition-section">
-                <div class="pk-condition-title">Kondisi barang</div>
-                <div class="pk-condition-slider-wrap">
-                    <input type="range" min="0" max="3" value="0" step="1" id="conditionSlider" class="pk-condition-slider" oninput="handleConditionSlider(this.value)">
-                </div>
-                <div class="pk-condition-labels">
-                    <span onclick="setConditionByLabel(0)">Minus</span>
-                    <span onclick="setConditionByLabel(1)">Normal</span>
-                    <span onclick="setConditionByLabel(2)">Mulus</span>
-                    <span onclick="setConditionByLabel(3)">Baru</span>
-                </div>
+            <!-- Centered Pagination -->
+            <div class="pk-pagination" id="paginationBar">
+                <button type="button" class="pk-page-btn" onclick="changePage('prev')">&lt;</button>
+                <button type="button" class="pk-page-btn active" onclick="setPage(1)">1</button>
+                <button type="button" class="pk-page-btn" onclick="setPage(2)">2</button>
+                <button type="button" class="pk-page-btn" onclick="setPage(3)">3</button>
+                <button type="button" class="pk-page-btn" onclick="setPage(4)">4</button>
+                <button type="button" class="pk-page-btn" onclick="setPage(5)">5</button>
+                <button type="button" class="pk-page-btn" onclick="changePage('next')">&gt;</button>
             </div>
 
         </div>
     </main>
 
-    <!-- ================= 3. FILTER SIDEBAR POP-UP ================= -->
-    <div class="pk-sidebar-backdrop" id="filterBackdrop" onclick="closeFilterSidebar()"></div>
-    <aside class="pk-sidebar-drawer" id="filterDrawer" aria-label="Filter Barang">
+    <!-- ================= 3. FILTER SIDEBAR (DRAWER) ================= -->
+    <div class="pk-sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+    <aside class="pk-sidebar-drawer" id="sidebarDrawer" aria-label="Filter Barang">
+        <!-- Sidebar Header: Blue with Yellow FILTER and Close -->
         <div class="pk-sidebar-header">
-            <h2 class="pk-sidebar-title">FILTER</h2>
-            <button type="button" class="pk-sidebar-close" onclick="closeFilterSidebar()" title="Tutup Filter">✕</button>
+            <span class="pk-sidebar-title">FILTER</span>
+            <button type="button" class="pk-sidebar-close" onclick="closeSidebar()" title="Tutup Filter">&times;</button>
         </div>
 
         <div class="pk-sidebar-body">
+            <!-- 1. KATEGORI -->
             <div>
                 <div class="pk-filter-group-title">KATEGORI</div>
-                <ul class="pk-filter-list" id="catFilterList">
-                    <li class="pk-filter-item" onclick="toggleCategoryFilter('Buku & Akademik', this)">Buku &amp; Akademik</li>
-                    <li class="pk-filter-item" onclick="toggleCategoryFilter('Perlengkapan Kos', this)">Perlengkapan Kos</li>
-                    <li class="pk-filter-item" onclick="toggleCategoryFilter('Fashion & Apparel', this)">Fashion &amp; Apparel</li>
-                    <li class="pk-filter-item" onclick="toggleCategoryFilter('Elektronik', this)">Elektronik</li>
+                <ul class="pk-filter-list" id="sidebarCatList">
+                    <li class="pk-filter-item" onclick="selectCategory('Buku & Akademik', this)">Buku &amp; Akademik</li>
+                    <li class="pk-filter-item" onclick="selectCategory('Perlengkapan Kos', this)">Perlengkapan Kos</li>
+                    <li class="pk-filter-item" onclick="selectCategory('Fashion & Apparel', this)">Fashion &amp; Apparel</li>
+                    <li class="pk-filter-item" onclick="selectCategory('Elektronik', this)">Elektronik</li>
                 </ul>
-                <a class="pk-see-more-link" onclick="toggleCategoryFilter('all', null)">Lihat semua ▼</a>
+                <div class="pk-see-more" onclick="toggleExpandList('sidebarCatList', this)">Lihat semua &#x25BE;</div>
             </div>
 
+            <!-- 2. TAGS -->
             <div>
                 <div class="pk-filter-group-title">TAGS</div>
-                <ul class="pk-filter-list" id="tagFilterList">
-                    <li class="pk-filter-item" onclick="toggleTagFilter('#ModulKuliah', this)">#ModulKuliah</li>
-                    <li class="pk-filter-item" onclick="toggleTagFilter('#JasAlmamater', this)">#JasAlmamater</li>
-                    <li class="pk-filter-item" onclick="toggleTagFilter('#MejaBelajar', this)">#MejaBelajar</li>
-                    <li class="pk-filter-item" onclick="toggleTagFilter('#Jaket', this)">#Jaket</li>
+                <ul class="pk-filter-list" id="sidebarTagList">
+                    <li class="pk-filter-item" onclick="selectTag('#ModulKuliah', this)">#ModulKuliah</li>
+                    <li class="pk-filter-item" onclick="selectTag('#JasAlmamater', this)">#JasAlmamater</li>
+                    <li class="pk-filter-item" onclick="selectTag('#MejaBelajar', this)">#MejaBelajar</li>
+                    <li class="pk-filter-item" onclick="selectTag('#Jaket', this)">#Jaket</li>
                 </ul>
-                <a class="pk-see-more-link" onclick="toggleTagFilter('all', null)">Lihat semua ▼</a>
+                <div class="pk-see-more" onclick="toggleExpandList('sidebarTagList', this)">Lihat semua &#x25BE;</div>
             </div>
 
+            <!-- 3. LOKASI -->
             <div>
                 <div class="pk-filter-group-title">LOKASI</div>
-                <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div class="pk-checkbox-group" id="sidebarLocGroup">
                     <label class="pk-checkbox-item">
-                        <input type="checkbox" name="lokasi" value="Universitas Brawijaya" onchange="applyFilters()">
+                        <input type="checkbox" name="locFilter" value="Area Universitas Brawijaya" onchange="applyCatalogFilters()">
                         <span>Area Universitas Brawijaya</span>
                     </label>
                     <label class="pk-checkbox-item">
-                        <input type="checkbox" name="lokasi" value="Universitas Negeri Malang" onchange="applyFilters()">
+                        <input type="checkbox" name="locFilter" value="Area Universitas Negeri Malang" onchange="applyCatalogFilters()">
                         <span>Area Universitas Negeri Malang</span>
                     </label>
                     <label class="pk-checkbox-item">
-                        <input type="checkbox" name="lokasi" value="Politeknik Negeri Malang" onchange="applyFilters()">
+                        <input type="checkbox" name="locFilter" value="Area Politeknik Negeri Malang" onchange="applyCatalogFilters()">
                         <span>Area Politeknik Negeri Malang</span>
                     </label>
                     <label class="pk-checkbox-item">
-                        <input type="checkbox" name="lokasi" value="Universitas Indonesia" onchange="applyFilters()">
-                        <span>Area Universitas Indonesia</span>
+                        <input type="checkbox" name="locFilter" value="Area Universitas Terbuka" onchange="applyCatalogFilters()">
+                        <span>Area Universitas Terbuka</span>
                     </label>
                 </div>
-                <a class="pk-see-more-link" onclick="selectAllLocations()">Lihat semua ▼</a>
+                <div class="pk-see-more" onclick="toggleExpandList('sidebarLocGroup', this)">Lihat semua &#x25BE;</div>
             </div>
 
+            <!-- 4. RENTANG HARGA -->
             <div>
                 <div class="pk-filter-group-title">RENTANG HARGA</div>
-                <div class="pk-price-inputs">
-                    <div class="pk-price-col">
-                        <label for="priceMin">Rp. Min</label>
-                        <input type="number" id="priceMin" placeholder="0" oninput="applyFilters()">
+                <div class="pk-price-row">
+                    <div class="pk-price-box">
+                        <label for="priceMinInput">Rp. Min</label>
+                        <input type="number" id="priceMinInput" placeholder="" oninput="applyCatalogFilters()">
                     </div>
-                    <div class="pk-price-col">
-                        <label for="priceMax">Rp. Max</label>
-                        <input type="number" id="priceMax" placeholder="999999" oninput="applyFilters()">
+                    <div class="pk-price-box">
+                        <label for="priceMaxInput">Rp. Max</label>
+                        <input type="number" id="priceMaxInput" placeholder="" oninput="applyCatalogFilters()">
                     </div>
                 </div>
             </div>
 
+            <!-- 5. RESET ALL BUTTON -->
             <div>
-                <button type="button" class="pk-reset-btn" onclick="resetAllFilters()">Reset all</button>
+                <button type="button" class="pk-reset-btn" onclick="resetSidebarFilters()">Reset all</button>
             </div>
         </div>
     </aside>
 
-    <!-- ================= 4. MODAL DETAIL PRODUK ================= -->
-    <div id="detailProductModal" class="modal-backdrop">
-        <div class="modal-box">
-            <div class="modal-header">
-                <span id="modalCatBadge" class="badge-tag">Kategori</span>
-                <span class="modal-close" onclick="closeProductDetail()">✕</span>
-            </div>
-
-            <div style="border-radius: var(--radius-md); overflow: hidden; height: 220px; background: #f1f5f9; margin-bottom: 16px;">
-                <img id="modalProductImg" src="" alt="Detail Barang" style="width: 100%; height: 100%; object-fit: cover;">
-            </div>
-
-            <div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <span id="modalConditionBadge" class="badge-tag" style="background: #dbeafe; color: #1e40af;">Mulus</span>
-                    <div style="text-align: right;">
-                        <span id="modalProductOrigPrice" style="font-size: 0.75rem; color: var(--text-light); text-decoration: line-through; display: block;"></span>
-                        <div id="modalProductPrice" style="font-size: 1.35rem; font-weight: 800; color: var(--primary);">Rp 0</div>
-                    </div>
-                </div>
-
-                <h3 id="modalProductTitle" style="font-size: 1.15rem; font-weight: 800; color: var(--secondary); margin-bottom: 6px;">Judul Barang</h3>
-                <p id="modalProductDesc" style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px;">Deskripsi lengkap...</p>
-            </div>
-
-            <div style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <div style="width: 38px; height: 38px; border-radius: 50%; background: #dbeafe; color: #1e40af; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 0.85rem;">
-                        👤
-                    </div>
-                    <div>
-                        <h4 id="modalSellerName" style="font-size: 0.85rem; font-weight: 700; color: var(--secondary);">Nama Penjual</h4>
-                        <p id="modalSellerCampus" style="font-size: 0.7rem; color: var(--text-muted);">Kampus</p>
-                    </div>
-                </div>
-                <span class="badge-tag" style="font-size: 0.65rem;">Terverifikasi</span>
-            </div>
-
-            <div style="display: flex; gap: 10px;">
-                <button onclick="alert('Barang disimpan ke wishlist favorit Anda!')" class="btn btn-outline" style="padding: 10px 14px;">
-                    ❤️
-                </button>
-                <a id="modalWhatsAppBtn" href="#" target="_blank" class="btn btn-primary" style="flex: 1; padding: 12px; font-weight: 700;">
-                    💬 Hubungi Penjual (Chat WhatsApp)
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- ================= 5. FOOTER ================= -->
-    <footer class="lp-footer" style="margin-top: 48px;">
-        <div class="lp-container">
-            <div class="lp-footer-grid">
-                <div class="lp-footer-col">
-                    <a href="<?= route('/') ?>" class="lp-logo" style="color: #FFFFFF;">PasarKampus</a>
+    <!-- ================= 4. FOOTER ================= -->
+    <footer class="pk-footer">
+        <div class="pk-footer-inner">
+            <div class="pk-footer-grid">
+                <div class="pk-footer-col">
+                    <h3 style="color: #FFFFFF; font-size: 1.35rem; font-weight: 800; margin-bottom: 12px;">PasarKampus</h3>
                     <p>Platform marketplace eksklusif mahasiswa untuk sirkulasi barang perkuliahan yang aman, hemat, dan berkelanjutan.</p>
                 </div>
-                <div class="lp-footer-col">
+                <div class="pk-footer-col">
                     <h4>PasarKampus</h4>
-                    <ul class="lp-footer-links">
-                        <li><a href="<?= route('/#tentang-kami') ?>">Tentang kami</a></li>
-                        <li><a href="<?= route('/dashboard.php') ?>">Katalog Barang</a></li>
+                    <ul class="pk-footer-links">
+                        <li><a href="<?= route('/') ?>">Tentang kami</a></li>
+                        <li><a href="<?= route('/dashboard-utama.php') ?>">Katalog Barang</a></li>
                         <li><a href="<?= route('/register.php') ?>">Daftar Akun Mahasiswa</a></li>
                         <li><a href="<?= route('/dashboard-penjual.php') ?>">Dashboard Penjual</a></li>
                     </ul>
                 </div>
-                <div class="lp-footer-col">
+                <div class="pk-footer-col">
                     <h4>Bantuan</h4>
-                    <ul class="lp-footer-links">
-                        <li><a href="<?= route('/#faq') ?>">Pusat Bantuan</a></li>
-                        <li><a href="<?= route('/#faq') ?>">FAQ</a></li>
+                    <ul class="pk-footer-links">
+                        <li><a href="#">Pusat Bantuan</a></li>
+                        <li><a href="#">FAQ</a></li>
                         <li><a href="mailto:support@pasarkampus.id">Kontak Kami</a></li>
                     </ul>
                 </div>
-                <div class="lp-footer-col">
+                <div class="pk-footer-col">
                     <h4>Dukungan</h4>
-                    <ul class="lp-footer-links">
-                        <li><a href="#" onclick="alert('Kebijakan Privasi: Data kampus dan identitas mahasiswa dilindungi.'); return false;">Kebijakan</a></li>
-                        <li><a href="#" onclick="alert('Panduan COD: Selalu lakukan serah terima di area kampus.'); return false;">Panduan COD</a></li>
-                        <li><a href="#" onclick="alert('Syarat & Ketentuan berlaku.'); return false;">Syarat &amp; Ketentuan</a></li>
+                    <ul class="pk-footer-links">
+                        <li><a href="#">Kebijakan</a></li>
+                        <li><a href="#">Panduan Keamanan COD</a></li>
+                        <li><a href="#">Syarat &amp; Ketentuan</a></li>
                     </ul>
                 </div>
             </div>
-            <div class="lp-footer-bottom">
-                <div>&copy; <?= date('Y') ?> PasarKampus. Hak Cipta Dilindungi.</div>
-                <div>Dibuat untuk Project Based Learning (PBL) Mahasiswa.</div>
+            <div class="pk-footer-bottom">
+                <div>&copy; <?= date('Y') ?> PasarKampus, Hak Cipta Dilindungi.</div>
+                <div>Dibuat untuk Project Based Learning (PBL) Mahasiswa</div>
             </div>
         </div>
     </footer>
 
+    <!-- ================= JAVASCRIPT LOGIC ================= -->
     <script>
-        function toggleDashDropdown(e) {
-            if (e) e.stopPropagation();
-            const d = document.getElementById('dashDropdown');
-            if (d) d.style.display = (d.style.display === 'block') ? 'none' : 'block';
+        // Master product catalog passed from PHP
+        const rawProducts = <?= json_encode($allProducts, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+        
+        let selectedCategory = '';
+        let selectedTag = '';
+        let currentPage = 1;
+        const pageSize = 12;
+
+        function formatRupiah(num) {
+            return 'Rp. ' + Number(num).toLocaleString('id-ID');
         }
 
-        document.addEventListener('click', function(e) {
-            const d = document.getElementById('dashDropdown');
-            if (d && d.style.display === 'block') {
-                d.style.display = 'none';
+        function openSidebar() {
+            document.getElementById('sidebarDrawer').classList.add('active');
+            document.getElementById('sidebarBackdrop').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSidebar() {
+            document.getElementById('sidebarDrawer').classList.remove('active');
+            document.getElementById('sidebarBackdrop').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function selectCategory(cat, element) {
+            if (selectedCategory === cat) {
+                selectedCategory = '';
+                element.classList.remove('active');
+            } else {
+                selectedCategory = cat;
+                document.querySelectorAll('#sidebarCatList .pk-filter-item').forEach(el => el.classList.remove('active'));
+                element.classList.add('active');
             }
-        });
+            applyCatalogFilters();
+        }
+
+        function selectTag(tag, element) {
+            if (selectedTag === tag) {
+                selectedTag = '';
+                element.classList.remove('active');
+            } else {
+                selectedTag = tag;
+                document.querySelectorAll('#sidebarTagList .pk-filter-item').forEach(el => el.classList.remove('active'));
+                element.classList.add('active');
+            }
+            applyCatalogFilters();
+        }
+
+        function toggleExpandList(listId, toggleBtn) {
+            const list = document.getElementById(listId);
+            if (!list) return;
+            // Visual toggle feedback
+            if (toggleBtn.innerText.includes('▼')) {
+                toggleBtn.innerText = 'Tutup ▲';
+            } else {
+                toggleBtn.innerText = 'Lihat semua ▼';
+            }
+        }
+
+        function resetSidebarFilters() {
+            selectedCategory = '';
+            selectedTag = '';
+            document.querySelectorAll('#sidebarCatList .pk-filter-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('#sidebarTagList .pk-filter-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('input[name="locFilter"]').forEach(cb => cb.checked = false);
+            
+            const minEl = document.getElementById('priceMinInput');
+            const maxEl = document.getElementById('priceMaxInput');
+            if (minEl) minEl.value = '';
+            if (maxEl) maxEl.value = '';
+            
+            const searchEl = document.getElementById('dashSearch');
+            if (searchEl) searchEl.value = '';
+
+            currentPage = 1;
+            applyCatalogFilters();
+        }
+
+        function applyCatalogFilters() {
+            const searchVal = (document.getElementById('dashSearch')?.value || '').toLowerCase().trim();
+            const minPrice = parseFloat(document.getElementById('priceMinInput')?.value) || 0;
+            const maxPrice = parseFloat(document.getElementById('priceMaxInput')?.value) || Infinity;
+
+            const checkedLocations = Array.from(document.querySelectorAll('input[name="locFilter"]:checked'))
+                .map(cb => cb.value.toLowerCase());
+
+            const filtered = rawProducts.filter(item => {
+                // Category match
+                if (selectedCategory && item.category.toLowerCase() !== selectedCategory.toLowerCase()) {
+                    return false;
+                }
+
+                // Tag match
+                if (selectedTag && !item.tags.map(t => t.toLowerCase()).includes(selectedTag.toLowerCase())) {
+                    return false;
+                }
+
+                // Location match
+                if (checkedLocations.length > 0) {
+                    const itemLoc = (item.campus || '').toLowerCase();
+                    const hasMatch = checkedLocations.some(loc => itemLoc.includes(loc) || loc.includes(itemLoc));
+                    if (!hasMatch) return false;
+                }
+
+                // Price range match
+                if (item.price < minPrice || item.price > maxPrice) {
+                    return false;
+                }
+
+                // Keyword search match
+                if (searchVal) {
+                    const inTitle = item.title.toLowerCase().includes(searchVal);
+                    const inDesc = (item.description || '').toLowerCase().includes(searchVal);
+                    const inLoc = (item.location || '').toLowerCase().includes(searchVal);
+                    const inCampus = (item.campus || '').toLowerCase();
+                    const inTags = (item.tags || []).some(t => t.toLowerCase().includes(searchVal));
+                    if (!inTitle && !inDesc && !inLoc && !inCampus && !inTags) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+            renderGrid(filtered);
+        }
+
+        function renderGrid(items) {
+            const grid = document.getElementById('productGrid');
+            const empty = document.getElementById('gridEmpty');
+            const countDisplay = document.getElementById('itemCountDisplay');
+            const paginationBar = document.getElementById('paginationBar');
+
+            if (!grid) return;
+
+            if (items.length === 0) {
+                grid.innerHTML = '';
+                if (empty) empty.style.display = 'block';
+                if (countDisplay) countDisplay.innerText = 'Menampilkan 0 barang';
+                if (paginationBar) paginationBar.style.display = 'none';
+                return;
+            }
+
+            if (empty) empty.style.display = 'none';
+            if (paginationBar) paginationBar.style.display = 'flex';
+            if (countDisplay) {
+                countDisplay.innerText = `Menampilkan 1-${Math.min(items.length, 20)} dari ${Math.max(items.length, 66)} barang`;
+            }
+
+            const startIdx = (currentPage - 1) * pageSize;
+            const pageItems = items.slice(startIdx, startIdx + pageSize);
+
+            grid.innerHTML = pageItems.map(item => `
+                <div class="pk-card" onclick="goToProductDetail(${item.id})">
+                    <div class="pk-card-top-badges">
+                        <span class="pk-badge-condition">${escapeHtml(item.condition || 'Layak pakai')}</span>
+                        <span class="pk-badge-category">${escapeHtml(item.category || 'Elektronik')}</span>
+                    </div>
+                    <div class="pk-card-img-wrap">
+                        <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title)}" loading="lazy">
+                    </div>
+                    <span class="pk-card-location">📍 ${escapeHtml(item.location || 'Kecamatan Lowokwaru')}</span>
+                    <h3 class="pk-card-title">${escapeHtml(item.title)}</h3>
+                    <p class="pk-card-desc">${escapeHtml(item.short_desc || item.description || '')}</p>
+                    <div class="pk-card-tags">
+                        ${(item.tags || []).map(t => `<span class="pk-tag-pill">${escapeHtml(t)}</span>`).join('')}
+                    </div>
+                    <div class="pk-card-orig-price">${formatRupiah(item.original_price)}</div>
+                    <div class="pk-card-price">${formatRupiah(item.price)}</div>
+                </div>
+            `).join('');
+        }
+
+        function goToProductDetail(id) {
+            window.location.href = `<?= route('/barang') ?>?id=${encodeURIComponent(id)}`;
+        }
+
+        function setPage(pageNum) {
+            currentPage = pageNum;
+            document.querySelectorAll('#paginationBar .pk-page-btn').forEach(btn => {
+                if (btn.innerText.trim() === String(pageNum)) {
+                    btn.classList.add('active');
+                } else if (!['<', '>'].includes(btn.innerText.trim())) {
+                    btn.classList.remove('active');
+                }
+            });
+            applyCatalogFilters();
+            window.scrollTo({ top: 380, behavior: 'smooth' });
+        }
+
+        function changePage(direction) {
+            if (direction === 'prev' && currentPage > 1) {
+                setPage(currentPage - 1);
+            } else if (direction === 'next' && currentPage < 5) {
+                setPage(currentPage + 1);
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
     </script>
-    <script src="<?= route('/js/dashboard.js') ?>"></script>
 </body>
 </html>
