@@ -4,13 +4,13 @@ CREATE OR REPLACE PROCEDURE public.acc_transaction(IN p_request_id integer, IN p
     AS $$
 BEGIN
     UPDATE requests
-    SET request_status = 'proses'
-    updated_at = CURRENT_TIMESTAMP
+    SET status = 'PROCESS',
+        updated_at = CURRENT_TIMESTAMP
     WHERE transaction_id = p_request_id;
 
     UPDATE requests
-    SET request_status = 'ditolak'
-    updated_at = CURRENT_TIMESTAMP
+    SET status = 'CANCELLED',
+        updated_at = CURRENT_TIMESTAMP
     WHERE product_id = p_product_id 
       AND transaction_id <> p_request_id;
 END;
@@ -22,7 +22,7 @@ CREATE OR REPLACE PROCEDURE public.finish_transaction(IN p_request_id integer, I
     AS $$
 BEGIN
     UPDATE requests
-    SET request_status = 'selesai',
+    SET status = 'COMPLETED',
         completed_date = CURRENT_DATE,
         updated_at = CURRENT_TIMESTAMP
     WHERE transaction_id = p_request_id;
@@ -40,7 +40,7 @@ CREATE OR REPLACE PROCEDURE public.cancel_transaction(IN p_request_id integer, I
     AS $$
 BEGIN
     UPDATE requests
-    SET request_status = 'dibatalkan',
+    SET status = 'CANCELLED',
         updated_at = CURRENT_TIMESTAMP
     WHERE transaction_id = p_request_id;
 
