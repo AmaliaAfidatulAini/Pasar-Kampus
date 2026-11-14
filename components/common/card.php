@@ -1,5 +1,5 @@
 <?php
-
+// COMPONENTS PROPS //
 $id = $id ?? "";
 $title = $title ?? "";
 $description = $description ?? "";
@@ -9,7 +9,7 @@ $condition = $condition ?? "";
 $o_price = $o_price ?? "";
 $price = $price ?? "";
 $foto = $foto ?? "";
-
+// END OF COMPONENTS PROPS //
 ?>
 
 <div class="product-card">

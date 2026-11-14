@@ -1,4 +1,5 @@
 <?php
+require_model('catalog');
 $session = get_session();
 $isLoggedIn = !empty($session);
 $userName = $session['name'] ?? 'Pengguna';

@@ -1,5 +1,7 @@
 <?php
-$title = $title ?? '';
+// COMPONENTS PROPS //
+$title = $title ?? "";
+// END OF COMPONENTS PROPS //
 $session = get_session();
 $displayName = $session['name'] ?? $session['email'] ?? 'Pengguna';
 $initial = strtoupper(substr($displayName, 0, 1));
@@ -56,7 +58,7 @@ $initial = strtoupper(substr($displayName, 0, 1));
 
                             <div id="lpProfileDropdown" class="lp-profile-dropdown">
                                 <a href="<?= route('/dashboard-penjual.php') ?>" class="lp-dropdown-item">
-                                    <span>Daftar Barang Saya</span>
+                                    <span>Daftar Barang</span>
                                 </a>
                                 <a href="<?= route('/riwayat.php') ?>" class="lp-dropdown-item">
                                     <span>Riwayat Pengajuan</span>
@@ -82,4 +84,4 @@ $initial = strtoupper(substr($displayName, 0, 1));
         </div>
     </header>
 
-    <?php include_component('flasher'); ?>
+    <?php Component::include('common/flasher'); ?>

@@ -57,33 +57,3 @@ function parse_errors(object $result): array
 
     return $errors;
 }
-
-function include_component(string $name, ?array $data = null): void
-{
-    if (preg_match('/^[A-Za-z0-9_-]+(?:\.php)?$/', $name) !== 1) {
-        throw new InvalidArgumentException('Invalid component name.');
-    }
-
-    $filename = str_ends_with($name, '.php') ? $name : $name . '.php';
-    $path = (defined('BASE_PATH') ? BASE_PATH : dirname(__DIR__)) . '/components/' . $filename;
-    if (!is_file($path)) {
-        throw new RuntimeException('Component not found: ' . $name);
-    }
-
-    extract($data ?? [], EXTR_SKIP);
-    require $path;
-}
-
-
-class Flush
-{
-    public static function start(): void
-    {
-        ob_start();
-    }
-
-    public static function end(): string
-    {
-        return ob_get_clean() ?: '';
-    }
-}

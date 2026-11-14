@@ -1,5 +1,7 @@
 <?php
+// COMPONENTS PROPS //
 $script = $script ?? "";
+// END OF COMPONENTS PROPS //
 $session = get_session();
 
 $profile = [];
@@ -7,7 +9,7 @@ if ($session !== null && isset($session['user_id'])) {
     $profile = fetch(executeQuery(
         "SELECT name, phone, campus, subdistrict, district, preferences
          FROM user_profiles
-         WHERE user_id = ? AND deleted_at = FALSE
+         WHERE user_id = ?
          ORDER BY profile_id DESC
          LIMIT 1",
         [$session['user_id']]

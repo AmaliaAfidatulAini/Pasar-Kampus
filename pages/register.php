@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body data-auth-page="register">
-    <?php include_component('flasher'); ?>
+    <?php Component::include('common/flasher'); ?>
 
     <main>
         <header>

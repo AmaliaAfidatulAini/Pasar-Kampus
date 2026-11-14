@@ -4114,8 +4114,8 @@ body.seller-body {
     position: sticky;
     top: 0;
     z-index: 500;
-    background-color: #FFFFFF;
-    border-bottom: 1px solid #E2E8F0;
+    background-color: #1D356D;
+    border-bottom: 1px solid #162955;
     padding: 12px 0;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
 }
@@ -4136,11 +4136,11 @@ body.seller-body {
     min-width: 0;
 }
 
-.lp-logo {
+ .lp-logo {
     display: inline-flex;
     align-items: center;
     text-decoration: none;
-    color: #1D356D;
+    color: #FFFFFF;
     font-weight: 800;
     font-size: 1.35rem;
     letter-spacing: -0.5px;
@@ -4169,7 +4169,7 @@ body.seller-body {
     width: 100%;
     height: 42px;
     padding: 0 16px 0 42px;
-    background: #F1F5F9;
+    background: #F8FAFC;
     border: 1.5px solid #CBD5E1;
     border-radius: 10px;
     font-size: 0.88rem;
@@ -4208,8 +4208,8 @@ body.seller-body {
 
 /* Wireframe 1: Masuk Button */
 .lp-btn-masuk {
-    background-color: #1D356D;
-    color: #FFFFFF;
+    background-color: #FFFFFF;
+    color: #1D356D;
     font-weight: 700;
     font-size: 0.9rem;
     padding: 9px 24px;
@@ -4221,14 +4221,14 @@ body.seller-body {
 }
 
 .lp-btn-masuk:hover {
-    background-color: #162955;
+    background-color: #E2E8F0;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(29, 53, 109, 0.3);
 }
 
 /* Wireframe 2: "butuh bantuan?" Link */
-.lp-help-link {
-    color: #1D356D;
+ .lp-help-link {
+    color: #FFFFFF;
     text-decoration: none;
     font-size: 0.9rem;
     font-weight: 600;
@@ -4238,9 +4238,9 @@ body.seller-body {
     white-space: nowrap;
 }
 
-.lp-help-link:hover {
-    color: #2563EB;
-    background-color: #F1F5F9;
+ .lp-help-link:hover {
+    color: #FFFFFF;
+    background-color: rgba(255, 255, 255, 0.12);
     text-decoration: underline;
 }
 
@@ -4719,5 +4719,73 @@ body.seller-body {
     }
     .lp-help-link {
         display: none;
+    }
+}
+.lp-error-page {
+    flex: 1;
+    display: grid;
+    place-items: center;
+    padding: clamp(48px, 8vw, 96px) 24px;
+    background: #FFFFFF;
+}
+
+.lp-error-content {
+    width: min(100%, 560px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.lp-error-illustration {
+    width: min(240px, 65vw);
+    margin-bottom: 12px;
+}
+
+.lp-error-code {
+    margin: 0;
+    color: #1D356D;
+    font-size: clamp(3.5rem, 12vw, 6rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 0.95;
+}
+
+.lp-error-content h1 {
+    margin: 18px 0 0;
+    color: #1D356D;
+    font-size: clamp(1.5rem, 4vw, 2.15rem);
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.lp-error-description {
+    max-width: 52ch;
+    margin: 14px 0 0;
+    color: #475569;
+    font-size: 1rem;
+    line-height: 1.65;
+}
+
+.lp-error-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 28px;
+}
+
+@media (max-width: 480px) {
+    .lp-error-page {
+        padding: 44px 20px 56px;
+    }
+
+    .lp-error-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .lp-error-actions .lp-btn {
+        width: 100%;
     }
 }
