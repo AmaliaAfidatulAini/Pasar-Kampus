@@ -93,6 +93,98 @@ $productId = $_GET['id'];
 $product = get_catalog_product_by_id($productId);
 $allProducts = get_catalog_products();
 
+// Resolve matching product in DB and seller info
+$dbProductId = null;
+$sellerName = 'Penjual Kampus';
+$sellerPhone = '081234567890';
+
+try {
+    $match = executeQuery(
+        "SELECT p.product_id, p.user_id, COALESCE(up.name, 'Penjual Kampus') AS seller_name, COALESCE(up.phone, '081234567890') AS seller_phone
+         FROM products p
+         LEFT JOIN user_profiles up ON up.user_id = p.user_id
+         WHERE p.product_id = :id
+         LIMIT 1",
+        ['id' => (int)$productId],
+        'fetch'
+    );
+    if ($match) {
+        $dbProductId = (int) $match['product_id'];
+        $sellerName = $match['seller_name'];
+        $sellerPhone = $match['seller_phone'] ?: '081234567890';
+    } else {
+        $matchTitle = executeQuery(
+            "SELECT p.product_id, p.user_id, COALESCE(up.name, 'Penjual Kampus') AS seller_name, COALESCE(up.phone, '081234567890') AS seller_phone
+             FROM products p
+             LEFT JOIN user_profiles up ON up.user_id = p.user_id
+             WHERE p.item_name ILIKE :title
+             LIMIT 1",
+            ['title' => $product['title']],
+            'fetch'
+        );
+        if ($matchTitle) {
+            $dbProductId = (int) $matchTitle['product_id'];
+            $sellerName = $matchTitle['seller_name'];
+            $sellerPhone = $matchTitle['seller_phone'] ?: '081234567890';
+        }
+    }
+} catch (Throwable $e) {
+    // Database query fallback
+}
+
+// Handle Purchase Request Submission (POST)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'ajukan_pembelian')) {
+    if (!$isLoggedIn) {
+        if (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json')) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'redirect' => route('/login')]);
+            exit;
+        }
+        redirect('/login', 302);
+        exit;
+    }
+
+    $buyerId = $session['user_id'] ?? null;
+    $newTxId = null;
+
+    if ($buyerId && $dbProductId) {
+        try {
+            $ins = executeQuery(
+                "INSERT INTO requests (user_id, product_id, status, meeting_point, created_at, updated_at) 
+                 VALUES (:user_id, :product_id, 'PENDING', :meeting_point, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) 
+                 RETURNING transaction_id",
+                [
+                    'user_id' => $buyerId,
+                    'product_id' => $dbProductId,
+                    'meeting_point' => $product['campus'] ?? $product['location'] ?? 'Area Kampus'
+                ],
+                'fetch'
+            );
+            if ($ins && isset($ins['transaction_id'])) {
+                $newTxId = (int) $ins['transaction_id'];
+            }
+        } catch (Throwable $e) {
+            error_log('Insert purchase request failed: ' . $e->getMessage());
+        }
+    }
+
+    flash('success', 'Pengajuan pembelian berhasil dibuat!');
+
+    if (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json')) {
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'transaction_id' => $newTxId,
+            'message' => 'Pengajuan pembelian berhasil dibuat.',
+            'redirect' => route('/riwayat.php')
+        ]);
+        exit;
+    }
+
+    redirect('/riwayat.php', 302);
+    exit;
+}
+
 // Get 4 recommendation products (excluding current or similar)
 $recommendations = [];
 foreach ($allProducts as $p) {
@@ -1031,7 +1123,7 @@ if (count($recommendations) < 4) {
                             <span class="pk-spec-label">Metode</span>
                             <span class="pk-spec-colon">:</span>
                             <span class="pk-spec-value"><?= esc($product['method']) ?></span>
-                        </div>beta-test-advance-2026.git
+                        </div>
                         <div class="pk-spec-row">
                             <span class="pk-spec-label">Lokasi</span>
                             <span class="pk-spec-colon">:</span>
@@ -1101,7 +1193,7 @@ if (count($recommendations) < 4) {
             </p>
             <div style="display: flex; gap: 10px; justify-content: center;">
                 <button type="button" class="pk-btn-report" onclick="closeBuyModal()">Batal</button>
-                <button type="button" class="pk-btn-buy" onclick="confirmPurchase()">Konfirmasi &amp; Hubungi Penjual</button>
+                <button type="button" class="pk-btn-buy" id="btnConfirmBuy" onclick="confirmPurchase()">Ajukan Pembelian</button>
             </div>
         </div>
     </div>
@@ -1279,9 +1371,102 @@ if (count($recommendations) < 4) {
             document.getElementById('buyModal').classList.remove('show');
         }
 
-        function confirmPurchase() {
+        async function confirmPurchase() {
+            const btn = document.getElementById('btnConfirmBuy');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = 'Mengajukan...';
+            }
+
+            const now = new Date();
+            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            const formattedDate = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+
+            // 1. Ambil data riwayat yang tersimpan di localStorage
+            let riwayatList = [];
+            try {
+                const stored = localStorage.getItem('pk_user_riwayat');
+                if (stored) {
+                    riwayatList = JSON.parse(stored);
+                }
+            } catch (e) {
+                riwayatList = [];
+            }
+
+            let nextId = 16;
+            if (Array.isArray(riwayatList) && riwayatList.length > 0) {
+                const maxId = Math.max(...riwayatList.map(item => parseInt(item.id) || 0));
+                nextId = maxId + 1;
+            }
+
+            const newRiwayat = {
+                id: nextId,
+                namaBarang: <?= json_encode($product['title']) ?>,
+                penjual: <?= json_encode($sellerName) ?>,
+                penjualDisplay: <?= json_encode($sellerName) ?>,
+                tanggal: formattedDate,
+                harga: <?= (int)$product['price'] ?>,
+                status: "Pending",
+                teleponPenjual: <?= json_encode($sellerPhone) ?>
+            };
+
+            // 2. Simpan juga ke database PostgreSQL via fetch POST
+            try {
+                const formData = new FormData();
+                formData.append('action', 'ajukan_pembelian');
+                formData.append('product_id', <?= (int)$productId ?>);
+
+                const res = await fetch(window.location.href, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json' },
+                    body: formData
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.transaction_id) {
+                        newRiwayat.id = data.transaction_id;
+                    }
+                }
+            } catch (err) {
+                console.warn('Sync to database warning:', err);
+            }
+
+            // 3. Simpan ke localStorage pk_user_riwayat
+            if (!Array.isArray(riwayatList)) {
+                riwayatList = [];
+            }
+            riwayatList.unshift(newRiwayat);
+            try {
+                localStorage.setItem('pk_user_riwayat', JSON.stringify(riwayatList));
+            } catch (e) {
+                console.error('LocalStorage save error:', e);
+            }
+
+            // 4. Sinkronkan dengan data penjual di localStorage jika ada
+            try {
+                const sellerStored = localStorage.getItem('pk_penjual_barang');
+                if (sellerStored) {
+                    const sellerList = JSON.parse(sellerStored);
+                    const targetProduct = sellerList.find(b => b.id === <?= (int)$productId ?> || b.namaBarang === <?= json_encode($product['title']) ?>);
+                    if (targetProduct) {
+                        if (!targetProduct.pengajuanList) targetProduct.pengajuanList = [];
+                        targetProduct.pengajuanList.unshift({
+                            id: newRiwayat.id,
+                            pembeli: <?= json_encode($userName) ?>,
+                            kampus: <?= json_encode($session['campus'] ?? 'Universitas Brawijaya') ?>,
+                            wa: '081234567899',
+                            waktu: formattedDate,
+                            status: 'Pending'
+                        });
+                        localStorage.setItem('pk_penjual_barang', JSON.stringify(sellerList));
+                    }
+                }
+            } catch (e) {}
+
             closeBuyModal();
-            alert('Pengajuan pembelian COD berhasil dikirim ke penjual! Silakan cek menu Riwayat Pengajuan.');
+            // 5. Arahkan pembeli ke halaman riwayat pengajuan pembelian
+            window.location.href = '<?= route('/riwayat.php') ?>';
         }
 
         function openReportModal() {
