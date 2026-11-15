@@ -1,6 +1,21 @@
 <?php 
 Component::include("section/header", ["title" => "Beranda"]);
-$stmt = executeQuery("SELECT * FROM products LIMIT 10");
+$stmt = executeQuery(
+    "SELECT p.*,
+            COALESCE(c.category_name, '') AS category_name,
+            CONCAT_WS(', ', NULLIF(TRIM(profile.district), ''), NULLIF(TRIM(profile.subdistrict), '')) AS location
+     FROM products p
+     LEFT JOIN categories c ON c.categories_id = p.category_id
+     LEFT JOIN users u ON u.user_id = p.user_id
+     LEFT JOIN LATERAL (
+         SELECT district, subdistrict
+         FROM user_profiles
+         WHERE user_id = u.user_id
+         ORDER BY profile_id DESC
+         LIMIT 1
+     ) profile ON TRUE
+     LIMIT 10"
+);
 $barang = fetchAll($stmt);
 ?>
 
@@ -120,8 +135,8 @@ $barang = fetchAll($stmt);
                             "id" => $item->product_id,
                             "title" => $item->item_name,
                             "description" => $item->description,
-                            "category" => "Fashion",
-                            "location" => "Malang, Jawa Timur",
+                            "category" => $item->category_name,
+                            "location" => $item->location,
                             "condition" => $categories[$item->condition-1],
                             "o_price" => $item->original_price,
                             "price" => $item->price,
