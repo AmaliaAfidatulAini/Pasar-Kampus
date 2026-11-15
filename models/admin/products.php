@@ -146,7 +146,7 @@ function admin_handle_product_post(string $redirect): void
         }
         $id = admin_post_id($input);
         $status = admin_post_string($input, 'status', 'Status');
-        if (!in_array($status, ['Tersedia', 'Dihapus'], true)) {
+        if (!in_array($status, ['ONSELL', 'SOLD'], true)) {
             throw new InvalidArgumentException('Status barang tidak valid.');
         }
         $note = is_string($input['moderation_note'] ?? null) ? trim($input['moderation_note']) : '';

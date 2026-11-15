@@ -48,8 +48,8 @@ Component::include('admin/header', [
                 <div class="admin-form-group">
                     <span class="admin-form-label">Tindakan Admin</span>
                     <div class="admin-radio-group">
-                        <label class="admin-radio-label"><input type="radio" name="status" value="Tersedia" required><span><strong>Biarkan Tersedia</strong> - Barang tetap tayang di katalog publik</span></label>
-                        <label class="admin-radio-label"><input type="radio" name="status" value="Dihapus" required><span><strong>Dihapus (Take Down)</strong> - Tarik barang dari katalog</span></label>
+                        <label class="admin-radio-label"><input type="radio" name="status" value="ONSELL" required><span><strong>ONSELL</strong> - Barang tetap tayang di katalog publik</span></label>
+                        <label class="admin-radio-label"><input type="radio" name="status" value="SOLD" required><span><strong>SOLD</strong> - Barang sudah terjual atau tidak tersedia</span></label>
                     </div>
                 </div>
                 <div class="admin-form-group">
@@ -179,7 +179,7 @@ Component::include('admin/header', [
             { data: 'kategori', render: value => esc(value || '-') },
             {
                 data: 'status',
-                render: value => `<span class="admin-badge ${value === 'Tersedia' ? 'admin-badge-success' : value === 'Dihapus' ? 'admin-badge-danger' : 'admin-badge-warning'}">${esc(value || '-')}</span>`
+                render: value => `<span class="admin-badge ${value === 'ONSELL' ? 'admin-badge-success' : value === 'SOLD' ? 'admin-badge-danger' : 'admin-badge-warning'}">${esc(value || '-')}</span>`
             },
             {
                 data: null,

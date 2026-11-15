@@ -59,16 +59,16 @@ VALUES
 INSERT INTO products (user_id, category_id, item_name, description, price, original_price, condition, status, moderation_note, delivery_methods)
 SELECT owners.user_id, categories.categories_id, product_data.item_name, product_data.description, product_data.price, product_data.original_price, product_data.condition, product_data.status, product_data.moderation_note, product_data.delivery_methods
 FROM (VALUES
-    ('fami@test.com', 'Buku', 'Buku Algoritma dan Pemrograman', 'Buku kuliah edisi terbaru, kondisi bersih dan lengkap.', 85000, 120000, 2, 'Tersedia', NULL, 'COD'),
-    ('sando@test.com', 'Buku', 'Novel Laut Bercerita', 'Novel bekas terawat, beberapa halaman diberi penanda.', 55000, 90000, 2, 'Tersedia', NULL, 'COD'),
-    ('rani.dummy@pasarkampus.local', 'ATK', 'Kalkulator Scientific', 'Kalkulator scientific berfungsi normal, baterai baru.', 95000, 150000, 2, 'Tersedia', NULL, 'COD'),
-    ('bima.dummy@pasarkampus.local', 'Elektronik', 'Keyboard Mechanical 87 Keys', 'Keyboard mechanical dengan kabel USB-C dan keycap lengkap.', 320000, 450000, 2, 'Tersedia', NULL, 'COD'),
-    ('nisa.dummy@pasarkampus.local', 'Elektronik', 'Headset Kabel', 'Headset kabel dengan mikrofon, suara kiri dan kanan normal.', 70000, 110000, 3, 'Tersedia', NULL, 'COD'),
-    ('fami@test.com', 'Perlengkapan Kos', 'Lampu Meja Belajar', 'Lampu meja LED dengan tiga tingkat kecerahan.', 60000, 95000, 2, 'Tersedia', NULL, 'COD'),
-    ('sando@test.com', 'Pakaian', 'Jaket Kampus Navy', 'Jaket kampus ukuran L, sudah dicuci dan siap pakai.', 125000, 220000, 2, 'Tersedia', NULL, 'COD'),
-    ('rani.dummy@pasarkampus.local', 'Perlengkapan Kos', 'Rak Buku Susun', 'Rak buku tiga tingkat, rangka kokoh dan mudah dibongkar.', 140000, 200000, 2, 'Tersedia', NULL, 'COD'),
-    ('bima.dummy@pasarkampus.local', 'Elektronik', 'Mouse Wireless', 'Mouse wireless dengan dongle USB, kondisi normal.', 80000, 130000, 3, 'Dihapus', 'Foto produk tidak sesuai dengan barang yang ditawarkan.', 'COD'),
-    ('nisa.dummy@pasarkampus.local', 'Buku', 'Komik Petualangan Volume 1-5', 'Paket lima volume komik, sampul masih utuh.', 100000, 160000, 2, 'Tersedia', NULL, 'COD')
+    ('fami@test.com', 'Buku', 'Buku Algoritma dan Pemrograman', 'Buku kuliah edisi terbaru, kondisi bersih dan lengkap.', 85000, 120000, 2, 'ONSELL', NULL, 'COD'),
+    ('sando@test.com', 'Buku', 'Novel Laut Bercerita', 'Novel bekas terawat, beberapa halaman diberi penanda.', 55000, 90000, 2, 'ONSELL', NULL, 'COD'),
+    ('rani.dummy@pasarkampus.local', 'ATK', 'Kalkulator Scientific', 'Kalkulator scientific berfungsi normal, baterai baru.', 95000, 150000, 2, 'ONSELL', NULL, 'COD'),
+    ('bima.dummy@pasarkampus.local', 'Elektronik', 'Keyboard Mechanical 87 Keys', 'Keyboard mechanical dengan kabel USB-C dan keycap lengkap.', 320000, 450000, 2, 'ONSELL', NULL, 'COD'),
+    ('nisa.dummy@pasarkampus.local', 'Elektronik', 'Headset Kabel', 'Headset kabel dengan mikrofon, suara kiri dan kanan normal.', 70000, 110000, 3, 'ONSELL', NULL, 'COD'),
+    ('fami@test.com', 'Perlengkapan Kos', 'Lampu Meja Belajar', 'Lampu meja LED dengan tiga tingkat kecerahan.', 60000, 95000, 2, 'ONSELL', NULL, 'COD'),
+    ('sando@test.com', 'Pakaian', 'Jaket Kampus Navy', 'Jaket kampus ukuran L, sudah dicuci dan siap pakai.', 125000, 220000, 2, 'ONSELL', NULL, 'COD'),
+    ('rani.dummy@pasarkampus.local', 'Perlengkapan Kos', 'Rak Buku Susun', 'Rak buku tiga tingkat, rangka kokoh dan mudah dibongkar.', 140000, 200000, 2, 'ONSELL', NULL, 'COD'),
+    ('bima.dummy@pasarkampus.local', 'Elektronik', 'Mouse Wireless', 'Mouse wireless dengan dongle USB, kondisi normal.', 80000, 130000, 3, 'SOLD', 'Foto produk tidak sesuai dengan barang yang ditawarkan.', 'COD'),
+    ('nisa.dummy@pasarkampus.local', 'Buku', 'Komik Petualangan Volume 1-5', 'Paket lima volume komik, sampul masih utuh.', 100000, 160000, 2, 'ONSELL', NULL, 'COD')
 ) AS product_data(owner_email, category_name, item_name, description, price, original_price, condition, status, moderation_note, delivery_methods)
 JOIN users owners ON owners.email = product_data.owner_email
 JOIN categories ON categories.category_name = product_data.category_name;
