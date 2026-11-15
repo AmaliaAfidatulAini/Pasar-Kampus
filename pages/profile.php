@@ -22,6 +22,7 @@ $userPhone = $session['phone'] ?? '';
         :root {
             --pk-nav-blue: #2355B8;
             --pk-navy: #1D356D;
+            --pk-footer: #1B3260;
             --pk-amber: #F59E0B;
             --pk-border: #E2E8F0;
             --pk-bg: #F8FAFC;
@@ -351,6 +352,77 @@ $userPhone = $session['phone'] ?? '';
             pointer-events: auto;
         }
 
+        /* ================= 3. FOOTER STYLES (MATCHED WITH DASHBOARD) ================= */
+        .pk-footer {
+            background-color: var(--pk-footer);
+            color: #CBD5E1;
+            padding: 48px 24px 24px;
+            margin-top: auto;
+        }
+
+        .pk-footer-inner {
+            max-width: 1240px;
+            margin: 0 auto;
+        }
+
+        .pk-footer-grid {
+            display: grid;
+            grid-template-columns: 1.6fr 1fr 1fr 1fr;
+            gap: 36px;
+            margin-bottom: 36px;
+        }
+
+        .pk-footer-col h4 {
+            color: #FFFFFF;
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 14px;
+            margin-top: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .pk-footer-col p {
+            font-size: 0.84rem;
+            line-height: 1.6;
+            color: #94A3B8;
+            max-width: 320px;
+            margin: 0;
+        }
+
+        .pk-footer-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 0;
+            margin: 0;
+        }
+
+        .pk-footer-links a {
+            font-size: 0.84rem;
+            color: #CBD5E1;
+            text-decoration: none;
+            transition: color 0.15s;
+        }
+
+        .pk-footer-links a:hover {
+            color: #FFFFFF;
+            text-decoration: underline;
+        }
+
+        .pk-footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.78rem;
+            color: #94A3B8;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
         @media (max-width: 768px) {
             .pk-welcome-row {
                 flex-direction: column;
@@ -366,6 +438,16 @@ $userPhone = $session['phone'] ?? '';
             }
             .pk-nav-search {
                 max-width: 200px;
+            }
+            .pk-footer-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+                margin-bottom: 24px;
+            }
+            .pk-footer-bottom {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
             }
         }
     </style>
@@ -394,7 +476,7 @@ $userPhone = $session['phone'] ?? '';
             <!-- Right Links & Avatar Menu -->
             <div class="pk-nav-menu">
                 <a href="<?= route('/riwayat.php') ?>" class="pk-nav-link">Riwayat</a>
-                <a href="<?= route('/dashboard.php') ?>" class="pk-nav-link">Katalog</a>
+                <a href="<?= route('/dashboard-utama.php') ?>" class="pk-nav-link">Katalog</a>
                 <a href="<?= route('/#faq') ?>" class="pk-nav-link">butuh bantuan?</a>
             </div>
         </div>
@@ -476,59 +558,42 @@ $userPhone = $session['phone'] ?? '';
     </div>
 
     <!-- ================= 3. FOOTER ================= -->
-    <footer class="lp-footer" style="margin-top: 48px;">
-        <div class="lp-container">
-            <div class="lp-footer-grid">
-                <!-- Col 1: Brand & Copyright -->
-                <div class="lp-footer-col">
-                    <a href="<?= route('/') ?>" class="lp-logo" style="color: #FFFFFF;">
-                        PasarKampus
-                    </a>
-                    <p>
-                        Platform marketplace eksklusif mahasiswa untuk sirkulasi barang perkuliahan yang aman, hemat, dan berkelanjutan.
-                    </p>
+    <footer class="pk-footer">
+        <div class="pk-footer-inner">
+            <div class="pk-footer-grid">
+                <div class="pk-footer-col">
+                    <h3 style="color: #FFFFFF; font-size: 1.35rem; font-weight: 800; margin-bottom: 12px; margin-top: 0;">PasarKampus</h3>
+                    <p>Platform marketplace eksklusif mahasiswa untuk sirkulasi barang perkuliahan yang aman, hemat, dan berkelanjutan.</p>
                 </div>
-
-                <!-- Col 2: PasarKampus -->
-                <div class="lp-footer-col">
+                <div class="pk-footer-col">
                     <h4>PasarKampus</h4>
-                    <ul class="lp-footer-links">
-                        <li><a href="<?= route('/#tentang-kami') ?>">Tentang kami</a></li>
-                        <li><a href="<?= route('/dashboard.php') ?>">Katalog Barang</a></li>
+                    <ul class="pk-footer-links">
+                        <li><a href="<?= route('/') ?>">Tentang kami</a></li>
+                        <li><a href="<?= route('/dashboard-utama.php') ?>">Katalog Barang</a></li>
                         <li><a href="<?= route('/register.php') ?>">Daftar Akun Mahasiswa</a></li>
                         <li><a href="<?= route('/dashboard-penjual.php') ?>">Dashboard Penjual</a></li>
                     </ul>
                 </div>
-
-                <!-- Col 3: Bantuan -->
-                <div class="lp-footer-col">
+                <div class="pk-footer-col">
                     <h4>Bantuan</h4>
-                    <ul class="lp-footer-links">
-                        <li><a href="<?= route('/#faq') ?>">Pusat Bantuan</a></li>
-                        <li><a href="<?= route('/#faq') ?>">FAQ</a></li>
+                    <ul class="pk-footer-links">
+                        <li><a href="#">Pusat Bantuan</a></li>
+                        <li><a href="#">FAQ</a></li>
                         <li><a href="mailto:support@pasarkampus.id">Kontak Kami</a></li>
                     </ul>
                 </div>
-
-                <!-- Col 4: Dukungan -->
-                <div class="lp-footer-col">
+                <div class="pk-footer-col">
                     <h4>Dukungan</h4>
-                    <ul class="lp-footer-links">
+                    <ul class="pk-footer-links">
                         <li><a href="#" onclick="alert('Kebijakan Privasi: Data kampus dan identitas mahasiswa dilindungi.'); return false;">Kebijakan</a></li>
                         <li><a href="#" onclick="alert('Panduan COD: Selalu lakukan serah terima di area kampus yang ramai pada jam operasional kampus.'); return false;">Panduan Keamanan COD</a></li>
                         <li><a href="#" onclick="alert('Syarat & Ketentuan PasarKampus: Hanya untuk barang legal & tidak melanggar hukum.'); return false;">Syarat &amp; Ketentuan</a></li>
                     </ul>
                 </div>
             </div>
-
-            <!-- Bottom Copyright Bar -->
-            <div class="lp-footer-bottom">
-                <div>
-                    &copy; 2026 PasarKampus. Hak Cipta Dilindungi.
-                </div>
-                <div>
-                    Dibuat untuk Project Based Learning (PBL) Mahasiswa.
-                </div>
+            <div class="pk-footer-bottom">
+                <div>&copy; <?= date('Y') ?> PasarKampus, Hak Cipta Dilindungi.</div>
+                <div>Dibuat untuk Project Based Learning (PBL) Mahasiswa</div>
             </div>
         </div>
     </footer>
@@ -567,20 +632,17 @@ $userPhone = $session['phone'] ?? '';
             if (raw) {
                 try {
                     const u = JSON.parse(raw);
-                    // Display name
                     const name = u.nama || u.username || 'user';
                     const usernameEl = document.getElementById('profileUsername');
                     if (usernameEl) {
                         usernameEl.innerText = name;
                     }
 
-                    // Form fields
                     if (u.jenisKelamin) document.getElementById('inputJenisKelamin').value = u.jenisKelamin;
                     if (u.tanggalLahir) document.getElementById('inputTanggalLahir').value = u.tanggalLahir;
                     if (u.alamat) document.getElementById('inputAlamat').value = u.alamat;
                     if (u.kelurahan) document.getElementById('inputKelurahan').value = u.kelurahan;
 
-                    // Photo
                     if (u.foto && u.foto.trim() !== '') {
                         currentUploadedPhoto = u.foto;
                         const img = document.getElementById('avatarPreviewImg');
@@ -612,7 +674,6 @@ $userPhone = $session['phone'] ?? '';
                 }
             }
 
-            // Update fields
             u.jenisKelamin = document.getElementById('inputJenisKelamin').value.trim();
             u.tanggalLahir = document.getElementById('inputTanggalLahir').value.trim();
             u.alamat = document.getElementById('inputAlamat').value.trim();
@@ -625,7 +686,6 @@ $userPhone = $session['phone'] ?? '';
             localStorage.setItem('preloved_user', JSON.stringify(u));
             localStorage.setItem('pk_logged_in', 'true');
 
-            // Show Toast
             const toast = document.getElementById('saveToast');
             if (toast) {
                 toast.classList.add('show');
