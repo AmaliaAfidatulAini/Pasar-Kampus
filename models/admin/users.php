@@ -31,9 +31,14 @@ function admin_handle_user_query(string $redirect): void
             $id = admin_post_id($input);
             $user = fetch(executeQuery(
                 "SELECT u.user_id AS id, COALESCE(p.name, '') AS name,
+                    COALESCE(p.phone, '') AS phone,
                     COALESCE(p.student_number, '') AS nim,
-                    COALESCE(p.campus, '') AS campus, u.email,
-                    u.role, u.account_status AS status, COALESCE(u.notes, '') AS reason
+                    COALESCE(p.campus, '') AS campus,
+                    COALESCE(p.preferences, '') AS preferences,
+                    COALESCE(p.subdistrict, '') AS subdistrict,
+                    COALESCE(p.district, '') AS district,
+                    COALESCE(p.coordinates, '') AS coordinates,
+                    u.email, u.role, u.account_status AS status, COALESCE(u.notes, '') AS reason
                  FROM users u
                  LEFT JOIN user_profiles p ON p.user_id = u.user_id
                  WHERE u.user_id = ? AND u.deleted_at IS FALSE",
@@ -107,16 +112,37 @@ function admin_handle_user_query(string $redirect): void
     }
     exit;
 }
+function admin_user_profile_values(array $input): array
+{
+    $fields = [
+        'name' => ['name', 255],
+        'phone' => ['phone', 50],
+        'campus' => ['campus', 255],
+        'nim' => ['student_number', 50],
+        'preferences' => ['preferences', 255],
+        'subdistrict' => ['subdistrict', 255],
+        'district' => ['district', 200],
+        'coordinates' => ['coordinates', 255],
+    ];
+    $profile = [];
+    foreach ($fields as $field => [$column, $maxLength]) {
+        $value = $input[$field] ?? '';
+        if (!is_string($value) || preg_match_all('/./us', $value, $matches) === false || count($matches[0]) > $maxLength) {
+            throw new InvalidArgumentException('Data profil tidak valid.');
+        }
+        $value = trim($value);
+        $profile[$column] = $value === '' ? ($field === 'name' ? '' : null) : $value;
+    }
+    return $profile;
+}
+
 function admin_handle_user_post(string $redirect): void
 {
     admin_handle_post($redirect, static function (array $input): string {
         $action = $input['action'] ?? '';
         if ($action === 'create-user') {
             $validation = Validator::make([
-                'name' => 'bail|required|string|max:255',
-                'nim' => ['bail', 'required', 'string', static fn($value): bool => $value === null || strlen($value) <= 50],
                 'email' => 'bail|required|string|email|max:50',
-                'campus' => 'bail|required|string|max:255',
                 'password' => 'bail|required|string|min:8',
                 'role' => 'bail|required|string|in:Mahasiswa,Admin',
             ], $input);
@@ -124,17 +150,15 @@ function admin_handle_user_post(string $redirect): void
                 throw new InvalidArgumentException(implode(' ', parse_errors($validation)));
             }
             $result = (object) $validation->validated();
-            $name = $result->name;
-            $nim = $result->nim;
-            $email = $result->email;
-            $campus = $result->campus;
-            $password = $result->password;
-            $role = $result->role;
+            $profile = admin_user_profile_values($input);
             global $pdo;
             $pdo->beginTransaction();
             try {
-                $user = fetch(executeQuery("INSERT INTO users (email, password, role, account_status) VALUES (?, ?, ?, 'Aktif') RETURNING user_id", [$email, password_hash($password, PASSWORD_DEFAULT), $role === 'Admin' ? 'admin' : 'user']));
-                executeQuery('INSERT INTO user_profiles (user_id, name, student_number, campus) VALUES (?, ?, ?, ?)', [(int) $user['user_id'], $name, $nim, $campus]);
+                $user = fetch(executeQuery("INSERT INTO users (email, password, role, account_status) VALUES (?, ?, ?, 'Aktif') RETURNING user_id", [$result->email, password_hash($result->password, PASSWORD_DEFAULT), $result->role === 'Admin' ? 'admin' : 'user']));
+                executeQuery(
+                    'INSERT INTO user_profiles (user_id, name, phone, campus, student_number, preferences, subdistrict, district, coordinates) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    [(int) $user['user_id'], $profile['name'], $profile['phone'], $profile['campus'], $profile['student_number'], $profile['preferences'], $profile['subdistrict'], $profile['district'], $profile['coordinates']]
+                );
                 $pdo->commit();
             } catch (Throwable $error) {
                 if ($pdo->inTransaction()) $pdo->rollBack();
@@ -157,17 +181,12 @@ function admin_handle_user_post(string $redirect): void
                 throw new InvalidArgumentException('Pengguna tidak ditemukan.');
             }
 
-            $password = $input['password'] ?? '';
             $rules = [
-                'name' => 'bail|required|string|max:255',
-                'nim' => ['bail', 'string', static fn($value): bool => $value === null || strlen($value) <= 50],
                 'email' => 'bail|required|string|email|max:50',
-                'campus' => 'bail|string|max:255',
+                'password' => 'bail|required|string|min:8',
+                'role' => 'bail|required|string|in:Mahasiswa,Admin',
             ];
-            if (!is_string($password) || $password !== '') {
-                $rules['password'] = 'bail|required|string|min:8';
-            }
-            if ($user['role'] === 'user') {
+            if (($input['role'] ?? null) === 'Mahasiswa') {
                 $rules['status'] = 'bail|required|string|in:Aktif,Suspend,Banned';
                 $rules['reason'] = 'bail|string|max:255';
             }
@@ -176,24 +195,27 @@ function admin_handle_user_post(string $redirect): void
                 throw new InvalidArgumentException(implode(' ', parse_errors($validation)));
             }
             $result = (object) $validation->validated();
-            $name = $result->name;
-            $nim = $result->nim ?? '';
-            $email = $result->email;
-            $campus = $result->campus ?? '';
-            $password = is_string($password) ? $password : '';
+            $profile = admin_user_profile_values($input);
 
             global $pdo;
             $pdo->beginTransaction();
             try {
-                executeQuery('UPDATE users SET email = ?, password = COALESCE(?, password), updated_at = CURRENT_TIMESTAMP WHERE user_id = ?', [$email, $password === '' ? null : password_hash($password, PASSWORD_DEFAULT), $id]);
-                $profile = fetch(executeQuery('SELECT profile_id FROM user_profiles WHERE user_id = ?', [$id]));
-                if ($profile) {
-                    executeQuery('UPDATE user_profiles SET name = ?, student_number = ?, campus = ?, updated_at = CURRENT_TIMESTAMP WHERE profile_id = ?', [$name, $nim, $campus, (int) $profile['profile_id']]);
+                executeQuery('UPDATE users SET email = ?, password = ?, role = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?', [$result->email, password_hash($result->password, PASSWORD_DEFAULT), $result->role === 'Admin' ? 'admin' : 'user', $id]);
+                $existingProfile = fetch(executeQuery('SELECT profile_id FROM user_profiles WHERE user_id = ?', [$id]));
+                $profileValues = [$profile['name'], $profile['phone'], $profile['campus'], $profile['student_number'], $profile['preferences'], $profile['subdistrict'], $profile['district'], $profile['coordinates']];
+                if ($existingProfile) {
+                    executeQuery(
+                        'UPDATE user_profiles SET name = ?, phone = ?, campus = ?, student_number = ?, preferences = ?, subdistrict = ?, district = ?, coordinates = ?, updated_at = CURRENT_TIMESTAMP WHERE profile_id = ?',
+                        [...$profileValues, (int) $existingProfile['profile_id']]
+                    );
                 } else {
-                    executeQuery('INSERT INTO user_profiles (user_id, name, student_number, campus) VALUES (?, ?, ?, ?)', [$id, $name, $nim, $campus]);
+                    executeQuery(
+                        'INSERT INTO user_profiles (user_id, name, phone, campus, student_number, preferences, subdistrict, district, coordinates) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                        [$id, ...$profileValues]
+                    );
                 }
 
-                if ($user['role'] === 'user') {
+                if ($result->role === 'Mahasiswa') {
                     $reason = is_string($input['reason'] ?? null) ? trim($input['reason']) : '';
                     executeQuery('UPDATE users SET account_status = ?, notes = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?', [$result->status, $result->status === 'Aktif' ? null : $reason, $id]);
                 }

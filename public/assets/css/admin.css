@@ -1645,6 +1645,49 @@ body.admin-body {
         flex-shrink: 0;
     }
 }
+.user-modal-card {
+    max-width: 900px;
+}
+
+.user-profile-divider {
+    margin: 2px 0 18px;
+    border: 0;
+    border-top: 1px solid var(--admin-border);
+}
+
+/* Keep account fields in one column; use the added width only for profile data. */
+.user-profile-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 20px;
+}
+
+.user-profile-grid .admin-form-group {
+    min-width: 0;
+}
+
+.user-role-options {
+    flex-direction: row;
+    gap: 12px;
+}
+
+.user-role-options .admin-radio-label {
+    flex: 1;
+}
+
+@media (max-width: 640px) {
+    .user-modal-card {
+        max-width: 100%;
+    }
+
+    .user-profile-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .user-role-options {
+        flex-direction: column;
+    }
+}
 
 .admin-data-state {
     padding: 24px !important;
