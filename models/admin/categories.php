@@ -106,6 +106,7 @@ function admin_handle_category_post(string $redirect): void
         if ($action === 'delete-category') {
             $id = admin_post_id($input);
             if ((int) fetch(executeQuery('SELECT COUNT(*) AS total FROM products WHERE category_id = ?', [$id]))['total'] > 0) throw new InvalidArgumentException('Kategori tidak dapat dihapus karena masih digunakan oleh barang.');
+            if ((int) fetch(executeQuery('SELECT COUNT(*) AS total FROM user_preferences WHERE category_id = ?', [$id]))['total'] > 0) throw new InvalidArgumentException('Kategori tidak dapat dihapus karena masih dipilih sebagai preferensi pengguna.');
             $stmt = executeQuery('DELETE FROM categories WHERE categories_id = ?', [$id]);
             if ($stmt->rowCount() === 0) throw new InvalidArgumentException('Kategori tidak ditemukan.');
             return 'Kategori berhasil dihapus.';

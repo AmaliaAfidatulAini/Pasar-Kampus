@@ -22,7 +22,6 @@ CREATE TABLE user_profiles (
     phone VARCHAR(50),
     campus VARCHAR(255),
     student_number VARCHAR(50),
-    preferences VARCHAR(255),
     subdistrict VARCHAR(255),
     district VARCHAR(200),
     coordinates VARCHAR(255),
@@ -44,6 +43,15 @@ CREATE TABLE social_media (
 CREATE TABLE categories (
     categories_id SERIAL PRIMARY KEY,
     category_name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE user_preferences (
+    profile_id INT NOT NULL,
+    category_id INT NOT NULL,
+    PRIMARY KEY (profile_id, category_id),
+    CONSTRAINT fk_user_preferences_profiles FOREIGN KEY (profile_id) REFERENCES user_profiles(profile_id) ON DELETE CASCADE,
+    CONSTRAINT fk_user_preferences_categories FOREIGN KEY (category_id) REFERENCES categories(categories_id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

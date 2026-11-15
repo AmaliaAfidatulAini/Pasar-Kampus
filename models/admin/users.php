@@ -30,18 +30,25 @@ function admin_handle_user_query(string $redirect): void
         if ($query === 'edit-user') {
             $id = admin_post_id($input);
             $user = fetch(executeQuery(
-                "SELECT u.user_id AS id, COALESCE(p.name, '') AS name,
+                "SELECT u.user_id AS id, p.profile_id AS profile_id,
+                    COALESCE(p.name, '') AS name,
                     COALESCE(p.phone, '') AS phone,
                     COALESCE(p.student_number, '') AS nim,
                     COALESCE(p.campus, '') AS campus,
-                    COALESCE(p.preferences, '') AS preferences,
                     COALESCE(p.subdistrict, '') AS subdistrict,
                     COALESCE(p.district, '') AS district,
                     COALESCE(p.coordinates, '') AS coordinates,
+                    COALESCE((
+                        SELECT json_agg(up.category_id ORDER BY up.category_id)
+                        FROM user_preferences up
+                        WHERE up.profile_id = p.profile_id
+                    ), '[]'::json) AS category_ids,
                     u.email, u.role, u.account_status AS status, COALESCE(u.notes, '') AS reason
                  FROM users u
                  LEFT JOIN user_profiles p ON p.user_id = u.user_id
-                 WHERE u.user_id = ? AND u.deleted_at IS FALSE",
+                 WHERE u.user_id = ? AND u.deleted_at IS FALSE
+                 ORDER BY p.profile_id DESC NULLS LAST
+                 LIMIT 1",
                 [$id]
             ));
             if (!$user) {
@@ -49,6 +56,8 @@ function admin_handle_user_query(string $redirect): void
                 echo json_encode(['error' => 'Pengguna tidak ditemukan.'], JSON_UNESCAPED_UNICODE);
                 exit;
             }
+            $user['preferences'] = json_decode((string) $user['category_ids'], true) ?: [];
+            unset($user['profile_id'], $user['category_ids']);
             $user['role'] = $user['role'] === 'admin' ? 'Admin' : 'Mahasiswa';
             echo json_encode($user, JSON_UNESCAPED_UNICODE);
             exit;
@@ -112,6 +121,73 @@ function admin_handle_user_query(string $redirect): void
     }
     exit;
 }
+function admin_user_preference_categories(): array
+{
+    return executeQuery(
+        'SELECT categories_id AS id, category_name AS name FROM categories ORDER BY category_name ASC',
+        [],
+        'fetchAll'
+    );
+}
+
+function admin_user_preference_ids(array $input): array
+{
+    $values = $input['preference_categories'] ?? [];
+    if ($values === null || $values === '') {
+        return [];
+    }
+    if (!is_array($values)) {
+        throw new InvalidArgumentException('Preferensi pengguna tidak valid.');
+    }
+
+    $ids = [];
+    foreach ($values as $value) {
+        if (!(is_int($value) || (is_string($value) && ctype_digit($value))) || (int) $value < 1) {
+            throw new InvalidArgumentException('Preferensi pengguna tidak valid.');
+        }
+        $ids[(int) $value] = true;
+    }
+    $ids = array_keys($ids);
+    if ($ids === []) {
+        return [];
+    }
+
+    $placeholders = implode(', ', array_fill(0, count($ids), '?'));
+    $validIds = array_map(
+        'intval',
+        executeQuery(
+            "SELECT categories_id FROM categories WHERE categories_id IN ({$placeholders})",
+            $ids,
+            'fetchColumn'
+        )
+    );
+    sort($validIds);
+    sort($ids);
+    if ($validIds !== $ids) {
+        throw new InvalidArgumentException('Preferensi pengguna tidak valid.');
+    }
+    return $ids;
+}
+
+function admin_sync_user_preferences(int $profileId, array $categoryIds): void
+{
+    executeQuery('DELETE FROM user_preferences WHERE profile_id = ?', [$profileId]);
+    if ($categoryIds === []) {
+        return;
+    }
+
+    $placeholders = implode(', ', array_fill(0, count($categoryIds), '(?, ?)'));
+    $bindings = [];
+    foreach ($categoryIds as $categoryId) {
+        $bindings[] = $profileId;
+        $bindings[] = $categoryId;
+    }
+    executeQuery(
+        "INSERT INTO user_preferences (profile_id, category_id) VALUES {$placeholders}",
+        $bindings
+    );
+}
+
 function admin_user_profile_values(array $input): array
 {
     $fields = [
@@ -119,7 +195,6 @@ function admin_user_profile_values(array $input): array
         'phone' => ['phone', 50],
         'campus' => ['campus', 255],
         'nim' => ['student_number', 50],
-        'preferences' => ['preferences', 255],
         'subdistrict' => ['subdistrict', 255],
         'district' => ['district', 200],
         'coordinates' => ['coordinates', 255],
@@ -151,14 +226,16 @@ function admin_handle_user_post(string $redirect): void
             }
             $result = (object) $validation->validated();
             $profile = admin_user_profile_values($input);
+            $preferenceIds = admin_user_preference_ids($input);
             global $pdo;
             $pdo->beginTransaction();
             try {
                 $user = fetch(executeQuery("INSERT INTO users (email, password, role, account_status) VALUES (?, ?, ?, 'Aktif') RETURNING user_id", [$result->email, password_hash($result->password, PASSWORD_DEFAULT), $result->role === 'Admin' ? 'admin' : 'user']));
-                executeQuery(
-                    'INSERT INTO user_profiles (user_id, name, phone, campus, student_number, preferences, subdistrict, district, coordinates) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                    [(int) $user['user_id'], $profile['name'], $profile['phone'], $profile['campus'], $profile['student_number'], $profile['preferences'], $profile['subdistrict'], $profile['district'], $profile['coordinates']]
-                );
+                $profileRow = fetch(executeQuery(
+                    'INSERT INTO user_profiles (user_id, name, phone, campus, student_number, subdistrict, district, coordinates) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING profile_id',
+                    [(int) $user['user_id'], $profile['name'], $profile['phone'], $profile['campus'], $profile['student_number'], $profile['subdistrict'], $profile['district'], $profile['coordinates']]
+                ));
+                admin_sync_user_preferences((int) $profileRow['profile_id'], $preferenceIds);
                 $pdo->commit();
             } catch (Throwable $error) {
                 if ($pdo->inTransaction()) $pdo->rollBack();
@@ -183,9 +260,11 @@ function admin_handle_user_post(string $redirect): void
 
             $rules = [
                 'email' => 'bail|required|string|email|max:50',
-                'password' => 'bail|required|string|min:8',
                 'role' => 'bail|required|string|in:Mahasiswa,Admin',
             ];
+            if (is_string($input['password'] ?? null) && $input['password'] !== '') {
+                $rules['password'] = 'bail|required|string|min:8';
+            }
             if (($input['role'] ?? null) === 'Mahasiswa') {
                 $rules['status'] = 'bail|required|string|in:Aktif,Suspend,Banned';
                 $rules['reason'] = 'bail|string|max:255';
@@ -196,24 +275,31 @@ function admin_handle_user_post(string $redirect): void
             }
             $result = (object) $validation->validated();
             $profile = admin_user_profile_values($input);
+            $preferenceIds = admin_user_preference_ids($input);
 
             global $pdo;
             $pdo->beginTransaction();
             try {
-                executeQuery('UPDATE users SET email = ?, password = ?, role = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?', [$result->email, password_hash($result->password, PASSWORD_DEFAULT), $result->role === 'Admin' ? 'admin' : 'user', $id]);
-                $existingProfile = fetch(executeQuery('SELECT profile_id FROM user_profiles WHERE user_id = ?', [$id]));
-                $profileValues = [$profile['name'], $profile['phone'], $profile['campus'], $profile['student_number'], $profile['preferences'], $profile['subdistrict'], $profile['district'], $profile['coordinates']];
+                if (isset($result->password)) {
+                    executeQuery('UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?', [password_hash($result->password, PASSWORD_DEFAULT), $id]);
+                }
+                executeQuery('UPDATE users SET email = ?, role = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?', [$result->email, $result->role === 'Admin' ? 'admin' : 'user', $id]);
+                $existingProfile = fetch(executeQuery('SELECT profile_id FROM user_profiles WHERE user_id = ? ORDER BY profile_id DESC LIMIT 1', [$id]));
+                $profileValues = [$profile['name'], $profile['phone'], $profile['campus'], $profile['student_number'], $profile['subdistrict'], $profile['district'], $profile['coordinates']];
                 if ($existingProfile) {
+                    $profileId = (int) $existingProfile['profile_id'];
                     executeQuery(
-                        'UPDATE user_profiles SET name = ?, phone = ?, campus = ?, student_number = ?, preferences = ?, subdistrict = ?, district = ?, coordinates = ?, updated_at = CURRENT_TIMESTAMP WHERE profile_id = ?',
-                        [...$profileValues, (int) $existingProfile['profile_id']]
+                        'UPDATE user_profiles SET name = ?, phone = ?, campus = ?, student_number = ?, subdistrict = ?, district = ?, coordinates = ?, updated_at = CURRENT_TIMESTAMP WHERE profile_id = ?',
+                        [...$profileValues, $profileId]
                     );
                 } else {
-                    executeQuery(
-                        'INSERT INTO user_profiles (user_id, name, phone, campus, student_number, preferences, subdistrict, district, coordinates) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    $profileRow = fetch(executeQuery(
+                        'INSERT INTO user_profiles (user_id, name, phone, campus, student_number, subdistrict, district, coordinates) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING profile_id',
                         [$id, ...$profileValues]
-                    );
+                    ));
+                    $profileId = (int) $profileRow['profile_id'];
                 }
+                admin_sync_user_preferences($profileId, $preferenceIds);
 
                 if ($result->role === 'Mahasiswa') {
                     $reason = is_string($input['reason'] ?? null) ? trim($input['reason']) : '';

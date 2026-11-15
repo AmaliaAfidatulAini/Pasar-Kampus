@@ -45,10 +45,15 @@ $initial = strtoupper(substr($displayName, 0, 1));
             <div class="lp-nav-right-area">
                 <?php if ($session): ?>
                     <div id="lpHeaderAuth" class="lp-header-state">
-                        <a href="#faq" class="lp-help-link" onclick="handleHelpClick(event)">
-                            butuh bantuan?
-                        </a>
-
+                        <?php if (($session['role'] ?? '') === 'admin'): ?>
+                            <a href="<?= esc(route('/admin')) ?>" class="lp-btn-masuk">
+                                Dashboard
+                            </a>
+                        <?php else: ?>
+                            <a href="#faq" class="lp-help-link" onclick="handleHelpClick(event)">
+                                butuh bantuan?
+                            </a>
+                        <?php endif; ?>
                         <div class="lp-profile-wrapper">
                             <button type="button" id="lpProfileBtn" class="lp-profile-btn" onclick="toggleProfileDropdown(event)" aria-haspopup="true" aria-expanded="false" title="Menu Profil">
                                 <div class="lp-profile-circle" id="lpAvatarCircle">
