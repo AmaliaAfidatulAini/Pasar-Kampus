@@ -156,6 +156,28 @@ if (count($recommendations) < 4) {
             opacity: 0.85;
         }
 
+        .pk-btn-masuk {
+            background-color: #FFFFFF;
+            color: var(--pk-blue);
+            font-weight: 700;
+            font-size: 0.9rem;
+            padding: 8px 22px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .pk-btn-masuk:hover {
+            background-color: #F8FAFC;
+            color: var(--pk-navy);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
         /* 2. MAIN LAYOUT */
         .pk-main-wrapper {
             flex: 1;
@@ -663,8 +685,12 @@ if (count($recommendations) < 4) {
             </div>
 
             <nav class="pk-nav-links">
-                <a href="<?= route('/riwayat.php') ?>" class="pk-nav-link">Riwayat</a>
-                <a href="<?= route('/profil.php') ?>" class="pk-nav-link">Profil</a>
+                <?php if ($isLoggedIn): ?>
+                    <a href="<?= route('/riwayat.php') ?>" class="pk-nav-link">Riwayat</a>
+                    <a href="<?= route('/profil.php') ?>" class="pk-nav-link">Profil</a>
+                <?php else: ?>
+                    <a href="<?= route('/login') ?>" class="pk-btn-masuk">Masuk</a>
+                <?php endif; ?>
             </nav>
         </div>
     </header>
@@ -744,7 +770,11 @@ if (count($recommendations) < 4) {
 
                     <div class="pk-detail-actions">
                         <button type="button" class="pk-btn-report" onclick="openReportModal()">Laporkan</button>
-                        <button type="button" class="pk-btn-buy" onclick="openBuyModal()">Ajukan Pembelian</button>
+                        <?php if ($isLoggedIn): ?>
+                            <button type="button" class="pk-btn-buy" onclick="openBuyModal()">Ajukan Pembelian</button>
+                        <?php else: ?>
+                            <a href="<?= route('/login') ?>" class="pk-btn-buy" style="display: inline-flex; align-items: center; justify-content: center; text-decoration: none;">Ajukan Pembelian</a>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -872,7 +902,7 @@ if (count($recommendations) < 4) {
             updateActiveThumb();
         }
 
-        function nextThumb() {beta-test-advance-2026.git
+        function nextThumb() {
             activeIdx = (activeIdx + 1) % galleryImages.length;
             updateActiveThumb();
         }
@@ -885,6 +915,10 @@ if (count($recommendations) < 4) {
         }
 
         function openBuyModal() {
+            <?php if (!$isLoggedIn): ?>
+                window.location.href = '<?= route('/login') ?>';
+                return;
+            <?php endif; ?>
             document.getElementById('buyModal').classList.add('show');
         }
 

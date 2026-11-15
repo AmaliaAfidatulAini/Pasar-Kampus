@@ -1,4 +1,5 @@
 <?php
+$session = session_include('/login');
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -101,10 +102,10 @@
 
     <header class="pk-navbar">
         <div class="pk-nav-inner">
-            <a href="dashboard-penjual.php" class="pk-nav-logo">PasarKampus</a>
+            <a href="<?= route('/dashboard-utama.php') ?>" class="pk-nav-logo">PasarKampus</a>
             <div class="pk-nav-links">
-                <a href="riwayat.php">Riwayat</a>
-                <a href="profil.php">Profil</a>
+                <a href="<?= route('/riwayat.php') ?>">Riwayat</a>
+                <a href="<?= route('/profil.php') ?>">Profil</a>
             </div>
         </div>
     </header>
