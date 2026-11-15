@@ -28,7 +28,7 @@ BEGIN
     WHERE transaction_id = p_request_id;
 
     UPDATE products
-    SET status = 'Terjual',
+    SET status = 'SOLD',
         updated_at = CURRENT_TIMESTAMP
     WHERE product_id = p_product_id;
 END;
@@ -45,7 +45,7 @@ BEGIN
     WHERE transaction_id = p_request_id;
 
     UPDATE products
-    SET status = 'Tersedia',
+    SET status = 'ONSELL',
         updated_at = CURRENT_TIMESTAMP
     WHERE product_id = p_product_id;
 END;

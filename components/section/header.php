@@ -3,8 +3,16 @@
 $title = $title ?? "";
 // END OF COMPONENTS PROPS //
 $session = get_session();
-$displayName = $session['name'] ?? $session['email'] ?? 'Pengguna';
-$initial = strtoupper(substr($displayName, 0, 1));
+$profileName = ($session['role'] ?? '') === 'admin' ? 'Administrator' : 'No Name';
+if ($session && isset($session['user_id'])) {
+    $profile = executeQuery(
+        'SELECT name FROM user_profiles WHERE user_id = ? ORDER BY profile_id DESC LIMIT 1',
+        [$session['user_id']],
+        'fetch'
+    ) ?: [];
+$profileName = trim((string) ($profile['name'] ?? '')) ?: $profileName;
+}
+$initial = strtoupper(substr($profileName, 0, 1));
 ?>
 
 <!DOCTYPE html>
@@ -45,10 +53,15 @@ $initial = strtoupper(substr($displayName, 0, 1));
             <div class="lp-nav-right-area">
                 <?php if ($session): ?>
                     <div id="lpHeaderAuth" class="lp-header-state">
-                        <a href="#faq" class="lp-help-link" onclick="handleHelpClick(event)">
-                            butuh bantuan?
-                        </a>
-
+                        <?php if (($session['role'] ?? '') === 'admin'): ?>
+                            <a href="<?= esc(route('/admin')) ?>" class="lp-btn-masuk">
+                                Dashboard
+                            </a>
+                        <?php else: ?>
+                            <a href="#faq" class="lp-help-link" onclick="handleHelpClick(event)">
+                                butuh bantuan?
+                            </a>
+                        <?php endif; ?>
                         <div class="lp-profile-wrapper">
                             <button type="button" id="lpProfileBtn" class="lp-profile-btn" onclick="toggleProfileDropdown(event)" aria-haspopup="true" aria-expanded="false" title="Menu Profil">
                                 <div class="lp-profile-circle" id="lpAvatarCircle">
@@ -57,17 +70,25 @@ $initial = strtoupper(substr($displayName, 0, 1));
                             </button>
 
                             <div id="lpProfileDropdown" class="lp-profile-dropdown">
+                                <div style="padding: 10px 18px 12px; border-bottom: 1px solid #E2E8F0;">
+                                    <strong style="display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><?= esc($profileName) ?></strong>
+                                    <span style="display: block; color: #64748B; font-size: 0.82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><?= esc((string) ($session['email'] ?? '')) ?></span>
+                                </div>
                                 <a href="<?= route('/dashboard_penjual.php') ?>" class="lp-dropdown-item">
+                                    <i data-lucide="package" class="lp-dropdown-icon" aria-hidden="true"></i>
                                     <span>Daftar Barang</span>
                                 </a>
                                 <a href="<?= route('/pengajuan.php') ?>" class="lp-dropdown-item">
+                                    <i data-lucide="history" class="lp-dropdown-icon" aria-hidden="true"></i>
                                     <span>Riwayat Pengajuan</span>
                                 </a>
                                 <a href="<?= route('/profil.php') ?>" class="lp-dropdown-item">
+                                    <i data-lucide="user-round" class="lp-dropdown-icon" aria-hidden="true"></i>
                                     <span>Profil Pengguna</span>
                                 </a>
                                 <div class="lp-dropdown-divider"></div>
                                 <a href="<?= route('/logout') ?>" class="lp-dropdown-item lp-dropdown-logout" onclick="return confirm('Apakah Anda yakin ingin keluar dari akun PasarKampus?');">
+                                    <i data-lucide="log-out" class="lp-dropdown-icon" aria-hidden="true"></i>
                                     <span>Logout</span>
                                 </a>
                             </div>

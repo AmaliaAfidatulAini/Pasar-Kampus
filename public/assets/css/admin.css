@@ -75,7 +75,54 @@ body.admin-body {
     left: 0;
     z-index: 100;
     padding: 24px 18px 20px 18px;
-    transition: transform 0.3s ease;
+    transition: width 0.3s ease, padding 0.3s ease, transform 0.3s ease;
+}
+.admin-layout.sidebar-state-preload .admin-sidebar,
+.admin-layout.sidebar-state-preload .admin-main,
+.admin-layout.sidebar-state-preload .admin-mobile-toggle,
+.admin-layout.sidebar-state-preload .hamburger-line {
+    transition: none !important;
+}
+.admin-sidebar-overlay {
+    display: none;
+}
+.admin-layout.sidebar-collapsed .admin-sidebar {
+    width: 76px;
+    padding-inline: 12px;
+}
+.admin-layout.sidebar-collapsed .admin-main {
+    margin-left: 76px;
+}
+.admin-layout.sidebar-collapsed .admin-profile-info,
+.admin-layout.sidebar-collapsed .admin-nav-label {
+    display: none;
+}
+.admin-layout.sidebar-collapsed .admin-profile-box {
+    justify-content: center;
+    padding-inline: 0;
+}
+.admin-layout.sidebar-collapsed .admin-btn-logout,
+.admin-layout.sidebar-collapsed .admin-nav-link {
+    justify-content: center;
+    padding-inline: 0;
+}
+.admin-layout.sidebar-collapsed .admin-nav-link,
+.admin-layout.sidebar-collapsed .admin-btn-logout {
+    position: relative;
+}
+.admin-layout.sidebar-collapsed .admin-nav-link[aria-label]:hover::after,
+.admin-layout.sidebar-collapsed .admin-nav-link[aria-label]:focus-visible::after,
+.admin-layout.sidebar-collapsed .admin-btn-logout[aria-label]:hover::after,
+.admin-layout.sidebar-collapsed .admin-btn-logout[aria-label]:focus-visible::after {
+    content: attr(aria-label);
+    position: absolute;
+    left: calc(100% + 10px);
+    z-index: 2;
+    padding: 7px 10px;
+    border-radius: 6px;
+    background: var(--admin-primary-hover);
+    color: #FFFFFF;
+    white-space: nowrap;
 }
 
 /* Pojok Kiri Atas: Profile (Sesuai Wireframe Layout Dashboard Admin) */
@@ -1643,6 +1690,88 @@ body.admin-body {
         width: 14px;
         height: 14px;
         flex-shrink: 0;
+    }
+}
+.user-modal-card {
+    max-width: 900px;
+}
+
+.user-profile-divider {
+    margin: 2px 0 18px;
+    border: 0;
+    border-top: 1px solid var(--admin-border);
+}
+
+/* Keep account fields in one column; use the added width only for profile data. */
+.user-profile-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 20px;
+}
+
+.user-profile-grid .admin-form-group {
+    min-width: 0;
+}
+
+.user-preferences-group {
+    grid-column: 1 / -1;
+}
+
+.user-preferences-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 12px;
+}
+
+.user-preference-option {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    padding: 9px 11px;
+    border: 1px solid var(--admin-border);
+    border-radius: 8px;
+    color: var(--admin-text-main);
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.user-preference-option:hover {
+    border-color: var(--admin-primary);
+    background: #F8FAFC;
+}
+
+.user-preference-option input {
+    accent-color: var(--admin-primary);
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.user-role-options {
+    flex-direction: row;
+    gap: 12px;
+}
+
+.user-role-options .admin-radio-label {
+    flex: 1;
+}
+
+@media (max-width: 640px) {
+    .user-modal-card {
+        max-width: 100%;
+    }
+
+    .user-profile-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .user-preferences-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .user-role-options {
+        flex-direction: column;
     }
 }
 

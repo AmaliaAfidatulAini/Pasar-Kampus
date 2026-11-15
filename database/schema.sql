@@ -22,7 +22,6 @@ CREATE TABLE user_profiles (
     phone VARCHAR(50),
     campus VARCHAR(255),
     student_number VARCHAR(50),
-    preferences VARCHAR(255),
     subdistrict VARCHAR(255),
     district VARCHAR(200),
     coordinates VARCHAR(255),
@@ -47,6 +46,15 @@ CREATE TABLE categories (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE user_preferences (
+    profile_id INT NOT NULL,
+    category_id INT NOT NULL,
+    PRIMARY KEY (profile_id, category_id),
+    CONSTRAINT fk_user_preferences_profiles FOREIGN KEY (profile_id) REFERENCES user_profiles(profile_id) ON DELETE CASCADE,
+    CONSTRAINT fk_user_preferences_categories FOREIGN KEY (category_id) REFERENCES categories(categories_id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
 CREATE TABLE tags (
     id_tag SERIAL PRIMARY KEY,
@@ -64,7 +72,7 @@ CREATE TABLE products (
     price NUMERIC(19, 0) NOT NULL,
     original_price NUMERIC(19, 0),
     condition INT CHECK (condition BETWEEN 1 AND 4),
-    status VARCHAR(255),
+    status VARCHAR(255) DEFAULT 'ONSELL' CHECK (status IN ('ONSELL', 'SOLD')),
     moderation_note VARCHAR(255),
     delivery_methods VARCHAR(255),
     CONSTRAINT fk_products_users FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
