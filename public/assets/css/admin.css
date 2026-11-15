@@ -1534,6 +1534,18 @@ body.admin-body {
     color: #0F172A;
     font-weight: 700;
 }
+.admin-info-row-stacked {
+    display: block;
+}
+
+.barang-detail-description {
+    max-height: 88px;
+    margin-top: 6px;
+    overflow-y: auto;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    font-weight: 400;
+}
 
 /* Sub-table in detail modal (Riwayat Pengajuan) */
 .admin-subtable {
