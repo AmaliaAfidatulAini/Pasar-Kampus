@@ -131,6 +131,8 @@ $profileValue = static fn (string $value, string $fallback = '—'): string => $
         </div>
     <?php endif; ?>
 
+    <script src="https://cdn.jsdelivr.net/npm/lucide@1.72.0/dist/umd/lucide.min.js"></script>
+    <script>lucide.createIcons();</script>
     <!-- ================= SHARED HEADER / MODAL SCRIPT ================= -->
     <script>
         function toggleProfileDropdown(event) {
