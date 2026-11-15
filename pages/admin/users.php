@@ -3,6 +3,7 @@ role_include('admin');
 require_model('admin/users');
 admin_handle_user_query('/admin/users');
 admin_handle_user_post('/admin/users');
+$userPreferenceCategories = admin_user_preference_categories();
 $session = get_session();
 ?>
 <?php Component::flush(); ?>
@@ -54,7 +55,7 @@ $session = get_session();
                     <input type="email" name="email" id="userEmail" required class="admin-form-input" placeholder="mahasiswa@student.ub.ac.id">
                 </div>
                 <div class="admin-form-group">
-                    <label class="admin-form-label" for="userPassword">Kata Sandi <span class="req">*</span></label>
+                    <label class="admin-form-label" for="userPassword">Kata Sandi <span class="req" id="userPasswordRequired">*</span></label>
                     <input type="password" name="password" id="userPassword" required class="admin-form-input" placeholder="Kata sandi akun">
                 </div>
                 <div class="admin-form-group" id="userRoleGroup">
@@ -82,17 +83,27 @@ $session = get_session();
                         <label class="admin-form-label" for="userNim">NIM</label>
                         <input type="text" name="nim" id="userNim" maxlength="50" class="admin-form-input" placeholder="Nomor induk mahasiswa">
                     </div>
+                    <div class="admin-form-group user-preferences-group">
+                        <span class="admin-form-label" id="userPreferencesLabel">Preferensi Kategori</span>
+                        <div class="user-preferences-grid" role="group" aria-labelledby="userPreferencesLabel">
+                            <?php foreach ($userPreferenceCategories as $category): ?>
+                                <label class="user-preference-option">
+                                    <input type="checkbox" name="preference_categories[]" value="<?= (int) $category['id'] ?>">
+                                    <span><?= esc($category['name']) ?></span>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                        <?php if ($userPreferenceCategories === []): ?>
+                            <div class="admin-form-note">Belum ada kategori yang tersedia.</div>
+                        <?php endif; ?>
+                    </div>
                     <div class="admin-form-group">
-                        <label class="admin-form-label" for="userPreferences">Preferensi</label>
-                        <input type="text" name="preferences" id="userPreferences" maxlength="255" class="admin-form-input" placeholder="Preferensi pengguna">
+                        <label class="admin-form-label" for="userDistrict">Desa/Kelurahan</label>
+                        <input type="text" name="district" id="userDistrict" maxlength="200" class="admin-form-input" placeholder="Desa atau kelurahan">
                     </div>
                     <div class="admin-form-group">
                         <label class="admin-form-label" for="userSubdistrict">Kecamatan</label>
                         <input type="text" name="subdistrict" id="userSubdistrict" maxlength="255" class="admin-form-input" placeholder="Kecamatan">
-                    </div>
-                    <div class="admin-form-group">
-                        <label class="admin-form-label" for="userDistrict">Kabupaten / Kota</label>
-                        <input type="text" name="district" id="userDistrict" maxlength="200" class="admin-form-input" placeholder="Kabupaten atau kota">
                     </div>
                     <div class="admin-form-group">
                         <label class="admin-form-label" for="userCoordinates">Koordinat</label>
@@ -143,13 +154,16 @@ $session = get_session();
         field('phone').value = editing ? user.phone : '';
         field('nim').value = editing ? user.nim : '';
         field('campus').value = editing ? user.campus : '';
-        field('preferences').value = editing ? user.preferences : '';
+        const selectedPreferences = new Set(editing && Array.isArray(user.preferences) ? user.preferences.map(String) : []);
+        userForm.querySelectorAll('[name="preference_categories[]"]').forEach(checkbox => {
+            checkbox.checked = selectedPreferences.has(checkbox.value);
+        });
         field('subdistrict').value = editing ? user.subdistrict : '';
         field('district').value = editing ? user.district : '';
         field('coordinates').value = editing ? user.coordinates : '';
         field('email').value = editing ? user.email : '';
-        field('password').value = '';
-        field('password').required = true;
+        field('password').required = !editing;
+        document.getElementById('userPasswordRequired').hidden = editing;
         field('role').forEach(radio => {
             radio.checked = radio.value === (editing ? user.role : 'Mahasiswa');
             radio.disabled = false;

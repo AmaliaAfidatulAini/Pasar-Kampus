@@ -31,6 +31,25 @@ VALUES
 ('Pakaian'),
 ('Lainnya');
 
+INSERT INTO user_preferences (profile_id, category_id)
+SELECT profiles.profile_id, categories.categories_id
+FROM user_profiles profiles
+JOIN users ON users.user_id = profiles.user_id
+JOIN categories ON categories.category_name = preference_data.category_name
+JOIN (VALUES
+    ('fami@test.com', 'Buku'),
+    ('fami@test.com', 'ATK'),
+    ('sando@test.com', 'Buku'),
+    ('sando@test.com', 'Pakaian'),
+    ('rani.dummy@pasarkampus.local', 'Elektronik'),
+    ('rani.dummy@pasarkampus.local', 'ATK'),
+    ('bima.dummy@pasarkampus.local', 'Elektronik'),
+    ('bima.dummy@pasarkampus.local', 'Perlengkapan Kos'),
+    ('nisa.dummy@pasarkampus.local', 'Buku'),
+    ('nisa.dummy@pasarkampus.local', 'Elektronik')
+) AS preference_data(email, category_name) ON preference_data.email = users.email;
+
+
 -- Tag Dummy
 INSERT INTO tags (name_tag)
 VALUES

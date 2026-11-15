@@ -7,10 +7,16 @@ $session = get_session();
 $profile = [];
 if ($session !== null && isset($session['user_id'])) {
     $profile = fetch(executeQuery(
-        "SELECT name, phone, campus, subdistrict, district, preferences
-         FROM user_profiles
-         WHERE user_id = ?
-         ORDER BY profile_id DESC
+        "SELECT name, phone, campus, subdistrict, district,
+                COALESCE((
+                    SELECT string_agg(c.category_name, ', ' ORDER BY c.category_name)
+                    FROM user_preferences up
+                    JOIN categories c ON c.categories_id = up.category_id
+                    WHERE up.profile_id = p.profile_id
+                ), '') AS preferences
+         FROM user_profiles p
+         WHERE p.user_id = ?
+         ORDER BY p.profile_id DESC
          LIMIT 1",
         [$session['user_id']]
     )) ?: [];

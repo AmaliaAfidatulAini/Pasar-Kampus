@@ -178,11 +178,8 @@ $barang = fetchAll($stmt);
                         </div>
 
                         <div class="lp-badge-bubble lp-bubble-share" title="Barang digunakan kembali" style="top: 16%; right: 4%; left: auto; bottom: auto;">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M20 7h-7a4 4 0 0 0-4 4v2"/>
-                                <path d="m6 10 3 3 3-3"/>
-                                <path d="M4 17h7a4 4 0 0 0 4-4v-2"/>
-                                <path d="m18 14-3-3-3 3"/>
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                             </svg>
                         </div>
 
