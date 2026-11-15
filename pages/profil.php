@@ -1,5 +1,5 @@
 <?php
-$session = get_session();
+$session = session_include('/login');
 $userName = $session['name'] ?? 'Pengguna';
 $userEmail = $session['email'] ?? '';
 $userCampus = $session['campus'] ?? '';

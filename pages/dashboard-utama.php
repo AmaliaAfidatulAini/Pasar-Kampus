@@ -134,6 +134,28 @@ $allProducts = get_catalog_products();
             opacity: 0.85;
         }
 
+        .pk-btn-masuk {
+            background-color: #FFFFFF;
+            color: var(--pk-blue);
+            font-weight: 700;
+            font-size: 0.9rem;
+            padding: 8px 22px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .pk-btn-masuk:hover {
+            background-color: #F8FAFC;
+            color: var(--pk-navy);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
         /* 2. MAIN CONTAINER */
         .pk-main-wrapper {
             flex: 1;
@@ -800,8 +822,12 @@ $allProducts = get_catalog_products();
             </div>
 
             <nav class="pk-nav-links">
-                <a href="<?= route('/riwayat.php') ?>" class="pk-nav-link">Riwayat</a>
-                <a href="<?= route('/profil.php') ?>" class="pk-nav-link">Profil</a>
+                <?php if ($isLoggedIn): ?>
+                    <a href="<?= route('/riwayat.php') ?>" class="pk-nav-link">Riwayat</a>
+                    <a href="<?= route('/profil.php') ?>" class="pk-nav-link">Profil</a>
+                <?php else: ?>
+                    <a href="<?= route('/login') ?>" class="pk-btn-masuk">Masuk</a>
+                <?php endif; ?>
             </nav>
         </div>
     </header>
