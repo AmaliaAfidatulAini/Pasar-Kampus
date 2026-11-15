@@ -4,10 +4,11 @@ use Azolee\Validator\Validator;
 
 $session = get_session();
 if ($session) {
-    if (($session['role'] ?? '') === 'admin') {
-        redirect('/dashboard/index.php', 302);
+    $role = $session['role'] ?? '';
+    if ($role === 'admin') {
+        redirect('/admin', 302);
     } else {
-        redirect('/dashboard-utama.php', 302);
+        redirect('/', 302);
     }
 }
 
@@ -37,9 +38,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             create_session($user);
 
             if (($user['role'] ?? '') === 'admin') {
-                redirect('/dashboard/index.php', 302);
+                redirect('/admin', 302);
             } else {
-                redirect('/dashboard-utama.php', 302);
+                redirect('/', 302);
             }
         }
 
@@ -62,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body data-auth-page="login">
-    <?php include_component('flasher'); ?>
+    <?php Component::include('common/flasher'); ?>
 
     <main>
         <header>

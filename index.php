@@ -30,7 +30,8 @@ require_once BASE_PATH . '/core/session.php';
 require_once BASE_PATH . '/core/flash.php';
 require_once BASE_PATH . '/core/database.php';
 require_once BASE_PATH . '/core/storage.php';
-require_once BASE_PATH . '/core/catalog.php';
+require_once BASE_PATH . '/core/component.php';
+require_once BASE_PATH . '/core/models.php';
 
 // Start session
 session_start();
@@ -100,9 +101,9 @@ foreach ($candidates as $candidate) {
         break;
     }
 }
-
 if ($selectedPage === null) {
     $notFound();
 }
+
 
 require_once $selectedPage;
