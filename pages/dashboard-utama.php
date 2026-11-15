@@ -895,7 +895,7 @@ $allProducts = get_catalog_products();
         }
 
         .pk-footer-col h4 {
-            color: #FFFFFF;
+            color: #FBBF24;
             font-size: 0.95rem;
             font-weight: 700;
             margin-bottom: 14px;

@@ -31,6 +31,25 @@ VALUES
 ('Pakaian'),
 ('Lainnya');
 
+INSERT INTO user_preferences (profile_id, category_id)
+SELECT profiles.profile_id, categories.categories_id
+FROM user_profiles profiles
+JOIN users ON users.user_id = profiles.user_id
+JOIN categories ON categories.category_name = preference_data.category_name
+JOIN (VALUES
+    ('fami@test.com', 'Buku'),
+    ('fami@test.com', 'ATK'),
+    ('sando@test.com', 'Buku'),
+    ('sando@test.com', 'Pakaian'),
+    ('rani.dummy@pasarkampus.local', 'Elektronik'),
+    ('rani.dummy@pasarkampus.local', 'ATK'),
+    ('bima.dummy@pasarkampus.local', 'Elektronik'),
+    ('bima.dummy@pasarkampus.local', 'Perlengkapan Kos'),
+    ('nisa.dummy@pasarkampus.local', 'Buku'),
+    ('nisa.dummy@pasarkampus.local', 'Elektronik')
+) AS preference_data(email, category_name) ON preference_data.email = users.email;
+
+
 -- Tag Dummy
 INSERT INTO tags (name_tag)
 VALUES
@@ -59,20 +78,16 @@ VALUES
 INSERT INTO products (user_id, category_id, item_name, description, price, original_price, condition, status, moderation_note, delivery_methods)
 SELECT owners.user_id, categories.categories_id, product_data.item_name, product_data.description, product_data.price, product_data.original_price, product_data.condition, product_data.status, product_data.moderation_note, product_data.delivery_methods
 FROM (VALUES
-    ('fami@test.com', 'Buku', 'Buku Algoritma dan Pemrograman', 'Buku kuliah edisi terbaru, kondisi bersih dan lengkap.', 85000, 120000, 2, 'Tersedia', NULL, 'COD'),
-    ('sando@test.com', 'Buku', 'Novel Laut Bercerita', 'Novel bekas terawat, beberapa halaman diberi penanda.', 55000, 90000, 2, 'Tersedia', NULL, 'COD'),
-    ('rani.dummy@pasarkampus.local', 'ATK', 'Kalkulator Scientific', 'Kalkulator scientific berfungsi normal, baterai baru.', 95000, 150000, 2, 'Tersedia', NULL, 'COD'),
-    ('bima.dummy@pasarkampus.local', 'Elektronik', 'Keyboard Mechanical 87 Keys', 'Keyboard mechanical dengan kabel USB-C dan keycap lengkap.', 320000, 450000, 2, 'Tersedia', NULL, 'COD'),
-    ('nisa.dummy@pasarkampus.local', 'Elektronik', 'Headset Kabel', 'Headset kabel dengan mikrofon, suara kiri dan kanan normal.', 70000, 110000, 3, 'Tersedia', NULL, 'COD'),
-    ('fami@test.com', 'Perlengkapan Kos', 'Lampu Meja Belajar', 'Lampu meja LED dengan tiga tingkat kecerahan.', 60000, 95000, 2, 'Tersedia', NULL, 'COD'),
-    ('sando@test.com', 'Pakaian', 'Jaket Kampus Navy', 'Jaket kampus ukuran L, sudah dicuci dan siap pakai.', 125000, 220000, 2, 'Tersedia', NULL, 'COD'),
-    ('rani.dummy@pasarkampus.local', 'Perlengkapan Kos', 'Rak Buku Susun', 'Rak buku tiga tingkat, rangka kokoh dan mudah dibongkar.', 140000, 200000, 2, 'Tersedia', NULL, 'COD'),
-    ('bima.dummy@pasarkampus.local', 'Elektronik', 'Mouse Wireless', 'Mouse wireless dengan dongle USB, kondisi normal.', 80000, 130000, 3, 'Dihapus', 'Foto produk tidak sesuai dengan barang yang ditawarkan.', 'COD'),
-    ('nisa.dummy@pasarkampus.local', 'Buku', 'Komik Petualangan Volume 1-5', 'Paket lima volume komik, sampul masih utuh.', 100000, 160000, 2, 'Tersedia', NULL, 'COD'),
-    ('fami@test.com', 'Elektronik', 'Keyboard Logiac - Silver', 'Dirancang khusus untuk menunjang produktivitas tinggi, keyboard wireless dengan balutan warna silver elegan dan desain slim yang hemat tempat.', 90000, 150000, 2, 'Tersedia', NULL, 'COD'),
-    ('fami@test.com', 'Buku', 'Buku Informatika', 'Buku pengantar informatika untuk mahasiswa semester awal, kondisi masih sangat terawat dan bersih.', 35000, 60000, 2, 'Proses', NULL, 'COD'),
-    ('fami@test.com', 'Pakaian', 'Jaket Adibas', 'Jaket olahraga kasual ukuran L, bahan fleece nyaman dan hangat.', 80000, 150000, 2, 'Ditolak', 'Dihapus Admin (Melanggar Aturan)', 'COD'),
-    ('fami@test.com', 'Elektronik', 'Kipas Angin', 'Kipas angin meja kondisi normal putaran kencang, cocok untuk kebutuhan kamar kos.', 95000, 140000, 2, 'Terjual', NULL, 'COD')
+    ('fami@test.com', 'Buku', 'Buku Algoritma dan Pemrograman', 'Buku kuliah edisi terbaru, kondisi bersih dan lengkap.', 85000, 120000, 2, 'ONSELL', NULL, 'COD'),
+    ('sando@test.com', 'Buku', 'Novel Laut Bercerita', 'Novel bekas terawat, beberapa halaman diberi penanda.', 55000, 90000, 2, 'ONSELL', NULL, 'COD'),
+    ('rani.dummy@pasarkampus.local', 'ATK', 'Kalkulator Scientific', 'Kalkulator scientific berfungsi normal, baterai baru.', 95000, 150000, 2, 'ONSELL', NULL, 'COD'),
+    ('bima.dummy@pasarkampus.local', 'Elektronik', 'Keyboard Mechanical 87 Keys', 'Keyboard mechanical dengan kabel USB-C dan keycap lengkap.', 320000, 450000, 2, 'ONSELL', NULL, 'COD'),
+    ('nisa.dummy@pasarkampus.local', 'Elektronik', 'Headset Kabel', 'Headset kabel dengan mikrofon, suara kiri dan kanan normal.', 70000, 110000, 3, 'ONSELL', NULL, 'COD'),
+    ('fami@test.com', 'Perlengkapan Kos', 'Lampu Meja Belajar', 'Lampu meja LED dengan tiga tingkat kecerahan.', 60000, 95000, 2, 'ONSELL', NULL, 'COD'),
+    ('sando@test.com', 'Pakaian', 'Jaket Kampus Navy', 'Jaket kampus ukuran L, sudah dicuci dan siap pakai.', 125000, 220000, 2, 'ONSELL', NULL, 'COD'),
+    ('rani.dummy@pasarkampus.local', 'Perlengkapan Kos', 'Rak Buku Susun', 'Rak buku tiga tingkat, rangka kokoh dan mudah dibongkar.', 140000, 200000, 2, 'ONSELL', NULL, 'COD'),
+    ('bima.dummy@pasarkampus.local', 'Elektronik', 'Mouse Wireless', 'Mouse wireless dengan dongle USB, kondisi normal.', 80000, 130000, 3, 'SOLD', 'Foto produk tidak sesuai dengan barang yang ditawarkan.', 'COD'),
+    ('nisa.dummy@pasarkampus.local', 'Buku', 'Komik Petualangan Volume 1-5', 'Paket lima volume komik, sampul masih utuh.', 100000, 160000, 2, 'ONSELL', NULL, 'COD')
 ) AS product_data(owner_email, category_name, item_name, description, price, original_price, condition, status, moderation_note, delivery_methods)
 JOIN users owners ON owners.email = product_data.owner_email
 JOIN categories ON categories.category_name = product_data.category_name;
