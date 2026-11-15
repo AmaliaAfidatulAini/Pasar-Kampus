@@ -64,7 +64,7 @@ CREATE TABLE products (
     price NUMERIC(19, 0) NOT NULL,
     original_price NUMERIC(19, 0),
     condition INT CHECK (condition BETWEEN 1 AND 4),
-    status VARCHAR(255),
+    status VARCHAR(255) DEFAULT 'ONSELL' CHECK (status IN 'ONSELL', 'SOLD'),
     moderation_note VARCHAR(255),
     delivery_methods VARCHAR(255),
     CONSTRAINT fk_products_users FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
