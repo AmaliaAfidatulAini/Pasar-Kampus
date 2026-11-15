@@ -3,6 +3,8 @@ require_model('catalog');
 $session = get_session();
 $isLoggedIn = !empty($session);
 $userName = $session['name'] ?? 'Pengguna';
+$displayName = $session['name'] ?? $session['email'] ?? 'Pengguna';
+$initial = strtoupper(substr($displayName, 0, 1));
 $allProducts = get_catalog_products();
 ?>
 <!DOCTYPE html>
@@ -133,6 +135,196 @@ $allProducts = get_catalog_products();
 
         .pk-nav-link:hover {
             opacity: 0.85;
+        }
+
+        .pk-btn-masuk {
+            background-color: #FFFFFF;
+            color: var(--pk-blue);
+            font-weight: 700;
+            font-size: 0.9rem;
+            padding: 8px 22px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .pk-btn-masuk:hover {
+            background-color: #F8FAFC;
+            color: var(--pk-navy);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Profile Dropdown & Avatar */
+        .lp-profile-wrapper {
+            position: relative;
+        }
+
+        .lp-profile-btn {
+            background: transparent;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            outline: none;
+        }
+
+        .lp-profile-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #FFFFFF;
+            border: 2px solid rgba(255, 255, 255, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            color: var(--pk-blue);
+            font-weight: 700;
+            font-size: 1rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+            transition: all 0.2s ease;
+        }
+
+        .lp-profile-btn:hover .lp-profile-circle,
+        .lp-profile-btn:focus .lp-profile-circle {
+            border-color: #BFDBFE;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+        }
+
+        .lp-avatar-initial {
+            text-transform: uppercase;
+        }
+
+        .lp-profile-dropdown {
+            position: absolute;
+            top: calc(100% + 14px);
+            right: 0;
+            width: 230px;
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 12px;
+            box-shadow: 0 12px 30px -6px rgba(15, 23, 42, 0.16), 0 4px 10px rgba(0, 0, 0, 0.05);
+            padding: 8px 0;
+            z-index: 1000;
+            display: none;
+            animation: lpDropdownPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .lp-profile-dropdown.show {
+            display: block;
+        }
+
+        .lp-profile-dropdown::before {
+            content: '';
+            position: absolute;
+            top: -7px;
+            right: 14px;
+            width: 12px;
+            height: 12px;
+            background: #FFFFFF;
+            border-left: 1px solid #E2E8F0;
+            border-top: 1px solid #E2E8F0;
+            transform: rotate(45deg);
+        }
+
+        @keyframes lpDropdownPop {
+            from {
+                opacity: 0;
+                transform: translateY(-8px) scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .lp-dropdown-header {
+            padding: 8px 18px 10px;
+            border-bottom: 1px solid #F1F5F9;
+        }
+
+        .lp-dropdown-user-name {
+            font-weight: 700;
+            font-size: 0.92rem;
+            color: #0F172A;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .lp-dropdown-user-email {
+            font-size: 0.78rem;
+            color: #64748B;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .lp-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 11px 18px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #1E293B;
+            text-decoration: none;
+            background: transparent;
+            border: none;
+            text-align: left;
+            cursor: pointer;
+            font-family: inherit;
+            box-sizing: border-box;
+            transition: all 0.15s ease;
+        }
+
+        .lp-dropdown-item:hover {
+            background-color: #F8FAFC;
+            color: #1D356D;
+            padding-left: 22px;
+        }
+
+        .lp-dropdown-item svg {
+            color: #64748B;
+            flex-shrink: 0;
+            transition: color 0.15s ease;
+        }
+
+        .lp-dropdown-item:hover svg {
+            color: #1D356D;
+        }
+
+        .lp-dropdown-divider {
+            height: 1px;
+            background-color: #E2E8F0;
+            margin: 6px 0;
+        }
+
+        .lp-dropdown-logout {
+            color: #DC2626;
+        }
+
+        .lp-dropdown-logout svg {
+            color: #DC2626;
+        }
+
+        .lp-dropdown-logout:hover {
+            background-color: #FEF2F2;
+            color: #B91C1C;
+        }
+
+        .lp-dropdown-logout:hover svg {
+            color: #B91C1C;
         }
 
         /* 2. MAIN CONTAINER */
@@ -801,8 +993,59 @@ $allProducts = get_catalog_products();
             </div>
 
             <nav class="pk-nav-links">
-                <a href="<?= route('/riwayat.php') ?>" class="pk-nav-link">Riwayat</a>
-                <a href="<?= route('/profil.php') ?>" class="pk-nav-link">Profil</a>
+                <?php if ($isLoggedIn): ?>
+                    <div class="lp-profile-wrapper">
+                        <button type="button" id="lpProfileBtn" class="lp-profile-btn" onclick="toggleProfileDropdown(event)" aria-haspopup="true" aria-expanded="false" title="Menu Profil">
+                            <div class="lp-profile-circle" id="lpAvatarCircle">
+                                <span id="lpAvatarInitial" class="lp-avatar-initial"><?= esc($initial) ?></span>
+                            </div>
+                        </button>
+
+                        <div id="lpProfileDropdown" class="lp-profile-dropdown">
+                            <div class="lp-dropdown-header">
+                                <div class="lp-dropdown-user-name"><?= esc($displayName) ?></div>
+                                <div class="lp-dropdown-user-email"><?= esc($session['email'] ?? '') ?></div>
+                            </div>
+                            <div class="lp-dropdown-divider"></div>
+                            <a href="<?= route('/dashboard_penjual.php') ?>" class="lp-dropdown-item">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                                </svg>
+                                <span>Daftar Barang</span>
+                            </a>
+                            <a href="<?= route('/pengajuan.php') ?>" class="lp-dropdown-item">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                </svg>
+                                <span>Riwayat Pengajuan</span>
+                            </a>
+                            <a href="<?= route('/profil.php') ?>" class="lp-dropdown-item">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                <span>Profil Pengguna</span>
+                            </a>
+                            <div class="lp-dropdown-divider"></div>
+                            <a href="<?= route('/logout') ?>" class="lp-dropdown-item lp-dropdown-logout" onclick="return confirm('Apakah Anda yakin ingin keluar dari akun PasarKampus?');">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                    <polyline points="16 17 21 12 16 7"></polyline>
+                                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                                </svg>
+                                <span>Logout</span>
+                            </a>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <a href="<?= route('/login') ?>" class="pk-btn-masuk">Masuk</a>
+                <?php endif; ?>
             </nav>
         </div>
     </header>
@@ -1251,6 +1494,34 @@ $allProducts = get_catalog_products();
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#039;');
         }
+
+        function toggleProfileDropdown(event) {
+            if (event) event.stopPropagation();
+            const dropdown = document.getElementById('lpProfileDropdown');
+            const btn = document.getElementById('lpProfileBtn');
+            if (!dropdown) return;
+
+            const isShown = dropdown.classList.contains('show');
+            dropdown.classList.toggle('show', !isShown);
+            if (btn) btn.setAttribute('aria-expanded', isShown ? 'false' : 'true');
+        }
+
+        function closeProfileDropdown() {
+            const dropdown = document.getElementById('lpProfileDropdown');
+            const btn = document.getElementById('lpProfileBtn');
+            if (dropdown) dropdown.classList.remove('show');
+            if (btn) btn.setAttribute('aria-expanded', 'false');
+        }
+
+        document.addEventListener('click', (event) => {
+            const dropdown = document.getElementById('lpProfileDropdown');
+            const btn = document.getElementById('lpProfileBtn');
+            if (dropdown && dropdown.classList.contains('show')) {
+                if (!dropdown.contains(event.target) && (!btn || !btn.contains(event.target))) {
+                    closeProfileDropdown();
+                }
+            }
+        });
     </script>
 </body>
 </html>

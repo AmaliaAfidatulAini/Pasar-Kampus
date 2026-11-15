@@ -62,15 +62,15 @@ $initial = strtoupper(substr($displayName, 0, 1));
                             </button>
 
                             <div id="lpProfileDropdown" class="lp-profile-dropdown">
-                                <a href="<?= route('/dashboard-penjual.php') ?>" class="lp-dropdown-item">
+                                <a href="<?= route('/dashboard_penjual.php') ?>" class="lp-dropdown-item">
                                     <span>Daftar Barang</span>
                                 </a>
-                                <a href="<?= route('/riwayat.php') ?>" class="lp-dropdown-item">
+                                <a href="<?= route('/pengajuan.php') ?>" class="lp-dropdown-item">
                                     <span>Riwayat Pengajuan</span>
                                 </a>
-                                <button type="button" class="lp-dropdown-item" onclick="openProfileModal()">
+                                <a href="<?= route('/profil.php') ?>" class="lp-dropdown-item">
                                     <span>Profil Pengguna</span>
-                                </button>
+                                </a>
                                 <div class="lp-dropdown-divider"></div>
                                 <a href="<?= route('/logout') ?>" class="lp-dropdown-item lp-dropdown-logout" onclick="return confirm('Apakah Anda yakin ingin keluar dari akun PasarKampus?');">
                                     <span>Logout</span>

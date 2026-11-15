@@ -1,5 +1,5 @@
 <?php
-
+$session = session_include('/login');
 ?>
 <!DOCTYPE html>
 <html lang="id">
