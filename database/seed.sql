@@ -68,7 +68,11 @@ FROM (VALUES
     ('sando@test.com', 'Pakaian', 'Jaket Kampus Navy', 'Jaket kampus ukuran L, sudah dicuci dan siap pakai.', 125000, 220000, 2, 'Tersedia', NULL, 'COD'),
     ('rani.dummy@pasarkampus.local', 'Perlengkapan Kos', 'Rak Buku Susun', 'Rak buku tiga tingkat, rangka kokoh dan mudah dibongkar.', 140000, 200000, 2, 'Tersedia', NULL, 'COD'),
     ('bima.dummy@pasarkampus.local', 'Elektronik', 'Mouse Wireless', 'Mouse wireless dengan dongle USB, kondisi normal.', 80000, 130000, 3, 'Dihapus', 'Foto produk tidak sesuai dengan barang yang ditawarkan.', 'COD'),
-    ('nisa.dummy@pasarkampus.local', 'Buku', 'Komik Petualangan Volume 1-5', 'Paket lima volume komik, sampul masih utuh.', 100000, 160000, 2, 'Tersedia', NULL, 'COD')
+    ('nisa.dummy@pasarkampus.local', 'Buku', 'Komik Petualangan Volume 1-5', 'Paket lima volume komik, sampul masih utuh.', 100000, 160000, 2, 'Tersedia', NULL, 'COD'),
+    ('fami@test.com', 'Elektronik', 'Keyboard Logiac - Silver', 'Dirancang khusus untuk menunjang produktivitas tinggi, keyboard wireless dengan balutan warna silver elegan dan desain slim yang hemat tempat.', 90000, 150000, 2, 'Tersedia', NULL, 'COD'),
+    ('fami@test.com', 'Buku', 'Buku Informatika', 'Buku pengantar informatika untuk mahasiswa semester awal, kondisi masih sangat terawat dan bersih.', 35000, 60000, 2, 'Proses', NULL, 'COD'),
+    ('fami@test.com', 'Pakaian', 'Jaket Adibas', 'Jaket olahraga kasual ukuran L, bahan fleece nyaman dan hangat.', 80000, 150000, 2, 'Ditolak', 'Dihapus Admin (Melanggar Aturan)', 'COD'),
+    ('fami@test.com', 'Elektronik', 'Kipas Angin', 'Kipas angin meja kondisi normal putaran kencang, cocok untuk kebutuhan kamar kos.', 95000, 140000, 2, 'Terjual', NULL, 'COD')
 ) AS product_data(owner_email, category_name, item_name, description, price, original_price, condition, status, moderation_note, delivery_methods)
 JOIN users owners ON owners.email = product_data.owner_email
 JOIN categories ON categories.category_name = product_data.category_name;
@@ -95,10 +99,39 @@ FROM (VALUES
     ('Buku Kuliah', 'Rak Buku Susun'),
     ('Aksesoris', 'Mouse Wireless'),
     ('Komik', 'Komik Petualangan Volume 1-5'),
-    ('Hobi', 'Komik Petualangan Volume 1-5')
+    ('Hobi', 'Komik Petualangan Volume 1-5'),
+    ('Keyboard', 'Keyboard Logiac - Silver'),
+    ('Aksesoris', 'Keyboard Logiac - Silver'),
+    ('Buku Kuliah', 'Buku Informatika'),
+    ('Catatan', 'Buku Informatika'),
+    ('Fashion', 'Jaket Adibas'),
+    ('Aksesoris', 'Jaket Adibas'),
+    ('Kamar Kos', 'Kipas Angin'),
+    ('Elektronik', 'Kipas Angin')
 ) AS tag_data(tag_name, item_name)
 JOIN tags ON tags.name_tag = tag_data.tag_name
 JOIN products AS product_rows ON product_rows.item_name = tag_data.item_name;
+
+-- Attachment Dummy
+INSERT INTO attachments (product_id, attachment_type, file_path, file_name, file_type, file_size)
+SELECT product_rows.product_id, attachment_data.attachment_type, attachment_data.file_path, attachment_data.file_name, attachment_data.file_type, attachment_data.file_size
+FROM (VALUES
+    ('Buku Algoritma dan Pemrograman', 1, 'https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&q=80&w=800', 'buku-algoritma.jpg', 'image/jpeg', 204800),
+    ('Novel Laut Bercerita', 1, 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=800', 'novel-laut-bercerita.jpg', 'image/jpeg', 195400),
+    ('Kalkulator Scientific', 1, 'https://images.unsplash.com/photo-1611125832047-1d7ad1e8e48f?auto=format&fit=crop&q=80&w=800', 'kalkulator-scientific.jpg', 'image/jpeg', 152000),
+    ('Keyboard Mechanical 87 Keys', 1, 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800', 'keyboard-mechanical-87.jpg', 'image/jpeg', 225000),
+    ('Headset Kabel', 1, 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=800', 'headset-kabel.jpg', 'image/jpeg', 181000),
+    ('Lampu Meja Belajar', 1, 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&q=80&w=800', 'lampu-meja-belajar.jpg', 'image/jpeg', 145000),
+    ('Jaket Kampus Navy', 1, 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&q=80&w=800', 'jaket-kampus-navy.jpg', 'image/jpeg', 210000),
+    ('Rak Buku Susun', 1, 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&q=80&w=800', 'rak-buku-susun.jpg', 'image/jpeg', 198000),
+    ('Mouse Wireless', 1, 'https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&q=80&w=800', 'mouse-wireless.jpg', 'image/jpeg', 135000),
+    ('Komik Petualangan Volume 1-5', 1, 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&q=80&w=800', 'komik-petualangan.jpg', 'image/jpeg', 179000),
+    ('Keyboard Logiac - Silver', 1, 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=300', 'keyboard-logiac-silver.jpg', 'image/jpeg', 184520),
+    ('Buku Informatika', 1, 'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=300', 'buku-informatika.jpg', 'image/jpeg', 145230),
+    ('Jaket Adibas', 1, 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300', 'jaket-adibas.jpg', 'image/jpeg', 198400),
+    ('Kipas Angin', 1, 'https://images.unsplash.com/photo-1618941721653-9652a23077e6?w=300', 'kipas-angin.jpg', 'image/jpeg', 162100)
+) AS attachment_data(item_name, attachment_type, file_path, file_name, file_type, file_size)
+JOIN products AS product_rows ON product_rows.item_name = attachment_data.item_name;
 
 -- Request Dummy
 INSERT INTO requests (user_id, product_id, completed_date, status, meeting_point, created_at)
