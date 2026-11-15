@@ -945,7 +945,6 @@ $allProducts = get_catalog_products();
             gap: 12px;
         }
 
-        //================= RESPONSIVE DESIGN ================= -->
         @media (min-width: 992px) and (max-width: 1180px) {
             .pk-hero-banner {
                 grid-template-columns: 1fr 1fr;
