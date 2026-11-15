@@ -40,11 +40,6 @@ Component::include('admin/header', [
             <input type="hidden" name="action" value="update-product">
             <input type="hidden" id="editBarangId" name="id">
             <div class="admin-modal-body">
-                <div class="admin-info-box">
-                    <div class="admin-info-box-title">Informasi Barang</div>
-                    <div class="admin-info-row"><span class="admin-info-label">Nama Barang:</span><span id="editBarangNamaView" class="admin-info-value"></span></div>
-                    <div class="admin-info-row"><span class="admin-info-label">Penjual:</span><span id="editBarangPenjualView" class="admin-info-value"></span></div>
-                </div>
                 <div class="admin-form-group">
                     <span class="admin-form-label">Tindakan Admin</span>
                     <div class="admin-radio-group">
@@ -74,8 +69,13 @@ Component::include('admin/header', [
         <div class="admin-modal-body">
             <div class="admin-info-box">
                 <div class="admin-info-box-title">Informasi Barang</div>
+                <div class="admin-info-row"><span class="admin-info-label">ID Barang:</span><span id="detailBarangId" class="admin-info-value"></span></div>
                 <div class="admin-info-row"><span class="admin-info-label">Nama Barang:</span><span id="detailBarangNama" class="admin-info-value"></span></div>
                 <div class="admin-info-row"><span class="admin-info-label">Penjual:</span><span id="detailBarangPenjual" class="admin-info-value"></span></div>
+                <div class="admin-info-row admin-info-row-stacked"><span class="admin-info-label">Deskripsi:</span><div id="detailBarangDescription" class="admin-info-value barang-detail-description"></div></div>
+                <div class="admin-info-row"><span class="admin-info-label">Harga:</span><span id="detailBarangPrice" class="admin-info-value"></span></div>
+                <div class="admin-info-row"><span class="admin-info-label">Harga Asli:</span><span id="detailBarangOriginalPrice" class="admin-info-value"></span></div>
+                <div class="admin-info-row"><span class="admin-info-label">Metode Pengiriman:</span><span id="detailBarangDeliveryMethod" class="admin-info-value"></span></div>
                 <div class="admin-info-row"><span class="admin-info-label">Status Barang:</span><span id="detailBarangStatus" class="admin-info-value"></span></div>
             </div>
             <div class="barang-request-section">
@@ -111,17 +111,24 @@ Component::include('admin/header', [
 
     function openEditBarang(product) {
         document.getElementById('editBarangId').value = product.id;
-        document.getElementById('editBarangNamaView').textContent = product.nama || '-';
-        document.getElementById('editBarangPenjualView').textContent = product.penjual || '-';
-        document.querySelectorAll('#modalEditBarang input[name="status"]').forEach(input => input.checked = input.value === product.status);
+        document.querySelectorAll('#modalEditBarang input[name="status"]').forEach(input => {
+            input.checked = input.value === product.status;
+        });
         document.getElementById('editBarangAlasan').value = product.note || '';
         openModal('modalEditBarang');
     }
 
     function openDetailBarang(product) {
-        document.getElementById('detailBarangNama').textContent = `${product.nama || '-'} (ID: ${product.id})`;
+        document.getElementById('detailBarangId').textContent = product.id || '-';
+        document.getElementById('detailBarangNama').textContent = product.nama || '-';
         document.getElementById('detailBarangPenjual').textContent = product.penjual || '-';
-        document.getElementById('detailBarangStatus').textContent = product.status || '-';
+        document.getElementById('detailBarangDescription').textContent = product.description || '-';
+        document.getElementById('detailBarangPrice').textContent = product.price == null ? '-' : `Rp ${Number(product.price).toLocaleString('id-ID')}`;
+        document.getElementById('detailBarangOriginalPrice').textContent = product.original_price == null ? '-' : `Rp ${Number(product.original_price).toLocaleString('id-ID')}`;
+        document.getElementById('detailBarangDeliveryMethod').textContent = product.delivery_method || '-';
+        const status = document.getElementById('detailBarangStatus');
+        status.textContent = product.status || '-';
+        status.className = `admin-badge ${product.status === 'ONSELL' ? 'admin-badge-success' : product.status === 'SOLD' ? 'admin-badge-danger' : 'admin-badge-warning'}`;
         const body = document.getElementById('detailBarangPengajuanBody');
         body.replaceChildren();
         const requests = Array.isArray(product.requests) ? product.requests : [];

@@ -1,6 +1,60 @@
 <?php
-$session = get_session();
+$session = session_include('/login');
 $userName = $session['name'] ?? 'Pengguna';
+$userId = $session['user_id'] ?? null;
+
+$dbRiwayat = [];
+if ($userId) {
+    try {
+        $dbRiwayat = executeQuery(
+            "SELECT r.transaction_id AS id,
+                    COALESCE(p.item_name, 'Barang') AS \"namaBarang\",
+                    COALESCE(sp.name, 'Penjual') AS penjual,
+                    COALESCE(sp.name, 'Penjual') AS \"penjualDisplay\",
+                    TO_CHAR(r.created_at, 'DD Month YYYY') AS tanggal,
+                    COALESCE(p.price, 0) AS harga,
+                    CASE 
+                        WHEN r.status = 'COMPLETED' THEN 'Selesai'
+                        WHEN r.status = 'PROCESS' THEN 'Proses'
+                        WHEN r.status = 'CANCELLED' THEN 'Dibatalkan'
+                        ELSE 'Pending'
+                    END AS status,
+                    COALESCE(sp.phone, '081234567890') AS \"teleponPenjual\",
+                    TO_CHAR(r.completed_date, 'DD Month YYYY') AS \"tanggalSelesai\"
+             FROM requests r
+             LEFT JOIN products p ON p.product_id = r.product_id
+             LEFT JOIN user_profiles sp ON sp.user_id = p.user_id
+             WHERE r.user_id = :user_id
+             ORDER BY r.transaction_id DESC",
+            ['user_id' => $userId],
+            'fetchAll'
+        );
+        foreach ($dbRiwayat as &$dr) {
+            $dr['id'] = (int) $dr['id'];
+            $dr['harga'] = (int) $dr['harga'];
+        }
+        unset($dr);
+    } catch (Throwable $e) {
+        $dbRiwayat = [];
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'cancel')) {
+    $cancelId = (int) ($_POST['transaction_id'] ?? 0);
+    if ($cancelId && $userId) {
+        try {
+            executeQuery(
+                "UPDATE requests SET status = 'CANCELLED', updated_at = CURRENT_TIMESTAMP WHERE transaction_id = :id AND user_id = :uid",
+                ['id' => $cancelId, 'uid' => $userId]
+            );
+        } catch (Throwable $e) {}
+    }
+    if (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json')) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true]);
+        exit;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -14,6 +68,7 @@ $userName = $session['name'] ?? 'Pengguna';
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- CSS Stylesheet -->
     <link rel="stylesheet" href="<?= route('/css/style.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/flasher.css') ?>">
 
     <style>
         :root {
@@ -320,7 +375,7 @@ $userName = $session['name'] ?? 'Pengguna';
         }
 
         .pk-badge-dibatalkan {
-            background-color: var(--pk-red);
+            background-color: #64748B;
             color: #FFFFFF;
             font-size: 0.75rem;
             font-weight: 700;
@@ -630,6 +685,7 @@ $userName = $session['name'] ?? 'Pengguna';
     </style>
 </head>
 <body class="pk-riwayat-body">
+    <?php Component::include('common/flasher'); ?>
 
     <!-- ================= 1. TOP NAVBAR ================= -->
     <header class="pk-navbar">
@@ -759,7 +815,9 @@ $userName = $session['name'] ?? 'Pengguna';
     </footer>
 
     <!-- JavaScript logic -->
-    <script>
+   <script>
+    // Data Seed Default
+    const dbRiwayatList = <?= json_encode($dbRiwayat) ?>;
     const defaultRiwayatList = [
         {
             id: 12,
@@ -806,12 +864,29 @@ $userName = $session['name'] ?? 'Pengguna';
     ];
 
     function getRiwayatData() {
+        let list = null;
         const stored = localStorage.getItem('pk_user_riwayat');
         if (stored) {
-            try { return JSON.parse(stored); } catch(e) {}
+            try { list = JSON.parse(stored); } catch(e) { list = null; }
         }
-        localStorage.setItem('pk_user_riwayat', JSON.stringify(defaultRiwayatList));
-        return defaultRiwayatList;
+        if (!Array.isArray(list) || list.length === 0) {
+            list = [...defaultRiwayatList];
+        }
+
+        // Sinkronisasi data dari database jika ada
+        if (Array.isArray(dbRiwayatList) && dbRiwayatList.length > 0) {
+            dbRiwayatList.forEach(dbItem => {
+                const existingIndex = list.findIndex(item => item.id === dbItem.id);
+                if (existingIndex === -1) {
+                    list.unshift(dbItem);
+                } else {
+                    list[existingIndex] = { ...list[existingIndex], ...dbItem };
+                }
+            });
+        }
+
+        localStorage.setItem('pk_user_riwayat', JSON.stringify(list));
+        return list;
     }
 
     function saveRiwayatData(data) {
@@ -933,7 +1008,7 @@ $userName = $session['name'] ?? 'Pengguna';
             statusBadge = `<span class="pk-badge-dibatalkan">Dibatalkan</span>`;
             bottomActions = `
                 <div class="pk-detail-message-box" style="margin-top: 28px;">
-                    <p style="margin: 0; color: var(--pk-red);">Pengajuan pembelian ini telah dibatalkan.</p>
+                    <p style="margin: 0 0 4px 0;">Pengajuan ini telah dibatalkan.</p>
                 </div>
             `;
         }
@@ -989,6 +1064,12 @@ $userName = $session['name'] ?? 'Pengguna';
             if (item) {
                 item.status = "Dibatalkan";
                 saveRiwayatData(list);
+                try {
+                    const fd = new FormData();
+                    fd.append('action', 'cancel');
+                    fd.append('transaction_id', id);
+                    fetch('<?= route('/riwayat.php') ?>', { method: 'POST', body: fd }).catch(() => {});
+                } catch(e) {}
                 closeDetailModal();
                 renderTable();
                 alert(`Pengajuan #${id} berhasil dibatalkan.`);

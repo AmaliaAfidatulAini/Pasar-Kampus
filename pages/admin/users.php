@@ -3,6 +3,7 @@ role_include('admin');
 require_model('admin/users');
 admin_handle_user_query('/admin/users');
 admin_handle_user_post('/admin/users');
+$userPreferenceCategories = admin_user_preference_categories();
 $session = get_session();
 ?>
 <?php Component::flush(); ?>
@@ -41,7 +42,7 @@ $session = get_session();
 </section>
 
 <div id="userModal" class="admin-modal-backdrop">
-    <div class="admin-modal-card">
+    <div class="admin-modal-card user-modal-card">
         <div class="admin-modal-header">
             <h2 class="admin-modal-title" id="userModalTitle">TAMBAH PENGGUNA</h2><button type="button" class="admin-modal-close" onclick="closeModal('userModal')" aria-label="Tutup">&times;</button>
         </div>
@@ -53,37 +54,64 @@ $session = get_session();
                     <label class="admin-form-label" for="userEmail">Email <span class="req">*</span></label>
                     <input type="email" name="email" id="userEmail" required class="admin-form-input" placeholder="mahasiswa@student.ub.ac.id">
                 </div>
-                <div class="admin-form-group" id="userPasswordGroup">
+                <div class="admin-form-group">
                     <label class="admin-form-label" for="userPassword">Kata Sandi <span class="req" id="userPasswordRequired">*</span></label>
                     <input type="password" name="password" id="userPassword" required class="admin-form-input" placeholder="Kata sandi akun">
                 </div>
                 <div class="admin-form-group" id="userRoleGroup">
-                    <span class="admin-form-label">Role Akun</span>
-                    <div class="admin-radio-group" style="flex-direction: row; gap: 20px;">
-                        <label class="admin-radio-label" style="flex: 1;"><input type="radio" name="role" value="Mahasiswa" checked><span>Pengguna</span></label>
-                        <label class="admin-radio-label" style="flex: 1;"><input type="radio" name="role" value="Admin"><span>Admin</span></label>
+                    <span class="admin-form-label" id="userRoleLabel">Role Akun <span class="req">*</span></span>
+                    <div class="admin-radio-group user-role-options" role="group" aria-labelledby="userRoleLabel">
+                        <label class="admin-radio-label"><input type="radio" name="role" value="Mahasiswa" required checked><span>Pengguna</span></label>
+                        <label class="admin-radio-label"><input type="radio" name="role" value="Admin" required><span>Admin</span></label>
                     </div>
                 </div>
-                <hr style="opacity: 0.5; margin-bottom: 1rem;">
-                <div class="admin-form-group">
-                    <label class="admin-form-label" for="userName">Nama Lengkap <span class="req">*</span></label>
-                    <input type="text" name="name" id="userName" required class="admin-form-input" placeholder="Masukkan nama lengkap">
-                </div>
-                <div class="admin-form-group">
-                    <label class="admin-form-label" for="userNim">NIM <span class="req">*</span></label>
-                    <input type="text" name="nim" id="userNim" required class="admin-form-input" placeholder="2141720XXXX">
-                </div>
-                <div class="admin-form-group">
-                    <label class="admin-form-label" for="userCampus">Asal Kampus</label>
-                    <select name="campus" id="userCampus" required class="admin-form-select">
-                        <option value="Universitas Brawijaya">Universitas Brawijaya (UB)</option>
-                        <option value="Universitas Negeri Malang">Universitas Negeri Malang (UM)</option>
-                        <option value="Univ. Muhammadiyah Malang">Univ. Muhammadiyah Malang (UMM)</option>
-                        <option value="Politeknik Negeri Malang">Politeknik Negeri Malang (POLINEMA)</option>
-                    </select>
+                <hr class="user-profile-divider">
+                <div class="user-profile-grid">
+                    <div class="admin-form-group">
+                        <label class="admin-form-label" for="userName">Nama Lengkap</label>
+                        <input type="text" name="name" id="userName" maxlength="255" class="admin-form-input" placeholder="Nama lengkap">
+                    </div>
+                    <div class="admin-form-group">
+                        <label class="admin-form-label" for="userPhone">Nomor Telepon</label>
+                        <input type="tel" name="phone" id="userPhone" maxlength="50" class="admin-form-input" placeholder="Nomor telepon">
+                    </div>
+                    <div class="admin-form-group">
+                        <label class="admin-form-label" for="userCampus">Asal Kampus</label>
+                        <input type="text" name="campus" id="userCampus" maxlength="255" class="admin-form-input" placeholder="Nama kampus">
+                    </div>
+                    <div class="admin-form-group">
+                        <label class="admin-form-label" for="userNim">NIM</label>
+                        <input type="text" name="nim" id="userNim" maxlength="50" class="admin-form-input" placeholder="Nomor induk mahasiswa">
+                    </div>
+                    <div class="admin-form-group user-preferences-group">
+                        <span class="admin-form-label" id="userPreferencesLabel">Preferensi Kategori</span>
+                        <div class="user-preferences-grid" role="group" aria-labelledby="userPreferencesLabel">
+                            <?php foreach ($userPreferenceCategories as $category): ?>
+                                <label class="user-preference-option">
+                                    <input type="checkbox" name="preference_categories[]" value="<?= (int) $category['id'] ?>">
+                                    <span><?= esc($category['name']) ?></span>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                        <?php if ($userPreferenceCategories === []): ?>
+                            <div class="admin-form-note">Belum ada kategori yang tersedia.</div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="admin-form-group">
+                        <label class="admin-form-label" for="userDistrict">Desa/Kelurahan</label>
+                        <input type="text" name="district" id="userDistrict" maxlength="200" class="admin-form-input" placeholder="Desa atau kelurahan">
+                    </div>
+                    <div class="admin-form-group">
+                        <label class="admin-form-label" for="userSubdistrict">Kecamatan</label>
+                        <input type="text" name="subdistrict" id="userSubdistrict" maxlength="255" class="admin-form-input" placeholder="Kecamatan">
+                    </div>
+                    <div class="admin-form-group">
+                        <label class="admin-form-label" for="userCoordinates">Koordinat</label>
+                        <input type="text" name="coordinates" id="userCoordinates" maxlength="255" class="admin-form-input" placeholder="Latitude, longitude">
+                    </div>
                 </div>
                 <div id="userSanctionFields" hidden>
-                    <hr style="opacity: 0.5; margin-bottom: 1rem;">
+                    <hr class="user-profile-divider">
                     <div class="admin-form-group"><span class="admin-form-label">Ubah Status</span>
                         <div class="admin-radio-group">
                             <label class="admin-radio-label"><input type="radio" name="status" value="Aktif">
@@ -123,28 +151,39 @@ $session = get_session();
         field('action').value = editing ? 'update-user' : 'create-user';
         field('id').value = editing ? user.id : '';
         field('name').value = editing ? user.name : '';
+        field('phone').value = editing ? user.phone : '';
         field('nim').value = editing ? user.nim : '';
+        field('campus').value = editing ? user.campus : '';
+        const selectedPreferences = new Set(editing && Array.isArray(user.preferences) ? user.preferences.map(String) : []);
+        userForm.querySelectorAll('[name="preference_categories[]"]').forEach(checkbox => {
+            checkbox.checked = selectedPreferences.has(checkbox.value);
+        });
+        field('subdistrict').value = editing ? user.subdistrict : '';
+        field('district').value = editing ? user.district : '';
+        field('coordinates').value = editing ? user.coordinates : '';
         field('email').value = editing ? user.email : '';
-        field('campus').value = editing ? user.campus : 'Universitas Brawijaya';
-        field('password').value = '';
         field('password').required = !editing;
-        document.getElementById('userPasswordRequired').textContent = editing ? '(opsional)' : '*';
-        field('nim').required = !editing;
-        field('campus').required = !editing;
-        document.getElementById('userPasswordGroup').hidden = false;
-        field('password').disabled = false;
-        document.getElementById('userRoleGroup').hidden = editing;
-        userForm.querySelectorAll('[name="role"]').forEach(radio => radio.disabled = editing);
+        document.getElementById('userPasswordRequired').hidden = editing;
+        field('role').forEach(radio => {
+            radio.checked = radio.value === (editing ? user.role : 'Mahasiswa');
+            radio.disabled = false;
+        });
+        document.getElementById('userRoleGroup').hidden = false;
         document.getElementById('userModalTitle').textContent = editing ? 'EDIT PENGGUNA' : 'TAMBAH PENGGUNA';
         document.getElementById('userSaveButton').textContent = editing ? 'Simpan' : 'Tambah';
-        const showSanctions = editing && user.role === 'Mahasiswa';
-        document.getElementById('userSanctionFields').hidden = !showSanctions;
-        userForm.querySelectorAll('[name="status"]').forEach(radio => {
-            radio.checked = showSanctions && radio.value === user.status;
-            radio.disabled = !showSanctions;
-        });
-        field('reason').value = showSanctions ? user.reason : '';
-        field('reason').disabled = !showSanctions;
+        const syncSanctions = () => {
+            const showSanctions = editing && field('role').value === 'Mahasiswa';
+            document.getElementById('userSanctionFields').hidden = !showSanctions;
+            userForm.querySelectorAll('[name="status"]').forEach(radio => {
+                radio.checked = showSanctions && radio.value === user.status;
+                radio.disabled = !showSanctions;
+                radio.required = showSanctions;
+            });
+            field('reason').value = showSanctions ? user.reason : '';
+            field('reason').disabled = !showSanctions;
+        };
+        syncSanctions();
+        userForm.querySelectorAll('[name="role"]').forEach(radio => radio.onchange = syncSanctions);
     };
     function openAddUserModal() {
         userForm.reset();

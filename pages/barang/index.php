@@ -4,6 +4,85 @@ $session = get_session();
 $isLoggedIn = !empty($session);
 $userName = $session['name'] ?? 'Pengguna';
 
+// Handle POST Aduan (Report Submission)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'submit-report') {
+    $userId = $session['user_id'] ?? null;
+    if ($userId === null) {
+        $guestUser = fetch(executeQuery("SELECT user_id FROM users WHERE role = 'user' ORDER BY user_id ASC LIMIT 1"));
+        $userId = $guestUser['user_id'] ?? 2;
+    }
+
+    $rawProductId = (int)($_POST['product_id'] ?? 1);
+    $productRow = fetch(executeQuery("SELECT product_id FROM products WHERE product_id = ?", [$rawProductId]));
+    $validProductId = $productRow ? (int)$productRow['product_id'] : (int)(fetch(executeQuery("SELECT product_id FROM products ORDER BY product_id ASC LIMIT 1"))['product_id'] ?? 1);
+
+    $jenis = trim((string)($_POST['jenis'] ?? 'Barang'));
+    $kategori = trim((string)($_POST['kategori'] ?? 'Lainnya'));
+    $deskripsi = trim((string)($_POST['deskripsi'] ?? ''));
+
+    if ($kategori === '') {
+        $kategori = 'Lainnya';
+    }
+
+    $reportType = $kategori;
+    if ($jenis === 'Pengguna') {
+        $reportType = 'Pengguna: ' . $kategori;
+    }
+
+    $stmt = executeQuery(
+        "INSERT INTO reports (user_id, product_id, report_type, description, review_status, decision, created_at, updated_at)
+         VALUES (?, ?, ?, ?, 'Menunggu', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+         RETURNING report_id",
+        [$userId, $validProductId, $reportType, $deskripsi]
+    );
+    $newReport = fetch($stmt);
+    $reportId = (int)($newReport['report_id'] ?? 0);
+
+    // Process file attachments if provided
+    if ($reportId > 0 && isset($_FILES['lampiran'])) {
+        $files = $_FILES['lampiran'];
+        $uploadTarget = 'reports';
+        $uploadDir = dirname(__DIR__, 2) . '/public/uploads/' . $uploadTarget;
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0775, true);
+        }
+
+        $names = is_array($files['name']) ? $files['name'] : [$files['name']];
+        $tmpNames = is_array($files['tmp_name']) ? $files['tmp_name'] : [$files['tmp_name']];
+        $errors = is_array($files['error']) ? $files['error'] : [$files['error']];
+
+        foreach ($names as $idx => $origName) {
+            if (($errors[$idx] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK && is_uploaded_file($tmpNames[$idx])) {
+                $ext = pathinfo((string)$origName, PATHINFO_EXTENSION);
+                $cleanName = 'report_' . $reportId . '_' . bin2hex(random_bytes(6)) . ($ext ? '.' . strtolower($ext) : '.jpg');
+                $destination = $uploadDir . '/' . $cleanName;
+                if (move_uploaded_file($tmpNames[$idx], $destination)) {
+                    $storedPath = upload($uploadTarget . '/' . $cleanName);
+                    executeQuery(
+                        "INSERT INTO attachments (report_id, product_id, attachment_type, file_path, file_name, created_at, updated_at)
+                         VALUES (?, ?, 1, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+                        [$reportId, $validProductId, $storedPath, (string)$origName]
+                    );
+                }
+            }
+        }
+    }
+
+    if (str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') || ($_POST['ajax'] ?? '') === '1') {
+        header('Content-Type: application/json; charset=UTF-8');
+        echo json_encode([
+            'success' => true,
+            'message' => 'Aduan berhasil dikirim! Laporan Anda telah masuk ke dashboard admin untuk ditinjau.',
+            'report_id' => $reportId
+        ]);
+        exit;
+    }
+
+    flash('success', 'Aduan berhasil dikirim ke Admin untuk ditinjau.');
+    redirect('/barang?id=' . $rawProductId);
+    exit;
+}
+
 // If no id passed, redirect to dashboard utama catalog
 if (!isset($_GET['id']) || trim((string)$_GET['id']) === '') {
     redirect('/dashboard-utama.php', 302);
@@ -13,6 +92,98 @@ if (!isset($_GET['id']) || trim((string)$_GET['id']) === '') {
 $productId = $_GET['id'];
 $product = get_catalog_product_by_id($productId);
 $allProducts = get_catalog_products();
+
+// Resolve matching product in DB and seller info
+$dbProductId = null;
+$sellerName = 'Penjual Kampus';
+$sellerPhone = '081234567890';
+
+try {
+    $match = executeQuery(
+        "SELECT p.product_id, p.user_id, COALESCE(up.name, 'Penjual Kampus') AS seller_name, COALESCE(up.phone, '081234567890') AS seller_phone
+         FROM products p
+         LEFT JOIN user_profiles up ON up.user_id = p.user_id
+         WHERE p.product_id = :id
+         LIMIT 1",
+        ['id' => (int)$productId],
+        'fetch'
+    );
+    if ($match) {
+        $dbProductId = (int) $match['product_id'];
+        $sellerName = $match['seller_name'];
+        $sellerPhone = $match['seller_phone'] ?: '081234567890';
+    } else {
+        $matchTitle = executeQuery(
+            "SELECT p.product_id, p.user_id, COALESCE(up.name, 'Penjual Kampus') AS seller_name, COALESCE(up.phone, '081234567890') AS seller_phone
+             FROM products p
+             LEFT JOIN user_profiles up ON up.user_id = p.user_id
+             WHERE p.item_name ILIKE :title
+             LIMIT 1",
+            ['title' => $product['title']],
+            'fetch'
+        );
+        if ($matchTitle) {
+            $dbProductId = (int) $matchTitle['product_id'];
+            $sellerName = $matchTitle['seller_name'];
+            $sellerPhone = $matchTitle['seller_phone'] ?: '081234567890';
+        }
+    }
+} catch (Throwable $e) {
+    // Database query fallback
+}
+
+// Handle Purchase Request Submission (POST)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'ajukan_pembelian')) {
+    if (!$isLoggedIn) {
+        if (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json')) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'redirect' => route('/login')]);
+            exit;
+        }
+        redirect('/login', 302);
+        exit;
+    }
+
+    $buyerId = $session['user_id'] ?? null;
+    $newTxId = null;
+
+    if ($buyerId && $dbProductId) {
+        try {
+            $ins = executeQuery(
+                "INSERT INTO requests (user_id, product_id, status, meeting_point, created_at, updated_at) 
+                 VALUES (:user_id, :product_id, 'PENDING', :meeting_point, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) 
+                 RETURNING transaction_id",
+                [
+                    'user_id' => $buyerId,
+                    'product_id' => $dbProductId,
+                    'meeting_point' => $product['campus'] ?? $product['location'] ?? 'Area Kampus'
+                ],
+                'fetch'
+            );
+            if ($ins && isset($ins['transaction_id'])) {
+                $newTxId = (int) $ins['transaction_id'];
+            }
+        } catch (Throwable $e) {
+            error_log('Insert purchase request failed: ' . $e->getMessage());
+        }
+    }
+
+    flash('success', 'Pengajuan pembelian berhasil dibuat!');
+
+    if (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json')) {
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'transaction_id' => $newTxId,
+            'message' => 'Pengajuan pembelian berhasil dibuat.',
+            'redirect' => route('/riwayat.php')
+        ]);
+        exit;
+    }
+
+    redirect('/riwayat.php', 302);
+    exit;
+}
 
 // Get 4 recommendation products (excluding current or similar)
 $recommendations = [];
@@ -37,6 +208,8 @@ if (count($recommendations) < 4) {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
         :root {
@@ -154,6 +327,28 @@ if (count($recommendations) < 4) {
 
         .pk-nav-link:hover {
             opacity: 0.85;
+        }
+
+        .pk-btn-masuk {
+            background-color: #FFFFFF;
+            color: var(--pk-blue);
+            font-weight: 700;
+            font-size: 0.9rem;
+            padding: 8px 22px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .pk-btn-masuk:hover {
+            background-color: #F8FAFC;
+            color: var(--pk-navy);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
         }
 
         /* 2. MAIN LAYOUT */
@@ -618,6 +813,267 @@ if (count($recommendations) < 4) {
             text-align: center;
         }
 
+        /* ================= MODAL BUAT ADUAN (MATCHING SCREENSHOT) ================= */
+        .pk-aduan-modal-box {
+            background-color: #FFFFFF;
+            border-radius: 14px;
+            padding: 28px 32px;
+            max-width: 520px;
+            width: 92%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.16);
+            text-align: left;
+            position: relative;
+            font-family: inherit;
+            box-sizing: border-box;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        .pk-aduan-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 22px;
+        }
+
+        .pk-aduan-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #1D356D;
+            margin: 0;
+            letter-spacing: -0.3px;
+        }
+
+        .pk-aduan-close {
+            background: none;
+            border: none;
+            font-size: 1.45rem;
+            color: #EF4444;
+            cursor: pointer;
+            padding: 0 4px;
+            line-height: 1;
+            font-weight: 300;
+            transition: transform 0.15s, opacity 0.15s;
+        }
+
+        .pk-aduan-close:hover {
+            opacity: 0.8;
+            transform: scale(1.1);
+        }
+
+        .pk-aduan-row {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 16px;
+            gap: 0;
+        }
+
+        .pk-aduan-label-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 110px;
+            flex-shrink: 0;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #1E293B;
+            padding-top: 10px;
+            padding-right: 12px;
+            box-sizing: border-box;
+        }
+
+        .pk-aduan-colon {
+            color: #1D356D;
+            font-weight: 700;
+        }
+
+        .pk-aduan-field {
+            flex: 1;
+        }
+
+        /* Custom Radios matching the screenshot */
+        .pk-aduan-radios {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding-top: 8px;
+        }
+
+        .pk-aduan-radio-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: #1D356D;
+            cursor: pointer;
+            user-select: none;
+            font-weight: 600;
+        }
+
+        .pk-aduan-radio-label input[type="radio"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border: 1.5px solid #CBD5E1;
+            border-radius: 50%;
+            outline: none;
+            cursor: pointer;
+            position: relative;
+            background: #FFFFFF;
+            transition: all 0.2s ease;
+            margin: 0;
+        }
+
+        .pk-aduan-radio-label input[type="radio"]:checked {
+            border-color: #F59E0B;
+            background: #FFFFFF;
+        }
+
+        .pk-aduan-radio-label input[type="radio"]:checked::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background-color: #F59E0B;
+        }
+
+        .pk-aduan-select {
+            width: 100%;
+            padding: 9px 14px;
+            border: 1px solid #E2E8F0;
+            border-radius: 8px;
+            background-color: #FFFFFF;
+            font-size: 0.88rem;
+            font-family: inherit;
+            color: #1E293B;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            box-sizing: border-box;
+        }
+
+        .pk-aduan-select:focus {
+            border-color: #2563EB;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+        }
+
+        .pk-aduan-textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #E2E8F0;
+            border-radius: 8px;
+            background-color: #FFFFFF;
+            font-size: 0.88rem;
+            font-family: inherit;
+            color: #1E293B;
+            outline: none;
+            resize: vertical;
+            min-height: 80px;
+            box-sizing: border-box;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .pk-aduan-textarea:focus {
+            border-color: #2563EB;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+        }
+
+        .pk-aduan-textarea::placeholder,
+        .pk-aduan-select:invalid {
+            color: #CBD5E1;
+        }
+
+        .pk-aduan-attachment-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding-top: 4px;
+        }
+
+        .pk-btn-choose-file {
+            background-color: #FFFFFF;
+            border: 1px solid #CBD5E1;
+            border-radius: 8px;
+            padding: 7px 14px;
+            font-size: 0.85rem;
+            color: #1E293B;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.15s;
+            user-select: none;
+        }
+
+        .pk-btn-choose-file:hover {
+            background-color: #F8FAFC;
+            border-color: #94A3B8;
+        }
+
+        .pk-file-list-preview {
+            font-size: 0.82rem;
+            color: #94A3B8;
+            word-break: break-all;
+        }
+
+        /* Buttons at bottom matching the screenshot: Batal (gray rect) & Kirim Aduan (navy pill) */
+        .pk-aduan-footer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 14px;
+            margin-top: 24px;
+            padding-top: 6px;
+        }
+
+        .pk-btn-aduan-batal {
+            background-color: #F1F5F9;
+            border: none;
+            color: #64748B;
+            font-size: 0.88rem;
+            font-weight: 600;
+            padding: 9px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.15s, color 0.15s;
+            font-family: inherit;
+        }
+
+        .pk-btn-aduan-batal:hover {
+            background-color: #E2E8F0;
+            color: #334155;
+        }
+
+        .pk-btn-kirim-aduan {
+            background-color: #1D356D;
+            border: none;
+            color: #FFFFFF;
+            font-size: 0.88rem;
+            font-weight: 700;
+            padding: 10px 28px;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.15s;
+            font-family: inherit;
+            box-shadow: 0 4px 12px rgba(29, 53, 109, 0.2);
+        }
+
+        .pk-btn-kirim-aduan:hover {
+            background-color: #15264F;
+            transform: translateY(-1px);
+        }
+
+        .pk-btn-kirim-aduan:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         /* RESPONSIVE */
         @media (max-width: 960px) {
             .pk-detail-card {
@@ -663,8 +1119,12 @@ if (count($recommendations) < 4) {
             </div>
 
             <nav class="pk-nav-links">
-                <a href="<?= route('/riwayat.php') ?>" class="pk-nav-link">Riwayat</a>
-                <a href="<?= route('/profil.php') ?>" class="pk-nav-link">Profil</a>
+                <?php if ($isLoggedIn): ?>
+                    <a href="<?= route('/riwayat.php') ?>" class="pk-nav-link">Riwayat</a>
+                    <a href="<?= route('/profil.php') ?>" class="pk-nav-link">Profil</a>
+                <?php else: ?>
+                    <a href="<?= route('/login') ?>" class="pk-btn-masuk">Masuk</a>
+                <?php endif; ?>
             </nav>
         </div>
     </header>
@@ -744,7 +1204,11 @@ if (count($recommendations) < 4) {
 
                     <div class="pk-detail-actions">
                         <button type="button" class="pk-btn-report" onclick="openReportModal()">Laporkan</button>
-                        <button type="button" class="pk-btn-buy" onclick="openBuyModal()">Ajukan Pembelian</button>
+                        <?php if ($isLoggedIn): ?>
+                            <button type="button" class="pk-btn-buy" onclick="openBuyModal()">Ajukan Pembelian</button>
+                        <?php else: ?>
+                            <a href="<?= route('/login') ?>" class="pk-btn-buy" style="display: inline-flex; align-items: center; justify-content: center; text-decoration: none;">Ajukan Pembelian</a>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -792,23 +1256,98 @@ if (count($recommendations) < 4) {
             </p>
             <div style="display: flex; gap: 10px; justify-content: center;">
                 <button type="button" class="pk-btn-report" onclick="closeBuyModal()">Batal</button>
-                <button type="button" class="pk-btn-buy" onclick="confirmPurchase()">Konfirmasi &amp; Hubungi Penjual</button>
+                <button type="button" class="pk-btn-buy" id="btnConfirmBuy" onclick="confirmPurchase()">Ajukan Pembelian</button>
             </div>
         </div>
     </div>
 
-    <!-- ================= MODAL LAPORKAN ================= -->
-    <div class="pk-modal-backdrop" id="reportModal">
-        <div class="pk-modal-box">
-            <div style="font-size: 2.2rem; margin-bottom: 10px;">⚠️</div>
-            <h3 style="font-size: 1.15rem; font-weight: 800; color: #DC2626; margin-bottom: 8px;">Laporkan Barang</h3>
-            <p style="font-size: 0.85rem; color: #64748B; line-height: 1.5; margin-bottom: 20px;">
-                Apakah barang ini melanggar ketentuan atau berisi informasi yang tidak sesuai?
-            </p>
-            <div style="display: flex; gap: 10px; justify-content: center;">
-                <button type="button" class="pk-btn-buy" style="background: #94A3B8;" onclick="closeReportModal()">Batal</button>
-                <button type="button" class="pk-btn-report" onclick="confirmReport()">Kirim Laporan</button>
+    <!-- ================= MODAL BUAT ADUAN ================= -->
+    <div class="pk-modal-backdrop" id="reportModal" onclick="handleReportModalBackdrop(event)">
+        <div class="pk-aduan-modal-box" onclick="event.stopPropagation()">
+            <!-- Header: Judul & Tombol Close Merah -->
+            <div class="pk-aduan-header">
+                <h2 class="pk-aduan-title">Buat Aduan</h2>
+                <button type="button" class="pk-aduan-close" onclick="closeReportModal()" aria-label="Tutup">&times;</button>
             </div>
+
+            <!-- Form Aduan -->
+            <form id="formBuatAduan" onsubmit="submitAduan(event)" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="submit-report">
+                <input type="hidden" name="product_id" value="<?= esc((string) $product['id']) ?>">
+                <input type="hidden" name="ajax" value="1">
+
+                <!-- Row 1: Jenis : ( ) Barang   ( ) Pengguna -->
+                <div class="pk-aduan-row">
+                    <div class="pk-aduan-label-group">
+                        <span>Jenis</span>
+                        <span class="pk-aduan-colon">:</span>
+                    </div>
+                    <div class="pk-aduan-field">
+                        <div class="pk-aduan-radios">
+                            <label class="pk-aduan-radio-label">
+                                <input type="radio" name="jenis" value="Barang" checked>
+                                <span>Barang</span>
+                            </label>
+                            <label class="pk-aduan-radio-label">
+                                <input type="radio" name="jenis" value="Pengguna">
+                                <span>Pengguna</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 2: Kategori : [Penipuan / Konten tidak pantas / Lainnya v] -->
+                <div class="pk-aduan-row">
+                    <div class="pk-aduan-label-group">
+                        <span>Kategori</span>
+                        <span class="pk-aduan-colon">:</span>
+                    </div>
+                    <div class="pk-aduan-field">
+                        <select name="kategori" id="aduanKategori" class="pk-aduan-select" required>
+                            <option value="" disabled selected>Pilih Kategori Aduan (Penipuan / Konten tidak pantas / Lainnya)</option>
+                            <option value="Penipuan">Penipuan</option>
+                            <option value="Konten tidak pantas">Konten tidak pantas</option>
+                            <option value="Barang palsu / rusak">Barang palsu / rusak</option>
+                            <option value="Ghosting / Tidak merespon">Ghosting / Tidak merespon</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Row 3: Deskripsi : [.............................] -->
+                <div class="pk-aduan-row">
+                    <div class="pk-aduan-label-group">
+                        <span>Deskripsi</span>
+                        <span class="pk-aduan-colon">:</span>
+                    </div>
+                    <div class="pk-aduan-field">
+                        <textarea name="deskripsi" id="aduanDeskripsi" class="pk-aduan-textarea" rows="3" placeholder="Tuliskan keterangan detail laporan Anda..." required></textarea>
+                    </div>
+                </div>
+
+                <!-- Row 4: Lampiran : [Pilih berkas] f1.jpg, f2.jpg, ... -->
+                <div class="pk-aduan-row">
+                    <div class="pk-aduan-label-group">
+                        <span>Lampiran</span>
+                        <span class="pk-aduan-colon">:</span>
+                    </div>
+                    <div class="pk-aduan-field">
+                        <div class="pk-aduan-attachment-wrap">
+                            <label class="pk-btn-choose-file" for="aduanLampiran">
+                                Pilih berkas
+                            </label>
+                            <input type="file" name="lampiran[]" id="aduanLampiran" accept="image/*" multiple style="display: none;" onchange="handleFileSelect(this)">
+                            <span id="aduanFileList" class="pk-file-list-preview">f1.jpg, f2.jpg, ... (Belum ada berkas)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 5: Action Buttons [ Batal ] [ Kirim Aduan ] -->
+                <div class="pk-aduan-footer">
+                    <button type="button" class="pk-btn-aduan-batal" onclick="closeReportModal()">Batal</button>
+                    <button type="submit" id="btnSubmitAduan" class="pk-btn-kirim-aduan">Kirim Aduan</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -855,7 +1394,7 @@ if (count($recommendations) < 4) {
 
     <!-- JAVASCRIPT FOR GALLERY CAROUSEL & ACTIONS -->
     <script>
-        const galleryImages = <?= json_encode($product['gallery']) ?>;beta-test-advance-2026.git
+        const galleryImages = <?= json_encode($product['gallery']) ?>;
         let activeIdx = 0;
 
         function switchThumb(imgUrl, el) {
@@ -872,7 +1411,7 @@ if (count($recommendations) < 4) {
             updateActiveThumb();
         }
 
-        function nextThumb() {beta-test-advance-2026.git
+        function nextThumb() {
             activeIdx = (activeIdx + 1) % galleryImages.length;
             updateActiveThumb();
         }
@@ -885,6 +1424,10 @@ if (count($recommendations) < 4) {
         }
 
         function openBuyModal() {
+            <?php if (!$isLoggedIn): ?>
+                window.location.href = '<?= route('/login') ?>';
+                return;
+            <?php endif; ?>
             document.getElementById('buyModal').classList.add('show');
         }
 
@@ -892,9 +1435,102 @@ if (count($recommendations) < 4) {
             document.getElementById('buyModal').classList.remove('show');
         }
 
-        function confirmPurchase() {
+        async function confirmPurchase() {
+            const btn = document.getElementById('btnConfirmBuy');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = 'Mengajukan...';
+            }
+
+            const now = new Date();
+            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            const formattedDate = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+
+            // 1. Ambil data riwayat yang tersimpan di localStorage
+            let riwayatList = [];
+            try {
+                const stored = localStorage.getItem('pk_user_riwayat');
+                if (stored) {
+                    riwayatList = JSON.parse(stored);
+                }
+            } catch (e) {
+                riwayatList = [];
+            }
+
+            let nextId = 16;
+            if (Array.isArray(riwayatList) && riwayatList.length > 0) {
+                const maxId = Math.max(...riwayatList.map(item => parseInt(item.id) || 0));
+                nextId = maxId + 1;
+            }
+
+            const newRiwayat = {
+                id: nextId,
+                namaBarang: <?= json_encode($product['title']) ?>,
+                penjual: <?= json_encode($sellerName) ?>,
+                penjualDisplay: <?= json_encode($sellerName) ?>,
+                tanggal: formattedDate,
+                harga: <?= (int)$product['price'] ?>,
+                status: "Pending",
+                teleponPenjual: <?= json_encode($sellerPhone) ?>
+            };
+
+            // 2. Simpan juga ke database PostgreSQL via fetch POST
+            try {
+                const formData = new FormData();
+                formData.append('action', 'ajukan_pembelian');
+                formData.append('product_id', <?= (int)$productId ?>);
+
+                const res = await fetch(window.location.href, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json' },
+                    body: formData
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.transaction_id) {
+                        newRiwayat.id = data.transaction_id;
+                    }
+                }
+            } catch (err) {
+                console.warn('Sync to database warning:', err);
+            }
+
+            // 3. Simpan ke localStorage pk_user_riwayat
+            if (!Array.isArray(riwayatList)) {
+                riwayatList = [];
+            }
+            riwayatList.unshift(newRiwayat);
+            try {
+                localStorage.setItem('pk_user_riwayat', JSON.stringify(riwayatList));
+            } catch (e) {
+                console.error('LocalStorage save error:', e);
+            }
+
+            // 4. Sinkronkan dengan data penjual di localStorage jika ada
+            try {
+                const sellerStored = localStorage.getItem('pk_penjual_barang');
+                if (sellerStored) {
+                    const sellerList = JSON.parse(sellerStored);
+                    const targetProduct = sellerList.find(b => b.id === <?= (int)$productId ?> || b.namaBarang === <?= json_encode($product['title']) ?>);
+                    if (targetProduct) {
+                        if (!targetProduct.pengajuanList) targetProduct.pengajuanList = [];
+                        targetProduct.pengajuanList.unshift({
+                            id: newRiwayat.id,
+                            pembeli: <?= json_encode($userName) ?>,
+                            kampus: <?= json_encode($session['campus'] ?? 'Universitas Brawijaya') ?>,
+                            wa: '081234567899',
+                            waktu: formattedDate,
+                            status: 'Pending'
+                        });
+                        localStorage.setItem('pk_penjual_barang', JSON.stringify(sellerList));
+                    }
+                }
+            } catch (e) {}
+
             closeBuyModal();
-            alert('Pengajuan pembelian COD berhasil dikirim ke penjual! Silakan cek menu Riwayat Pengajuan.');
+            // 5. Arahkan pembeli ke halaman riwayat pengajuan pembelian
+            window.location.href = '<?= route('/riwayat.php') ?>';
         }
 
         function openReportModal() {
@@ -905,9 +1541,96 @@ if (count($recommendations) < 4) {
             document.getElementById('reportModal').classList.remove('show');
         }
 
-        function confirmReport() {
-            closeReportModal();
-            alert('Terima kasih. Laporan Anda telah kami terima untuk ditinjau oleh tim PasarKampus.');
+        function handleReportModalBackdrop(event) {
+            if (event.target === event.currentTarget) {
+                closeReportModal();
+            }
+        }
+
+        function handleFileSelect(input) {
+            const previewEl = document.getElementById('aduanFileList');
+            if (!previewEl) return;
+            if (input.files && input.files.length > 0) {
+                const names = Array.from(input.files).map(f => f.name).join(', ');
+                previewEl.textContent = names;
+                previewEl.style.fontStyle = 'normal';
+                previewEl.style.color = '#0F172A';
+            } else {
+                previewEl.textContent = 'f1.jpg, f2.jpg, ... (Belum ada berkas)';
+                previewEl.style.fontStyle = 'italic';
+                previewEl.style.color = '#64748B';
+            }
+        }
+
+        async function submitAduan(event) {
+            event.preventDefault();
+            const form = event.target;
+            const submitBtn = document.getElementById('btnSubmitAduan');
+            const originalText = submitBtn.textContent;
+
+            const kategori = document.getElementById('aduanKategori').value;
+            const deskripsi = document.getElementById('aduanDeskripsi').value.trim();
+
+            if (!kategori) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Perhatian', 'Silakan pilih kategori aduan terlebih dahulu.', 'warning');
+                } else {
+                    alert('Silakan pilih kategori aduan terlebih dahulu.');
+                }
+                return;
+            }
+
+            if (!deskripsi) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Perhatian', 'Silakan isi deskripsi aduan secara lengkap.', 'warning');
+                } else {
+                    alert('Silakan isi deskripsi aduan secara lengkap.');
+                }
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Mengirim Aduan...';
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch(window.location.href, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    closeReportModal();
+                    form.reset();
+                    handleFileSelect(document.getElementById('aduanLampiran'));
+
+                    if (typeof Swal !== 'undefined') {
+                        await Swal.fire({
+                            title: 'Aduan Terkirim!',
+                            text: 'Laporan Anda telah berhasil dikirim ke dashboard admin untuk ditinjau.',
+                            icon: 'success',
+                            confirmButtonColor: '#1D356D'
+                        });
+                    } else {
+                        alert('Aduan berhasil dikirim ke dashboard admin untuk ditinjau!');
+                    }
+                } else {
+                    throw new Error(result.error || result.message || 'Gagal mengirim aduan.');
+                }
+            } catch (err) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Gagal Mengirim Aduan', err.message || 'Terjadi kesalahan sistem.', 'error');
+                } else {
+                    alert('Gagal mengirim aduan: ' + err.message);
+                }
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
         }
     </script>
 </body>

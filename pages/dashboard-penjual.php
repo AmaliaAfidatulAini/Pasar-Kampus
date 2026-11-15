@@ -1,4 +1,56 @@
 <?php
+$session = session_include('/login');
+$userId = $session['user_id'] ?? null;
+
+$sellerProductsDb = [];
+if ($userId) {
+    $sellerProductsDb = executeQuery(
+        "SELECT p.product_id AS id,
+                p.item_name AS \"namaBarang\",
+                p.price AS harga,
+                COALESCE(c.category_name, 'Lainnya') AS kategori,
+                p.status,
+                COALESCE(p.moderation_note, '') AS \"alasanAdmin\",
+                COALESCE(a.file_path, 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=300') AS gambar
+         FROM products p
+         LEFT JOIN categories c ON c.categories_id = p.category_id
+         LEFT JOIN attachments a ON a.product_id = p.product_id AND a.attachment_type = 1
+         WHERE p.user_id = :user_id
+         ORDER BY p.product_id ASC",
+        ['user_id' => $userId],
+        'fetchAll'
+    );
+
+    foreach ($sellerProductsDb as &$sp) {
+        $sp['harga'] = (int) $sp['harga'];
+        $reqs = executeQuery(
+            "SELECT r.transaction_id AS id,
+                    COALESCE(up.name, 'Pembeli') AS pembeli,
+                    COALESCE(up.campus, 'Kampus') AS kampus,
+                    COALESCE(up.phone, '081234567890') AS wa,
+                    TO_CHAR(r.created_at, 'DD Month YYYY') AS waktu,
+                    CASE 
+                        WHEN r.status = 'PROCESS' THEN 'Diterima'
+                        WHEN r.status = 'CANCELLED' THEN 'Ditolak'
+                        ELSE 'Pending'
+                    END AS status
+             FROM requests r
+             LEFT JOIN user_profiles up ON up.user_id = r.user_id
+             WHERE r.product_id = :product_id
+             ORDER BY r.transaction_id ASC",
+            ['product_id' => $sp['id']],
+            'fetchAll'
+        );
+        $sp['pengajuanList'] = $reqs;
+        if ($sp['status'] === 'Proses') {
+            $accepted = array_filter($reqs, fn($r) => $r['status'] === 'Diterima');
+            $first = reset($accepted);
+            $sp['pembeliDiterima'] = $first ? $first['pembeli'] : 'Abdul';
+            $sp['pembeliWa'] = $first ? $first['wa'] : '081987654321';
+        }
+    }
+    unset($sp);
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -101,10 +153,10 @@
 
     <header class="pk-navbar">
         <div class="pk-nav-inner">
-            <a href="dashboard-penjual.php" class="pk-nav-logo">PasarKampus</a>
+            <a href="<?= route('/dashboard-utama.php') ?>" class="pk-nav-logo">PasarKampus</a>
             <div class="pk-nav-links">
-                <a href="riwayat.php">Riwayat</a>
-                <a href="profil.php">Profil</a>
+                <a href="<?= route('/riwayat.php') ?>">Riwayat</a>
+                <a href="<?= route('/profil.php') ?>">Profil</a>
             </div>
         </div>
     </header>
@@ -166,8 +218,9 @@
     </div>
 
     <script>
+        const dbSellerProducts = <?= json_encode($sellerProductsDb, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
         // Data Seed Default Penjual
-        const defaultPenjualBarang = [
+        const defaultPenjualBarang = (Array.isArray(dbSellerProducts) && dbSellerProducts.length > 0) ? dbSellerProducts : [
             {
                 id: 1,
                 namaBarang: "Keyboard Logiac - Silver",
@@ -217,6 +270,18 @@
         ];
 
         function getPenjualData() {
+            if (Array.isArray(dbSellerProducts) && dbSellerProducts.length > 0) {
+                const stored = localStorage.getItem('pk_penjual_barang');
+                if (!stored) {
+                    localStorage.setItem('pk_penjual_barang', JSON.stringify(dbSellerProducts));
+                    return dbSellerProducts;
+                }
+                try {
+                    const parsed = JSON.parse(stored);
+                    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+                } catch(e){}
+                return dbSellerProducts;
+            }
             const stored = localStorage.getItem('pk_penjual_barang');
             if (stored) {
                 try { return JSON.parse(stored); } catch(e){}

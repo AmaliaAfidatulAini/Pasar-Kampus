@@ -11,18 +11,7 @@ $price = $price ?? "";
 $foto = $foto ?? "";
 // END OF COMPONENTS PROPS //
 
-$formatVal = static function ($val): string {
-    if ($val === "" || $val === null) return "";
-    if (is_numeric($val)) {
-        return number_format((float)$val, 0, ',', '.');
-    }
-    return preg_replace('/^Rp\.?\s*/i', '', (string)$val);
-};
-
-$displayOPrice = $formatVal($o_price);
-$displayPrice = $formatVal($price);
-$locationStr = trim((string)$location);
-$displayLocation = $locationStr !== '' ? (str_starts_with($locationStr, '📍') ? $locationStr : '📍 ' . $locationStr) : '';
+$condition = ["Bekas", "Cukup", "Baik", "Sangat Baik"][$condition-1];
 ?>
 
 <div class="product-card" onclick="if (!event.target.closest('a')) window.location.href='<?= route('/barang?id=' . $id) ?>'" style="cursor: pointer;">
