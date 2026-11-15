@@ -53,6 +53,23 @@ try {
     // Database query fallback
 }
 
+// Check if buyer has already requested this product
+$alreadyRequested = false;
+$buyerId = $session['user_id'] ?? null;
+if ($isLoggedIn && $buyerId && $dbProductId) {
+    try {
+        $checkExisting = executeQuery(
+            "SELECT transaction_id FROM requests 
+             WHERE user_id = :uid AND product_id = :pid AND status IN ('PENDING', 'PROCESS')",
+            ['uid' => $buyerId, 'pid' => $dbProductId],
+            'fetch'
+        );
+        if ($checkExisting) {
+            $alreadyRequested = true;
+        }
+    } catch (Throwable $e) {}
+}
+
 // Handle Purchase Request Submission (POST)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'ajukan_pembelian')) {
     if (!$isLoggedIn) {
@@ -66,6 +83,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'ajuk
     }
 
     $buyerId = $session['user_id'] ?? null;
+
+    // Prevent duplicate requests for the same product
+    if ($alreadyRequested) {
+        flash('warning', 'Anda sudah mengajukan pembelian untuk barang ini.');
+        if (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json')) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'already_requested' => true,
+                'message' => 'Anda sudah mengajukan pembelian untuk barang ini.',
+                'redirect' => route('/riwayat.php')
+            ]);
+            exit;
+        }
+        redirect('/riwayat.php', 302);
+        exit;
+    }
+
     $newTxId = null;
 
     if ($buyerId && $dbProductId) {
@@ -863,7 +898,9 @@ if (count($recommendations) < 4) {
                     <div class="pk-detail-actions">
                         <button type="button" class="pk-btn-report" onclick="openReportModal()">Laporkan</button>
                         <?php if ($isLoggedIn): ?>
-                            <button type="button" class="pk-btn-buy" onclick="openBuyModal()">Ajukan Pembelian</button>
+                            <button type="button" class="pk-btn-buy" id="btnAjukanPembelian" onclick="handleBuyButtonClick()">
+                                <?= $alreadyRequested ? 'Sudah Diajukan' : 'Ajukan Pembelian' ?>
+                            </button>
                         <?php else: ?>
                             <a href="<?= route('/login') ?>" class="pk-btn-buy" style="display: inline-flex; align-items: center; justify-content: center; text-decoration: none;">Ajukan Pembelian</a>
                         <?php endif; ?>
@@ -1006,11 +1043,69 @@ if (count($recommendations) < 4) {
             }
         }
 
+        function isItemAlreadyRequested() {
+            let requested = <?= $alreadyRequested ? 'true' : 'false' ?>;
+            try {
+                const stored = localStorage.getItem('pk_user_riwayat');
+                if (stored) {
+                    const list = JSON.parse(stored);
+                    if (Array.isArray(list)) {
+                        const found = list.some(item => 
+                            (item.namaBarang === <?= json_encode($product['title']) ?> || item.id === <?= (int)$productId ?>) &&
+                            (!item.status || item.status.toLowerCase() !== 'dibatalkan')
+                        );
+                        if (found) requested = true;
+                    }
+                }
+            } catch (e) {}
+            return requested;
+        }
+
+        function updateBuyButtonState() {
+            const btn = document.getElementById('btnAjukanPembelian');
+            if (!btn) return;
+            if (isItemAlreadyRequested()) {
+                btn.innerText = 'Sudah Diajukan';
+                btn.style.backgroundColor = '#94A3B8';
+                btn.style.borderColor = '#94A3B8';
+                btn.style.cursor = 'not-allowed';
+                btn.setAttribute('data-already-requested', 'true');
+            } else {
+                btn.innerText = 'Ajukan Pembelian';
+                btn.style.backgroundColor = '';
+                btn.style.borderColor = '';
+                btn.style.cursor = 'pointer';
+                btn.removeAttribute('data-already-requested');
+            }
+        }
+
+        function handleBuyButtonClick() {
+            <?php if (!$isLoggedIn): ?>
+                window.location.href = '<?= route('/login') ?>';
+                return;
+            <?php endif; ?>
+
+            if (isItemAlreadyRequested()) {
+                alert('Anda sudah mengajukan pembelian untuk barang ini. Pembeli tidak dapat mengajukan barang yang sama lebih dari 1 kali.');
+                window.location.href = '<?= route('/riwayat.php') ?>';
+                return;
+            }
+
+            openBuyModal();
+        }
+
         function openBuyModal() {
             <?php if (!$isLoggedIn): ?>
                 window.location.href = '<?= route('/login') ?>';
                 return;
             <?php endif; ?>
+
+            if (isItemAlreadyRequested()) {
+                alert('Anda sudah mengajukan pembelian untuk barang ini. Pembeli tidak dapat mengajukan barang yang sama lebih dari 1 kali.');
+                window.location.href = '<?= route('/riwayat.php') ?>';
+                return;
+            }
+
             document.getElementById('buyModal').classList.add('show');
         }
 
@@ -1019,6 +1114,13 @@ if (count($recommendations) < 4) {
         }
 
         async function confirmPurchase() {
+            if (isItemAlreadyRequested()) {
+                alert('Anda sudah mengajukan pembelian untuk barang ini. Pembeli tidak dapat mengajukan barang yang sama lebih dari 1 kali.');
+                closeBuyModal();
+                window.location.href = '<?= route('/riwayat.php') ?>';
+                return;
+            }
+
             const btn = document.getElementById('btnConfirmBuy');
             if (btn) {
                 btn.disabled = true;
@@ -1128,6 +1230,10 @@ if (count($recommendations) < 4) {
             closeReportModal();
             alert('Terima kasih. Laporan Anda telah kami terima untuk ditinjau oleh tim PasarKampus.');
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateBuyButtonState();
+        });
     </script>
 </body>
 </html>

@@ -3,6 +3,9 @@
 if (!defined('UPLOAD_BASEDIR')) {
 	define('UPLOAD_BASEDIR', dirname(__DIR__) . '/public/uploads');
 }
+if (!is_dir(UPLOAD_BASEDIR)) {
+	@mkdir(UPLOAD_BASEDIR, 0775, true);
+}
 
 function storeFile(string $target_dir, array $file, string $new_namefile): bool {
 	if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || !isset($file['tmp_name']) || !is_uploaded_file($file['tmp_name']) || $new_namefile === '' || basename($new_namefile) !== $new_namefile) {

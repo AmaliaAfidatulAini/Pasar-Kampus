@@ -1,9 +1,176 @@
 <?php
-$session = get_session();
-$userName = $session['name'] ?? 'Pengguna';
-$userEmail = $session['email'] ?? '';
-$userCampus = $session['campus'] ?? '';
-$userPhone = $session['phone'] ?? '';
+$session = session_include('/login');
+$userId = (int) ($session['user_id'] ?? 0);
+
+// Handle AJAX / Form submission for profile update
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'update_profile' || isset($_POST['save_profile']))) {
+    $gender = trim((string)($_POST['jenis_kelamin'] ?? ''));
+    $birthDate = trim((string)($_POST['tanggal_lahir'] ?? ''));
+    $alamat = trim((string)($_POST['alamat'] ?? ''));
+    $kelurahan = trim((string)($_POST['kelurahan'] ?? ''));
+
+    $avatarUrl = null;
+    $attId = null;
+
+    if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
+        $allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/jpg'];
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $_FILES['avatar']['tmp_name']);
+        finfo_close($finfo);
+
+        if (in_array($mime, $allowed, true)) {
+            $ext = pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION);
+            if (!$ext) $ext = 'jpg';
+            $fileName = 'avatar_' . $userId . '_' . time() . '.' . strtolower($ext);
+            $targetDir = BASE_PATH . '/public/uploads/avatars';
+            if (!is_dir($targetDir)) {
+                mkdir($targetDir, 0775, true);
+            }
+            if (move_uploaded_file($_FILES['avatar']['tmp_name'], $targetDir . '/' . $fileName)) {
+                $avatarUrl = upload('avatars/' . $fileName);
+
+                // Insert into attachments table
+                try {
+                    $attIns = executeQuery(
+                        "INSERT INTO attachments (product_id, report_id, attachment_type, file_path, file_name, file_type, file_size, created_at, updated_at)
+                         VALUES (NULL, NULL, 0, :path, :name, :type, :size, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                         RETURNING attachment_id",
+                        [
+                            'path' => $avatarUrl,
+                            'name' => $fileName,
+                            'type' => $mime,
+                            'size' => (int) $_FILES['avatar']['size']
+                        ],
+                        'fetch'
+                    );
+                    if ($attIns && isset($attIns['attachment_id'])) {
+                        $attId = (int) $attIns['attachment_id'];
+                    }
+                } catch (Throwable $e) {
+                    error_log('Insert avatar attachment failed: ' . $e->getMessage());
+                }
+            }
+        }
+    }
+
+    // Check existing profile in user_profiles
+    $existing = executeQuery("SELECT profile_id, avatar_url, attachment_id FROM user_profiles WHERE user_id = :uid", ['uid' => $userId], 'fetch');
+
+    if ($existing) {
+        $updateSql = "UPDATE user_profiles SET 
+                        gender = :gender, 
+                        birth_date = :birth_date, 
+                        address = :address, 
+                        subdistrict = :subdistrict, 
+                        updated_at = CURRENT_TIMESTAMP";
+        $binds = [
+            'gender' => $gender,
+            'birth_date' => $birthDate,
+            'address' => $alamat,
+            'subdistrict' => $kelurahan,
+            'uid' => $userId
+        ];
+        if ($avatarUrl) {
+            $updateSql .= ", avatar_url = :avatar_url";
+            $binds['avatar_url'] = $avatarUrl;
+            if ($attId) {
+                $updateSql .= ", attachment_id = :attachment_id";
+                $binds['attachment_id'] = $attId;
+            }
+        }
+        $updateSql .= " WHERE user_id = :uid";
+        executeQuery($updateSql, $binds);
+    } else {
+        $insertSql = "INSERT INTO user_profiles (user_id, name, gender, birth_date, address, subdistrict, avatar_url, attachment_id, created_at, updated_at) 
+                      VALUES (:uid, :name, :gender, :birth_date, :address, :subdistrict, :avatar_url, :attachment_id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+        executeQuery($insertSql, [
+            'uid' => $userId,
+            'name' => $session['name'] ?? 'Pengguna',
+            'gender' => $gender,
+            'birth_date' => $birthDate,
+            'address' => $alamat,
+            'subdistrict' => $kelurahan,
+            'avatar_url' => $avatarUrl,
+            'attachment_id' => $attId
+        ]);
+    }
+
+    // Update Session
+    $_SESSION['gender'] = $gender;
+    $_SESSION['birth_date'] = $birthDate;
+    $_SESSION['address'] = $alamat;
+    $_SESSION['subdistrict'] = $kelurahan;
+    if ($avatarUrl) {
+        $_SESSION['avatar_url'] = $avatarUrl;
+    }
+
+    $finalAvatar = $avatarUrl ?: ($existing['avatar_url'] ?? null);
+
+    if (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json')) {
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'message' => 'Perubahan profil berhasil disimpan ke database!',
+            'avatar_url' => $finalAvatar,
+            'data' => [
+                'gender' => $gender,
+                'birth_date' => $birthDate,
+                'address' => $alamat,
+                'subdistrict' => $kelurahan,
+                'avatar_url' => $finalAvatar
+            ]
+        ]);
+        exit;
+    }
+
+    flash('success', 'Perubahan profil berhasil disimpan!');
+    redirect('/profil.php', 302);
+    exit;
+}
+
+// Fetch current user and profile data from DB
+$dbProfile = executeQuery(
+    "SELECT u.email, u.role, up.* 
+     FROM users u
+     LEFT JOIN user_profiles up ON up.user_id = u.user_id
+     WHERE u.user_id = :uid",
+    ['uid' => $userId],
+    'fetch'
+) ?: [];
+
+$userName = $dbProfile['name'] ?? $session['name'] ?? 'Pengguna';
+$userEmail = $dbProfile['email'] ?? $session['email'] ?? '';
+$userCampus = $dbProfile['campus'] ?? $session['campus'] ?? '';
+$userPhone = $dbProfile['phone'] ?? $session['phone'] ?? '';
+$userGender = $dbProfile['gender'] ?? $session['gender'] ?? '';
+$userBirthDate = $dbProfile['birth_date'] ?? $session['birth_date'] ?? '';
+$userAddress = $dbProfile['address'] ?? $session['address'] ?? '';
+$userSubdistrict = $dbProfile['subdistrict'] ?? $session['subdistrict'] ?? '';
+$userAvatar = $dbProfile['avatar_url'] ?? $session['avatar_url'] ?? '';
+
+// Parse birth date components for dropdowns
+$curDay = '';
+$curMonth = '';
+$curYear = '';
+if (!empty($userBirthDate)) {
+    if (str_contains($userBirthDate, '-')) {
+        $parts = explode('-', $userBirthDate);
+        if (strlen($parts[0]) === 4) {
+            $curYear = $parts[0];
+            $curMonth = str_pad($parts[1] ?? '', 2, '0', STR_PAD_LEFT);
+            $curDay = str_pad($parts[2] ?? '', 2, '0', STR_PAD_LEFT);
+        } else {
+            $curDay = str_pad($parts[0] ?? '', 2, '0', STR_PAD_LEFT);
+            $curMonth = str_pad($parts[1] ?? '', 2, '0', STR_PAD_LEFT);
+            $curYear = $parts[2] ?? '';
+        }
+    } elseif (str_contains($userBirthDate, '/')) {
+        $parts = explode('/', $userBirthDate);
+        $curDay = str_pad($parts[0] ?? '', 2, '0', STR_PAD_LEFT);
+        $curMonth = str_pad($parts[1] ?? '', 2, '0', STR_PAD_LEFT);
+        $curYear = $parts[2] ?? '';
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -100,29 +267,28 @@ $userPhone = $session['phone'] ?? '';
             left: 14px;
             top: 50%;
             transform: translateY(-50%);
-            color: #64748B;
-            pointer-events: none;
             display: flex;
             align-items: center;
+            color: #64748B;
+            pointer-events: none;
         }
 
         .pk-nav-menu {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 24px;
         }
 
         .pk-nav-link {
             color: #FFFFFF;
             text-decoration: none;
-            font-size: 0.88rem;
             font-weight: 600;
-            transition: opacity 0.2s;
+            font-size: 0.92rem;
+            transition: opacity 0.15s;
         }
 
         .pk-nav-link:hover {
             opacity: 0.85;
-            text-decoration: underline;
         }
 
         /* 2. PROFILE CONTAINER */
@@ -203,7 +369,6 @@ $userPhone = $session['phone'] ?? '';
             height: 100%;
             object-fit: cover;
             border-radius: 50%;
-            display: none;
         }
 
         .pk-avatar-placeholder-text {
@@ -264,7 +429,7 @@ $userPhone = $session['phone'] ?? '';
 
         .pk-form-label {
             font-size: 1rem;
-            font-weight: 500;
+            font-weight: 600;
             color: #0F172A;
         }
 
@@ -290,6 +455,26 @@ $userPhone = $session['phone'] ?? '';
         .pk-form-input:focus {
             border-color: #2563EB;
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .pk-form-select {
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-color: #FFFFFF;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            background-size: 16px;
+            padding-right: 38px;
+        }
+
+        /* Date of Birth 3-Dropdown Grid */
+        .pk-dob-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.4fr 1.1fr;
+            gap: 10px;
         }
 
         /* Action Simpan Button Row */
@@ -319,30 +504,26 @@ $userPhone = $session['phone'] ?? '';
             box-shadow: 0 6px 18px rgba(29, 53, 109, 0.3);
         }
 
-        .pk-btn-simpan:active {
-            transform: translateY(1px);
-        }
-
-        /* Toast Feedback */
+        /* Toast Popup */
         .pk-toast {
             position: fixed;
             bottom: 30px;
             right: 30px;
-            background: #10B981;
+            background: #0F172A;
             color: #FFFFFF;
-            padding: 14px 24px;
+            padding: 14px 22px;
             border-radius: 12px;
-            font-weight: 600;
-            font-size: 0.92rem;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
             display: flex;
             align-items: center;
-            gap: 10px;
-            z-index: 10000;
+            gap: 12px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            z-index: 1000;
             opacity: 0;
             transform: translateY(20px);
-            pointer-events: none;
             transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
         }
 
         .pk-toast.show {
@@ -366,6 +547,9 @@ $userPhone = $session['phone'] ?? '';
             }
             .pk-nav-search {
                 max-width: 200px;
+            }
+            .pk-dob-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -415,8 +599,8 @@ $userPhone = $session['phone'] ?? '';
                 <div class="pk-avatar-upload-box">
                     <input type="file" id="profileFileInput" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
                     <div class="pk-avatar-circle" id="avatarCircleBtn" onclick="triggerFileUpload()" title="Klik untuk unggah foto">
-                        <img id="avatarPreviewImg" alt="Foto Profil">
-                        <div class="pk-avatar-placeholder-text" id="avatarPlaceholderText">
+                        <img id="avatarPreviewImg" alt="Foto Profil" src="<?= esc($userAvatar) ?>" style="<?= !empty($userAvatar) ? 'display:block;' : 'display:none;' ?>">
+                        <div class="pk-avatar-placeholder-text" id="avatarPlaceholderText" style="<?= !empty($userAvatar) ? 'display:none;' : '' ?>">
                             Unggah<br>foto
                         </div>
                     </div>
@@ -426,7 +610,7 @@ $userPhone = $session['phone'] ?? '';
                 <!-- Welcome Text -->
                 <div class="pk-welcome-text">
                     <h1>Selamat datang!</h1>
-                    <h2 id="profileUsername">user</h2>
+                    <h2 id="profileUsername"><?= esc($userName) ?></h2>
                 </div>
             </div>
         </section>
@@ -435,28 +619,71 @@ $userPhone = $session['phone'] ?? '';
         <section class="pk-profile-card">
             <form id="profileForm" onsubmit="saveProfileData(event)">
                 <div class="pk-form-grid">
-                    <!-- Left Column -->
+                    <!-- Left Column: Dropdown Jenis Kelamin -->
                     <div class="pk-form-group">
                         <label class="pk-form-label" for="inputJenisKelamin">Jenis Kelamin</label>
-                        <input type="text" id="inputJenisKelamin" class="pk-form-input" placeholder="Masukkan jenis kelamin">
+                        <select id="inputJenisKelamin" name="jenis_kelamin" class="pk-form-input pk-form-select">
+                            <option value="" <?= empty($userGender) ? 'selected' : '' ?> disabled>-- Pilih jenis kelamin --</option>
+                            <option value="Laki-laki" <?= ($userGender === 'Laki-laki') ? 'selected' : '' ?>>Laki-laki</option>
+                            <option value="Perempuan" <?= ($userGender === 'Perempuan') ? 'selected' : '' ?>>Perempuan</option>
+                        </select>
                     </div>
 
-                    <!-- Right Column -->
+                    <!-- Right Column: Tanggal Lahir (Pilih Tanggal, Bulan, Tahun) -->
                     <div class="pk-form-group">
-                        <label class="pk-form-label" for="inputTanggalLahir">Tanggal Lahir (dd/mm/yy)</label>
-                        <input type="text" id="inputTanggalLahir" class="pk-form-input" placeholder="Masukkan tanggal lahir">
+                        <label class="pk-form-label">Tanggal Lahir</label>
+                        <div class="pk-dob-grid">
+                            <!-- Dropdown Tanggal -->
+                            <select id="selectTanggal" class="pk-form-input pk-form-select" onchange="syncTanggalLahir()" aria-label="Tanggal">
+                                <option value="">Tanggal</option>
+                                <?php for ($d = 1; $d <= 31; $d++): 
+                                    $dStr = sprintf('%02d', $d);
+                                ?>
+                                    <option value="<?= $dStr ?>" <?= ($curDay === $dStr) ? 'selected' : '' ?>><?= $d ?></option>
+                                <?php endfor; ?>
+                            </select>
+
+                            <!-- Dropdown Bulan -->
+                            <select id="selectBulan" class="pk-form-input pk-form-select" onchange="syncTanggalLahir()" aria-label="Bulan">
+                                <option value="">Bulan</option>
+                                <?php
+                                $months = [
+                                    '01' => 'Januari', '02' => 'Februari', '03' => 'Maret',
+                                    '04' => 'April', '05' => 'Mei', '06' => 'Juni',
+                                    '07' => 'Juli', '08' => 'Agustus', '09' => 'September',
+                                    '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
+                                ];
+                                foreach ($months as $mNum => $mName):
+                                ?>
+                                    <option value="<?= $mNum ?>" <?= ($curMonth === $mNum) ? 'selected' : '' ?>><?= $mName ?></option>
+                                <?php endforeach; ?>
+                            </select>
+
+                            <!-- Dropdown Tahun -->
+                            <select id="selectTahun" class="pk-form-input pk-form-select" onchange="syncTanggalLahir()" aria-label="Tahun">
+                                <option value="">Tahun</option>
+                                <?php
+                                $thisYear = (int) date('Y');
+                                for ($y = $thisYear - 10; $y >= 1950; $y--):
+                                    $yStr = (string) $y;
+                                ?>
+                                    <option value="<?= $yStr ?>" <?= ($curYear === $yStr) ? 'selected' : '' ?>><?= $y ?></option>
+                                <?php endfor; ?>
+                            </select>
+                        </div>
+                        <input type="hidden" id="inputTanggalLahir" name="tanggal_lahir" value="<?= esc($userBirthDate) ?>">
                     </div>
 
-                    <!-- Left Column -->
+                    <!-- Left Column: Alamat Lengkap -->
                     <div class="pk-form-group">
                         <label class="pk-form-label" for="inputAlamat">Alamat lengkap</label>
-                        <input type="text" id="inputAlamat" class="pk-form-input" placeholder="Masukkan alamat">
+                        <input type="text" id="inputAlamat" class="pk-form-input" placeholder="Masukkan alamat lengkap" value="<?= esc($userAddress) ?>">
                     </div>
 
-                    <!-- Right Column -->
+                    <!-- Right Column: Kelurahan -->
                     <div class="pk-form-group">
                         <label class="pk-form-label" for="inputKelurahan">Kelurahan</label>
-                        <input type="text" id="inputKelurahan" class="pk-form-input" placeholder="Masukkan kelurahan">
+                        <input type="text" id="inputKelurahan" class="pk-form-input" placeholder="Masukkan kelurahan" value="<?= esc($userSubdistrict) ?>">
                     </div>
                 </div>
             </form>
@@ -464,7 +691,7 @@ $userPhone = $session['phone'] ?? '';
 
         <!-- Right Aligned Simpan Button -->
         <div class="pk-action-row">
-            <button type="button" class="pk-btn-simpan" onclick="saveProfileData()">Simpan</button>
+            <button type="button" class="pk-btn-simpan" id="btnSimpanProfile" onclick="saveProfileData()">Simpan</button>
         </div>
 
     </main>
@@ -472,7 +699,7 @@ $userPhone = $session['phone'] ?? '';
     <!-- Toast Notification -->
     <div id="saveToast" class="pk-toast">
         <span>✅</span>
-        <span>Perubahan profil berhasil disimpan!</span>
+        <span id="toastMsg">Perubahan profil berhasil disimpan ke database!</span>
     </div>
 
     <!-- ================= 3. FOOTER ================= -->
@@ -535,7 +762,7 @@ $userPhone = $session['phone'] ?? '';
 
     <!-- JavaScript logic -->
     <script>
-        let currentUploadedPhoto = '';
+        let selectedAvatarFile = null;
 
         function triggerFileUpload() {
             const input = document.getElementById('profileFileInput');
@@ -545,14 +772,14 @@ $userPhone = $session['phone'] ?? '';
         function handleImageUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
+            selectedAvatarFile = file;
 
             const reader = new FileReader();
             reader.onload = function(e) {
-                currentUploadedPhoto = e.target.result;
                 const img = document.getElementById('avatarPreviewImg');
                 const placeholder = document.getElementById('avatarPlaceholderText');
                 if (img) {
-                    img.src = currentUploadedPhoto;
+                    img.src = e.target.result;
                     img.style.display = 'block';
                 }
                 if (placeholder) {
@@ -562,76 +789,112 @@ $userPhone = $session['phone'] ?? '';
             reader.readAsDataURL(file);
         }
 
-        function loadProfileData() {
-            const raw = localStorage.getItem('preloved_user');
-            if (raw) {
-                try {
-                    const u = JSON.parse(raw);
-                    // Display name
-                    const name = u.nama || u.username || 'user';
-                    const usernameEl = document.getElementById('profileUsername');
-                    if (usernameEl) {
-                        usernameEl.innerText = name;
-                    }
-
-                    // Form fields
-                    if (u.jenisKelamin) document.getElementById('inputJenisKelamin').value = u.jenisKelamin;
-                    if (u.tanggalLahir) document.getElementById('inputTanggalLahir').value = u.tanggalLahir;
-                    if (u.alamat) document.getElementById('inputAlamat').value = u.alamat;
-                    if (u.kelurahan) document.getElementById('inputKelurahan').value = u.kelurahan;
-
-                    // Photo
-                    if (u.foto && u.foto.trim() !== '') {
-                        currentUploadedPhoto = u.foto;
-                        const img = document.getElementById('avatarPreviewImg');
-                        const placeholder = document.getElementById('avatarPlaceholderText');
-                        if (img) {
-                            img.src = u.foto;
-                            img.style.display = 'block';
-                        }
-                        if (placeholder) {
-                            placeholder.style.display = 'none';
-                        }
-                    }
-                } catch (e) {
-                    console.error('Error parsing preloved_user', e);
-                }
+        function syncTanggalLahir() {
+            const d = document.getElementById('selectTanggal').value;
+            const m = document.getElementById('selectBulan').value;
+            const y = document.getElementById('selectTahun').value;
+            const hidden = document.getElementById('inputTanggalLahir');
+            if (d && m && y) {
+                hidden.value = `${y}-${m}-${d}`;
+            } else {
+                hidden.value = '';
             }
         }
 
-        function saveProfileData(event) {
+        function setTanggalLahirFromValue(val) {
+            if (!val) return;
+            let d = '', m = '', y = '';
+            if (val.includes('-')) {
+                const parts = val.split('-');
+                if (parts[0].length === 4) {
+                    y = parts[0];
+                    m = parts[1].padStart(2, '0');
+                    d = parts[2] ? parts[2].padStart(2, '0') : '';
+                } else {
+                    d = parts[0].padStart(2, '0');
+                    m = parts[1].padStart(2, '0');
+                    y = parts[2] || '';
+                }
+            } else if (val.includes('/')) {
+                const parts = val.split('/');
+                d = parts[0].padStart(2, '0');
+                m = parts[1].padStart(2, '0');
+                y = parts[2] || '';
+            }
+            if (d) document.getElementById('selectTanggal').value = d;
+            if (m) document.getElementById('selectBulan').value = m;
+            if (y) document.getElementById('selectTahun').value = y;
+            syncTanggalLahir();
+        }
+
+        async function saveProfileData(event) {
             if (event) event.preventDefault();
 
-            let u = {};
-            const raw = localStorage.getItem('preloved_user');
-            if (raw) {
-                try {
-                    u = JSON.parse(raw);
-                } catch (e) {
-                    u = {};
+            syncTanggalLahir();
+
+            const btn = document.getElementById('btnSimpanProfile');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = 'Menyimpan...';
+            }
+
+            const gender = document.getElementById('inputJenisKelamin').value;
+            const tgl = document.getElementById('inputTanggalLahir').value;
+            const alamat = document.getElementById('inputAlamat').value.trim();
+            const kelurahan = document.getElementById('inputKelurahan').value.trim();
+
+            const fd = new FormData();
+            fd.append('action', 'update_profile');
+            fd.append('jenis_kelamin', gender);
+            fd.append('tanggal_lahir', tgl);
+            fd.append('alamat', alamat);
+            fd.append('kelurahan', kelurahan);
+            if (selectedAvatarFile) {
+                fd.append('avatar', selectedAvatarFile);
+            }
+
+            try {
+                const res = await fetch(window.location.href, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json' },
+                    body: fd
+                });
+                const result = await res.json();
+                if (result.success) {
+                    // Update local storage mirror for compatibility
+                    let u = {};
+                    try { u = JSON.parse(localStorage.getItem('preloved_user') || '{}'); } catch(e){}
+                    u.jenisKelamin = gender;
+                    u.tanggalLahir = tgl;
+                    u.alamat = alamat;
+                    u.kelurahan = kelurahan;
+                    if (result.avatar_url) {
+                        u.foto = result.avatar_url;
+                    }
+                    localStorage.setItem('preloved_user', JSON.stringify(u));
+                    localStorage.setItem('pk_logged_in', 'true');
+
+                    // Show Toast
+                    const toastMsg = document.getElementById('toastMsg');
+                    if (toastMsg) toastMsg.innerText = result.message || 'Perubahan profil berhasil disimpan!';
+                    const toast = document.getElementById('saveToast');
+                    if (toast) {
+                        toast.classList.add('show');
+                        setTimeout(() => {
+                            toast.classList.remove('show');
+                        }, 3000);
+                    }
+                } else {
+                    alert(result.message || 'Gagal menyimpan profil ke database.');
                 }
-            }
-
-            // Update fields
-            u.jenisKelamin = document.getElementById('inputJenisKelamin').value.trim();
-            u.tanggalLahir = document.getElementById('inputTanggalLahir').value.trim();
-            u.alamat = document.getElementById('inputAlamat').value.trim();
-            u.kelurahan = document.getElementById('inputKelurahan').value.trim();
-
-            if (currentUploadedPhoto) {
-                u.foto = currentUploadedPhoto;
-            }
-
-            localStorage.setItem('preloved_user', JSON.stringify(u));
-            localStorage.setItem('pk_logged_in', 'true');
-
-            // Show Toast
-            const toast = document.getElementById('saveToast');
-            if (toast) {
-                toast.classList.add('show');
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                }, 3000);
+            } catch (err) {
+                console.error('Error saving profile to database:', err);
+                alert('Terjadi kesalahan saat menyimpan data ke database.');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = 'Simpan';
+                }
             }
         }
 
@@ -642,10 +905,6 @@ $userPhone = $session['phone'] ?? '';
                 window.location.href = '<?= route('/dashboard.php') ?>';
             }
         }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            loadProfileData();
-        });
     </script>
 </body>
 </html>

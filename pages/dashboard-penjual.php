@@ -1,6 +1,47 @@
 <?php
 $session = session_include('/login');
-$userId = $session['user_id'] ?? null;
+$userId = (int) ($session['user_id'] ?? 0);
+
+// Handle Actions (Terima, Tolak, Batalkan, Selesaikan, Hapus)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    $action = $_POST['action'];
+    $txId = (int) ($_POST['transaction_id'] ?? 0);
+    $barangId = (int) ($_POST['barang_id'] ?? $_POST['product_id'] ?? 0);
+
+    if ($action === 'terima_pengajuan' && $txId) {
+        $req = executeQuery("SELECT product_id, user_id FROM requests WHERE transaction_id = :id", ['id' => $txId], 'fetch');
+        if ($req) {
+            $pid = (int) $req['product_id'];
+            executeQuery("UPDATE requests SET status = 'PROCESS', updated_at = CURRENT_TIMESTAMP WHERE transaction_id = :id", ['id' => $txId]);
+            executeQuery("UPDATE products SET status = 'Proses', updated_at = CURRENT_TIMESTAMP WHERE product_id = :pid", ['pid' => $pid]);
+        }
+    } elseif ($action === 'tolak_pengajuan' && $txId) {
+        executeQuery("UPDATE requests SET status = 'CANCELLED', updated_at = CURRENT_TIMESTAMP WHERE transaction_id = :id", ['id' => $txId]);
+    } elseif ($action === 'batalkan_pengajuan_modal' && $txId) {
+        $req = executeQuery("SELECT product_id FROM requests WHERE transaction_id = :id", ['id' => $txId], 'fetch');
+        executeQuery("UPDATE requests SET status = 'CANCELLED', updated_at = CURRENT_TIMESTAMP WHERE transaction_id = :id", ['id' => $txId]);
+        $targetPid = $barangId ?: ($req ? (int)$req['product_id'] : 0);
+        if ($targetPid) {
+            executeQuery("UPDATE products SET status = 'Tersedia', updated_at = CURRENT_TIMESTAMP WHERE product_id = :pid", ['pid' => $targetPid]);
+        }
+    } elseif ($action === 'batalkan_proses' && $barangId) {
+        executeQuery("UPDATE products SET status = 'Tersedia', updated_at = CURRENT_TIMESTAMP WHERE product_id = :pid", ['pid' => $barangId]);
+        executeQuery("UPDATE requests SET status = 'CANCELLED', updated_at = CURRENT_TIMESTAMP WHERE product_id = :pid AND status = 'PROCESS'", ['pid' => $barangId]);
+    } elseif ($action === 'selesaikan_transaksi' && $barangId) {
+        executeQuery("UPDATE products SET status = 'Terjual', updated_at = CURRENT_TIMESTAMP WHERE product_id = :pid", ['pid' => $barangId]);
+        executeQuery("UPDATE requests SET status = 'COMPLETED', completed_date = CURRENT_DATE, updated_at = CURRENT_TIMESTAMP WHERE product_id = :pid AND status = 'PROCESS'", ['pid' => $barangId]);
+    } elseif ($action === 'hapus_barang' && $barangId && $userId) {
+        executeQuery("DELETE FROM products WHERE product_id = :pid AND user_id = :uid", ['pid' => $barangId, 'uid' => $userId]);
+    }
+
+    if (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json')) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true]);
+        exit;
+    }
+    redirect('/dashboard-penjual.php', 302);
+    exit;
+}
 
 $sellerProductsDb = [];
 if ($userId) {
@@ -16,12 +57,13 @@ if ($userId) {
          LEFT JOIN categories c ON c.categories_id = p.category_id
          LEFT JOIN attachments a ON a.product_id = p.product_id AND a.attachment_type = 1
          WHERE p.user_id = :user_id
-         ORDER BY p.product_id ASC",
+         ORDER BY p.product_id DESC",
         ['user_id' => $userId],
         'fetchAll'
     );
 
     foreach ($sellerProductsDb as &$sp) {
+        $sp['id'] = (int) $sp['id'];
         $sp['harga'] = (int) $sp['harga'];
         $reqs = executeQuery(
             "SELECT r.transaction_id AS id,
@@ -32,6 +74,7 @@ if ($userId) {
                     CASE 
                         WHEN r.status = 'PROCESS' THEN 'Diterima'
                         WHEN r.status = 'CANCELLED' THEN 'Ditolak'
+                        WHEN r.status = 'COMPLETED' THEN 'Selesai'
                         ELSE 'Pending'
                     END AS status
              FROM requests r
@@ -41,11 +84,15 @@ if ($userId) {
             ['product_id' => $sp['id']],
             'fetchAll'
         );
+        foreach ($reqs as &$rq) {
+            $rq['id'] = (int) $rq['id'];
+        }
+        unset($rq);
         $sp['pengajuanList'] = $reqs;
         if ($sp['status'] === 'Proses') {
             $accepted = array_filter($reqs, fn($r) => $r['status'] === 'Diterima');
             $first = reset($accepted);
-            $sp['pembeliDiterima'] = $first ? $first['pembeli'] : 'Abdul';
+            $sp['pembeliDiterima'] = $first ? $first['pembeli'] : 'Pembeli';
             $sp['pembeliWa'] = $first ? $first['wa'] : '081987654321';
         }
     }
@@ -128,7 +175,7 @@ if ($userId) {
         .btn-selesai { background: #2563EB; color: #FFF; border: none; padding: 7px 16px; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer; }
         .btn-batal-proses { background: #E2E8F0; color: #475569; border: none; padding: 7px 16px; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer; }
 
-        /* Modal Styles (Sama seperti riwayat.php) */
+        /* Modal Styles */
         .pk-modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(4px);
@@ -167,7 +214,7 @@ if ($userId) {
             <a href="tambah-barang.php" class="btn-tambah-barang">Tambah barang</a>
         </div>
 
-        <!-- Filter Bar Toolbar (Poin 5) -->
+        <!-- Filter Bar Toolbar -->
         <div class="filter-toolbar">
             <select id="filterStatus" class="filter-select" onchange="renderBarangList()">
                 <option value="Semua">Semua Status</option>
@@ -182,7 +229,9 @@ if ($userId) {
                 <option value="Buku">Buku</option>
                 <option value="Elektronik">Elektronik</option>
                 <option value="Pakaian">Pakaian</option>
-                <option value="Perlengkapan">Perlengkapan</option>
+                <option value="Perlengkapan Kos">Perlengkapan Kos</option>
+                <option value="ATK">ATK</option>
+                <option value="Lainnya">Lainnya</option>
             </select>
 
             <input type="text" id="filterSearch" class="filter-search" placeholder="Cari nama barang..." oninput="renderBarangList()">
@@ -194,7 +243,7 @@ if ($userId) {
         </div>
     </div>
 
-    <!-- Modal Cek Pengajuan (Poin 2) -->
+    <!-- Modal Cek Pengajuan -->
     <div id="pengajuanModal" class="pk-modal-overlay" onclick="if(event.target.id==='pengajuanModal') closePengajuanModal()">
         <div class="pk-modal-container">
             <button class="pk-modal-close" onclick="closePengajuanModal()">&times;</button>
@@ -218,76 +267,21 @@ if ($userId) {
     </div>
 
     <script>
-        const dbSellerProducts = <?= json_encode($sellerProductsDb, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
-        // Data Seed Default Penjual
-        const defaultPenjualBarang = (Array.isArray(dbSellerProducts) && dbSellerProducts.length > 0) ? dbSellerProducts : [
-            {
-                id: 1,
-                namaBarang: "Keyboard Logiac - Silver",
-                harga: 90000,
-                kategori: "Elektronik",
-                status: "Tersedia",
-                gambar: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=300",
-                pengajuanList: [
-                    { id: 101, pembeli: "Budi", kampus: "UB", wa: "081234567890", waktu: "12 Oktober 2026", status: "Pending" },
-                    { id: 102, pembeli: "Andi", kampus: "UM", wa: "081234567891", waktu: "11 Oktober 2026", status: "Ditolak" }
-                ]
-            },
-            {
-                id: 2,
-                namaBarang: "Buku Informatika",
-                harga: 35000,
-                kategori: "Buku",
-                status: "Proses",
-                pembeliDiterima: "Abdul",
-                pembeliWa: "081987654321",
-                gambar: "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=300",
-                pengajuanList: [
-                    { id: 103, pembeli: "Abdul", kampus: "UB", wa: "081987654321", waktu: "15 Oktober 2026", status: "Diterima" }
-                ]
-            },
-            {
-                id: 3,
-                namaBarang: "Jaket Adibas",
-                harga: 80000,
-                kategori: "Pakaian",
-                status: "Ditolak", // Poin 3: Ditolak/Dihapus oleh admin
-                tglDitolak: "19 Okt 2026",
-                alasanAdmin: "Dihapus Admin (Melanggar Aturan)",
-                gambar: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300",
-                pengajuanList: []
-            },
-            {
-                id: 4,
-                namaBarang: "Kipas Angin",
-                harga: 95000,
-                kategori: "Elektronik",
-                status: "Terjual",
-                tglTerjual: "20 Okt 2026",
-                gambar: "https://images.unsplash.com/photo-1618941721653-9652a23077e6?w=300",
-                pengajuanList: []
-            }
-        ];
+        const dbSellerProducts = <?= json_encode($sellerProductsDb, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?> || [];
 
         function getPenjualData() {
             if (Array.isArray(dbSellerProducts) && dbSellerProducts.length > 0) {
-                const stored = localStorage.getItem('pk_penjual_barang');
-                if (!stored) {
-                    localStorage.setItem('pk_penjual_barang', JSON.stringify(dbSellerProducts));
-                    return dbSellerProducts;
-                }
-                try {
-                    const parsed = JSON.parse(stored);
-                    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-                } catch(e){}
+                localStorage.setItem('pk_penjual_barang', JSON.stringify(dbSellerProducts));
                 return dbSellerProducts;
             }
             const stored = localStorage.getItem('pk_penjual_barang');
             if (stored) {
-                try { return JSON.parse(stored); } catch(e){}
+                try {
+                    const parsed = JSON.parse(stored);
+                    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+                } catch(e){}
             }
-            localStorage.setItem('pk_penjual_barang', JSON.stringify(defaultPenjualBarang));
-            return defaultPenjualBarang;
+            return dbSellerProducts || [];
         }
 
         function savePenjualData(data) {
@@ -309,7 +303,7 @@ if ($userId) {
             const filtered = list.filter(item => {
                 const matchStatus = (fStatus === 'Semua') || (item.status === fStatus);
                 const matchKat = (fKat === 'Semua') || (item.kategori === fKat);
-                const matchSearch = item.namaBarang.toLowerCase().includes(fSearch);
+                const matchSearch = (item.namaBarang || '').toLowerCase().includes(fSearch);
                 return matchStatus && matchKat && matchSearch;
             });
 
@@ -388,7 +382,7 @@ if ($userId) {
             }).join('');
         }
 
-        /* Logic Pop-up Modal Cek Pengajuan (Poin 2) */
+        /* Logic Pop-up Modal Cek Pengajuan */
         function openPengajuanModal(barangId) {
             activeModalBarangId = barangId;
             const list = getPenjualData();
@@ -424,6 +418,9 @@ if ($userId) {
                 } else if (p.status === 'Ditolak') {
                     statusSpan = `<span style="background:#FEE2E2; color:#B91C1C; padding:3px 8px; border-radius:4px; font-weight:700;">Ditolak</span>`;
                     btnAksi = `-`;
+                } else if (p.status === 'Selesai') {
+                    statusSpan = `<span style="background:#E2E8F0; color:#334155; padding:3px 8px; border-radius:4px; font-weight:700;">Selesai</span>`;
+                    btnAksi = `-`;
                 }
 
                 return `
@@ -443,8 +440,26 @@ if ($userId) {
             activeModalBarangId = null;
         }
 
+        /* Post to Database Helper */
+        async function sendDbAction(action, data = {}) {
+            try {
+                const fd = new FormData();
+                fd.append('action', action);
+                for (const k in data) {
+                    fd.append(k, data[k]);
+                }
+                await fetch(window.location.href, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json' },
+                    body: fd
+                });
+            } catch (e) {
+                console.error('Error executing action:', e);
+            }
+        }
+
         /* Logika Aksi Penjual */
-        function terimaPengajuan(pengajuanId) {
+        async function terimaPengajuan(pengajuanId) {
             let list = getPenjualData();
             const item = list.find(b => b.id === activeModalBarangId);
             if (!item) return;
@@ -458,10 +473,13 @@ if ($userId) {
                 savePenjualData(list);
                 closePengajuanModal();
                 renderBarangList();
+
+                // Save to Database
+                await sendDbAction('terima_pengajuan', { transaction_id: pengajuanId, barang_id: item.id });
             }
         }
 
-        function tolakPengajuan(pengajuanId) {
+        async function tolakPengajuan(pengajuanId) {
             let list = getPenjualData();
             const item = list.find(b => b.id === activeModalBarangId);
             if (!item) return;
@@ -472,10 +490,13 @@ if ($userId) {
                 savePenjualData(list);
                 renderPengajuanModalTable(item);
                 renderBarangList();
+
+                // Save to Database
+                await sendDbAction('tolak_pengajuan', { transaction_id: pengajuanId, barang_id: item.id });
             }
         }
 
-        function batalkanPengajuanInModal(pengajuanId) {
+        async function batalkanPengajuanInModal(pengajuanId) {
             let list = getPenjualData();
             const item = list.find(b => b.id === activeModalBarangId);
             if (!item) return;
@@ -489,10 +510,13 @@ if ($userId) {
                 savePenjualData(list);
                 closePengajuanModal();
                 renderBarangList();
+
+                // Save to Database
+                await sendDbAction('batalkan_pengajuan_modal', { transaction_id: pengajuanId, barang_id: item.id });
             }
         }
 
-        function batalkanProses(barangId) {
+        async function batalkanProses(barangId) {
             if (confirm('Kembalikan status barang menjadi Tersedia?')) {
                 let list = getPenjualData();
                 const item = list.find(b => b.id === barangId);
@@ -502,11 +526,14 @@ if ($userId) {
                     delete item.pembeliWa;
                     savePenjualData(list);
                     renderBarangList();
+
+                    // Save to Database
+                    await sendDbAction('batalkan_proses', { barang_id: barangId });
                 }
             }
         }
 
-        function selesaikanTransaksi(barangId) {
+        async function selesaikanTransaksi(barangId) {
             if (confirm('Tandai transaksi COD ini telah selesai? Barang akan diarsipkan sebagai Terjual.')) {
                 let list = getPenjualData();
                 const item = list.find(b => b.id === barangId);
@@ -515,16 +542,22 @@ if ($userId) {
                     item.tglTerjual = new Date().toLocaleDateString('id-ID');
                     savePenjualData(list);
                     renderBarangList();
+
+                    // Save to Database
+                    await sendDbAction('selesaikan_transaksi', { barang_id: barangId });
                 }
             }
         }
 
-        function hapusBarang(barangId) {
+        async function hapusBarang(barangId) {
             if (confirm('Apakah Anda yakin ingin menghapus barang jualan ini?')) {
                 let list = getPenjualData();
                 list = list.filter(b => b.id !== barangId);
                 savePenjualData(list);
                 renderBarangList();
+
+                // Save to Database
+                await sendDbAction('hapus_barang', { barang_id: barangId });
             }
         }
 

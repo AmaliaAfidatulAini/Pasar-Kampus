@@ -7,7 +7,7 @@ $session = get_session();
 $profile = [];
 if ($session !== null && isset($session['user_id'])) {
     $profile = fetch(executeQuery(
-        "SELECT name, phone, campus, subdistrict, district, preferences
+        "SELECT name, phone, campus, subdistrict, district, preferences, avatar_url, gender, birth_date, address
          FROM user_profiles
          WHERE user_id = ?
          ORDER BY profile_id DESC
@@ -93,8 +93,12 @@ $profileValue = static fn (string $value, string $fallback = '—'): string => $
             <div class="lp-auth-modal-card lp-profile-modal-card">
                 <button type="button" class="lp-modal-close" onclick="closeProfileModal()">&times;</button>
                 <div class="lp-profile-modal-header">
-                    <div class="lp-profile-avatar-large" id="modalUserAvatarBox">
-                        <span class="lp-avatar-initial"><?= esc($profileInitial) ?></span>
+                    <div class="lp-profile-avatar-large" id="modalUserAvatarBox" style="<?= !empty($profile['avatar_url']) ? 'padding:0; overflow:hidden;' : '' ?>">
+                        <?php if (!empty($profile['avatar_url'])): ?>
+                            <img src="<?= esc($profile['avatar_url']) ?>" alt="Avatar" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
+                        <?php else: ?>
+                            <span class="lp-avatar-initial"><?= esc($profileInitial) ?></span>
+                        <?php endif; ?>
                     </div>
                     <h3 id="modalUserName" class="lp-profile-name"><?= esc($profileName) ?></h3>
                     <span id="modalUserCampus" class="lp-profile-campus"><?= $profileValue($profileCampus, 'Kampus belum diisi') ?></span>

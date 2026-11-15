@@ -23,9 +23,13 @@ CREATE TABLE user_profiles (
     campus VARCHAR(255),
     student_number VARCHAR(50),
     preferences VARCHAR(255),
+    address VARCHAR(255),
     subdistrict VARCHAR(255),
     district VARCHAR(200),
     coordinates VARCHAR(255),
+    gender VARCHAR(20),
+    birth_date VARCHAR(50),
+    avatar_url VARCHAR(255),
     CONSTRAINT fk_user_profiles_users FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

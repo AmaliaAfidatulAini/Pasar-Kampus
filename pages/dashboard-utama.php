@@ -996,8 +996,12 @@ $allProducts = get_catalog_products();
                 <?php if ($isLoggedIn): ?>
                     <div class="lp-profile-wrapper">
                         <button type="button" id="lpProfileBtn" class="lp-profile-btn" onclick="toggleProfileDropdown(event)" aria-haspopup="true" aria-expanded="false" title="Menu Profil">
-                            <div class="lp-profile-circle" id="lpAvatarCircle">
-                                <span id="lpAvatarInitial" class="lp-avatar-initial"><?= esc($initial) ?></span>
+                            <div class="lp-profile-circle" id="lpAvatarCircle" style="<?= !empty($session['avatar_url']) ? 'padding:0; overflow:hidden;' : '' ?>">
+                                <?php if (!empty($session['avatar_url'])): ?>
+                                    <img src="<?= esc($session['avatar_url']) ?>" alt="Avatar" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
+                                <?php else: ?>
+                                    <span id="lpAvatarInitial" class="lp-avatar-initial"><?= esc($initial) ?></span>
+                                <?php endif; ?>
                             </div>
                         </button>
 
