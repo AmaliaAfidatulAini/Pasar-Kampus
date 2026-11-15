@@ -128,20 +128,19 @@ $barang = fetchAll($stmt);
                     <!-- Product 1: Keyboard Logiac -->
                     <?php foreach ($barang as $item): ?>
                         <?php 
-                        $categories = ["Scrap", "Minor", "Used", "Prelove"];
                         $item = (object) $item;
-                        // dd($item->product_id);
                         Component::include("common/card", [
                             "id" => $item->product_id,
                             "title" => $item->item_name,
                             "description" => $item->description,
                             "category" => $item->category_name,
                             "location" => $item->location,
-                            "condition" => $categories[$item->condition-1],
+                            "condition" => $item->condition,
                             "o_price" => $item->original_price,
                             "price" => $item->price,
                             "foto" => "https://placehold.co/400x500",
-                        ]) ?>
+                        ]) 
+                        ?>
                     <?php endforeach; ?>
                 </div>
 

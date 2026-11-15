@@ -9,16 +9,16 @@ VALUES
 ('nisa.dummy@pasarkampus.local', '$2y$10$XmLljyuVXiOef5xPWFnOresf/Qb6fWvdXJL7L0icuNcoDyYvzKjde', 'user');
 
 -- User Profiles Dummy
-INSERT INTO user_profiles (user_id, name, student_number, campus)
-SELECT users.user_id, profiles.name, profiles.student_number, profiles.campus
+INSERT INTO user_profiles (user_id, name, student_number, campus, district, subdistrict)
+SELECT users.user_id, profiles.name, profiles.student_number, profiles.campus, profiles.district, profiles.subdistrict
 FROM users
 JOIN (VALUES
-    ('fami@test.com', 'Fami Test', '2251501001', 'Universitas Brawijaya'),
-    ('sando@test.com', 'Sando Test', '2251501002', 'Universitas Negeri Malang'),
-    ('rani.dummy@pasarkampus.local', 'Rani Putri', '2251501003', 'Universitas Brawijaya'),
-    ('bima.dummy@pasarkampus.local', 'Bima Pratama', '2251501004', 'Politeknik Negeri Malang'),
-    ('nisa.dummy@pasarkampus.local', 'Nisa Rahma', '2251501005', 'Univ. Muhammadiyah Malang')
-) AS profiles(email, name, student_number, campus) ON profiles.email = users.email;
+    ('fami@test.com', 'Fami Test', '2251501001', 'Universitas Brawijaya', 'Ketawanggede', 'Lowokwaru'),
+    ('sando@test.com', 'Sando Test', '2251501002', 'Universitas Negeri Malang', 'Sumbersari', 'Lowokwaru'),
+    ('rani.dummy@pasarkampus.local', 'Rani Putri', '2251501003', 'Universitas Brawijaya', 'Dinoyo', 'Lowokwaru'),
+    ('bima.dummy@pasarkampus.local', 'Bima Pratama', '2251501004', 'Politeknik Negeri Malang', 'Jatimulyo', 'Lowokwaru'),
+    ('nisa.dummy@pasarkampus.local', 'Nisa Rahma', '2251501005', 'Univ. Muhammadiyah Malang', 'Landungsari', 'Dau')
+) AS profiles(email, name, student_number, campus, district, subdistrict) ON profiles.email = users.email;
 
 -- Category Dummy
 INSERT INTO categories 

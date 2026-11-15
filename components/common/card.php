@@ -10,6 +10,8 @@ $o_price = $o_price ?? "";
 $price = $price ?? "";
 $foto = $foto ?? "";
 // END OF COMPONENTS PROPS //
+
+$condition = ["Bekas", "Cukup", "Baik", "Sangat Baik"][$condition-1];
 ?>
 
 <div class="product-card">
