@@ -726,7 +726,7 @@ if (count($recommendations) < 4) {
                             <span class="pk-spec-label">Metode</span>
                             <span class="pk-spec-colon">:</span>
                             <span class="pk-spec-value"><?= esc($product['method']) ?></span>
-                        </div>beta-test-advance-2026.git
+                        </div>
                         <div class="pk-spec-row">
                             <span class="pk-spec-label">Lokasi</span>
                             <span class="pk-spec-colon">:</span>
