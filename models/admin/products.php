@@ -156,18 +156,47 @@ function admin_handle_product_post(string $redirect): void
         }
         $id = admin_post_id($input);
         $status = admin_post_string($input, 'status', 'Status');
-        if (!in_array($status, ['ONSELL', 'SOLD'], true)) {
+        $validStatuses = ['Tersedia', 'ONSELL', 'Proses', 'Terjual', 'SOLD', 'Ditolak', 'Dihapus'];
+        if (!in_array($status, $validStatuses, true)) {
             throw new InvalidArgumentException('Status barang tidak valid.');
         }
+
+        // Standardize status
+        if ($status === 'ONSELL') {
+            $status = 'Tersedia';
+        } elseif ($status === 'SOLD') {
+            $status = 'Terjual';
+        }
+
         $note = is_string($input['moderation_note'] ?? null) ? trim($input['moderation_note']) : '';
         $product = fetch(executeQuery('SELECT product_id FROM products WHERE product_id = ?', [$id]));
         if (!$product) {
             throw new InvalidArgumentException('Barang tidak ditemukan.');
         }
+
         executeQuery(
             'UPDATE products SET status = ?, moderation_note = ?, updated_at = CURRENT_TIMESTAMP WHERE product_id = ?',
             [$status, $note, $id]
         );
+
+        // Sync with related requests
+        if (in_array($status, ['Ditolak', 'Dihapus'], true)) {
+            executeQuery(
+                "UPDATE requests SET status = 'CANCELLED', updated_at = CURRENT_TIMESTAMP WHERE product_id = ? AND status IN ('PENDING', 'PROCESS')",
+                [$id]
+            );
+        } elseif ($status === 'Terjual') {
+            executeQuery(
+                "UPDATE requests SET status = 'COMPLETED', completed_date = CURRENT_DATE, updated_at = CURRENT_TIMESTAMP WHERE product_id = ? AND status = 'PROCESS'",
+                [$id]
+            );
+        } elseif ($status === 'Tersedia') {
+            executeQuery(
+                "UPDATE requests SET status = 'CANCELLED', updated_at = CURRENT_TIMESTAMP WHERE product_id = ? AND status = 'PROCESS'",
+                [$id]
+            );
+        }
+
         return 'Status barang berhasil diperbarui.';
     });
 }

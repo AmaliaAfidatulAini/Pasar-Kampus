@@ -41,10 +41,13 @@ Component::include('admin/header', [
             <input type="hidden" id="editBarangId" name="id">
             <div class="admin-modal-body">
                 <div class="admin-form-group">
-                    <span class="admin-form-label">Tindakan Admin</span>
+                    <span class="admin-form-label">Tindakan Admin / Status Barang</span>
                     <div class="admin-radio-group">
-                        <label class="admin-radio-label"><input type="radio" name="status" value="ONSELL" required><span><strong>ONSELL</strong> - Barang tetap tayang di katalog publik</span></label>
-                        <label class="admin-radio-label"><input type="radio" name="status" value="SOLD" required><span><strong>SOLD</strong> - Barang sudah terjual atau tidak tersedia</span></label>
+                        <label class="admin-radio-label"><input type="radio" name="status" value="Tersedia" required><span><strong>Tersedia</strong> - Barang tayang aktif di katalog publik</span></label>
+                        <label class="admin-radio-label"><input type="radio" name="status" value="Proses" required><span><strong>Proses</strong> - Sedang dalam proses transaksi COD</span></label>
+                        <label class="admin-radio-label"><input type="radio" name="status" value="Terjual" required><span><strong>Terjual</strong> - Barang sudah laku / selesai transaksi</span></label>
+                        <label class="admin-radio-label"><input type="radio" name="status" value="Ditolak" required><span><strong>Ditolak</strong> - Take-down barang (foto tidak layak / melanggar)</span></label>
+                        <label class="admin-radio-label"><input type="radio" name="status" value="Dihapus" required><span><strong>Dihapus</strong> - Hapus barang dari peredaran</span></label>
                     </div>
                 </div>
                 <div class="admin-form-group">
@@ -111,8 +114,11 @@ Component::include('admin/header', [
 
     function openEditBarang(product) {
         document.getElementById('editBarangId').value = product.id;
+        let targetStatus = product.status;
+        if (targetStatus === 'ONSELL') targetStatus = 'Tersedia';
+        if (targetStatus === 'SOLD') targetStatus = 'Terjual';
         document.querySelectorAll('#modalEditBarang input[name="status"]').forEach(input => {
-            input.checked = input.value === product.status;
+            input.checked = input.value === targetStatus;
         });
         document.getElementById('editBarangAlasan').value = product.note || '';
         openModal('modalEditBarang');
@@ -128,7 +134,12 @@ Component::include('admin/header', [
         document.getElementById('detailBarangDeliveryMethod').textContent = product.delivery_method || '-';
         const status = document.getElementById('detailBarangStatus');
         status.textContent = product.status || '-';
-        status.className = `admin-badge ${product.status === 'ONSELL' ? 'admin-badge-success' : product.status === 'SOLD' ? 'admin-badge-danger' : 'admin-badge-warning'}`;
+        let badgeClass = 'admin-badge-neutral';
+        if (product.status === 'Tersedia' || product.status === 'ONSELL') badgeClass = 'admin-badge-success';
+        else if (product.status === 'Proses') badgeClass = 'admin-badge-info';
+        else if (product.status === 'Terjual' || product.status === 'SOLD') badgeClass = 'admin-badge-neutral';
+        else if (product.status === 'Ditolak' || product.status === 'Dihapus') badgeClass = 'admin-badge-danger';
+        status.className = `admin-badge ${badgeClass}`;
         const body = document.getElementById('detailBarangPengajuanBody');
         body.replaceChildren();
         const requests = Array.isArray(product.requests) ? product.requests : [];
@@ -186,7 +197,14 @@ Component::include('admin/header', [
             { data: 'kategori', render: value => esc(value || '-') },
             {
                 data: 'status',
-                render: value => `<span class="admin-badge ${value === 'ONSELL' ? 'admin-badge-success' : value === 'SOLD' ? 'admin-badge-danger' : 'admin-badge-warning'}">${esc(value || '-')}</span>`
+                render: value => {
+                    let badgeClass = 'admin-badge-neutral';
+                    if (value === 'Tersedia' || value === 'ONSELL') badgeClass = 'admin-badge-success';
+                    else if (value === 'Proses') badgeClass = 'admin-badge-info';
+                    else if (value === 'Terjual' || value === 'SOLD') badgeClass = 'admin-badge-neutral';
+                    else if (value === 'Ditolak' || value === 'Dihapus') badgeClass = 'admin-badge-danger';
+                    return `<span class="admin-badge ${badgeClass}">${esc(value || '-')}</span>`;
+                }
             },
             {
                 data: null,

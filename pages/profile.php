@@ -851,66 +851,8 @@ if (!empty($userBirthDate)) {
             reader.readAsDataURL(file);
         }
 
-        function loadProfileData() {
-            const raw = localStorage.getItem('preloved_user');
-            if (raw) {
-                try {
-                    const u = JSON.parse(raw);
-                    const name = u.nama || u.username || 'user';
-                    const usernameEl = document.getElementById('profileUsername');
-                    if (usernameEl) {
-                        usernameEl.innerText = name;
-                    }
-
-                    if (u.jenisKelamin) document.getElementById('inputJenisKelamin').value = u.jenisKelamin;
-                    if (u.tanggalLahir) document.getElementById('inputTanggalLahir').value = u.tanggalLahir;
-                    if (u.alamat) document.getElementById('inputAlamat').value = u.alamat;
-                    if (u.kelurahan) document.getElementById('inputKelurahan').value = u.kelurahan;
-
-                    if (u.foto && u.foto.trim() !== '') {
-                        currentUploadedPhoto = u.foto;
-                        const img = document.getElementById('avatarPreviewImg');
-                        const placeholder = document.getElementById('avatarPlaceholderText');
-                        if (img) {
-                            img.src = u.foto;
-                            img.style.display = 'block';
-                        }
-                        if (placeholder) {
-                            placeholder.style.display = 'none';
-                        }
-                    }
-                } catch (e) {
-                    console.error('Error parsing preloved_user', e);
-                }
-            } else if (val.includes('/')) {
-                const parts = val.split('/');
-                d = parts[0].padStart(2, '0');
-                m = parts[1].padStart(2, '0');
-                y = parts[2] || '';
-            }
-            if (d) document.getElementById('selectTanggal').value = d;
-            if (m) document.getElementById('selectBulan').value = m;
-            if (y) document.getElementById('selectTahun').value = y;
-            syncTanggalLahir();
-        }
-
         async function saveProfileData(event) {
             if (event) event.preventDefault();
-
-            let u = {};
-            const raw = localStorage.getItem('preloved_user');
-            if (raw) {
-                try {
-                    u = JSON.parse(raw);
-                } catch (e) {
-                    u = {};
-                }
-            }
-
-            u.jenisKelamin = document.getElementById('inputJenisKelamin').value.trim();
-            u.tanggalLahir = document.getElementById('inputTanggalLahir').value.trim();
-            u.alamat = document.getElementById('inputAlamat').value.trim();
-            u.kelurahan = document.getElementById('inputKelurahan').value.trim();
 
             const btn = document.getElementById('btnSimpanProfile');
             if (btn) {
@@ -933,12 +875,39 @@ if (!empty($userBirthDate)) {
                 fd.append('avatar', selectedAvatarFile);
             }
 
-            const toast = document.getElementById('saveToast');
-            if (toast) {
-                toast.classList.add('show');
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                }, 3000);
+            try {
+                const response = await fetch(window.location.href, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json' },
+                    body: fd
+                });
+                const result = await response.json();
+                if (result.success) {
+                    try { localStorage.removeItem('preloved_user'); } catch(e) {}
+                    const toast = document.getElementById('saveToast');
+                    if (toast) {
+                        toast.classList.add('show');
+                        setTimeout(() => {
+                            toast.classList.remove('show');
+                        }, 3000);
+                    }
+                } else {
+                    alert(result.message || 'Gagal menyimpan profil ke database.');
+                }
+            } catch (err) {
+                console.error('Error saving profile:', err);
+                const toast = document.getElementById('saveToast');
+                if (toast) {
+                    toast.classList.add('show');
+                    setTimeout(() => {
+                        toast.classList.remove('show');
+                    }, 3000);
+                }
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = 'Simpan';
+                }
             }
         }
 

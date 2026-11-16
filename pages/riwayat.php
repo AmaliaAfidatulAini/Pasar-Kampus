@@ -820,76 +820,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
 
     <!-- JavaScript logic -->
    <script>
-    // Data Seed Default
-    const dbRiwayatList = <?= json_encode($dbRiwayat) ?>;
-    const defaultRiwayatList = [
-        {
-            id: 12,
-            namaBarang: "Buku kalkulus",
-            penjual: "Budi",
-            penjualDisplay: "Arif",
-            tanggal: "12 Oktober 2026",
-            tanggalSelesai: "13 Oktober 2026",
-            harga: 50000,
-            status: "Selesai",
-            teleponPenjual: "081234567890"
-        },
-        {
-            id: 13,
-            namaBarang: "Jas lab",
-            penjual: "Naya",
-            penjualDisplay: "Naya",
-            tanggal: "16 Oktober 2026",
-            tanggalDisetujui: "16 Oktober 2026",
-            harga: 80000,
-            status: "Proses",
-            teleponPenjual: "081234567891"
-        },
-        {
-            id: 14,
-            namaBarang: "Sepatu",
-            penjual: "James",
-            penjualDisplay: "James",
-            tanggal: "22 Oktober 2026",
-            harga: 100000,
-            status: "Pending",
-            teleponPenjual: "081234567892"
-        },
-        {
-            id: 15,
-            namaBarang: "Kipas angin",
-            penjual: "Citra",
-            penjualDisplay: "Citra",
-            tanggal: "12 November 2026",
-            harga: 65000,
-            status: "Ditolak",
-            teleponPenjual: "081234567893"
-        }
-    ];
+    // Live database data for current user
+    let userRiwayatList = <?= json_encode($dbRiwayat) ?> || [];
 
     function getRiwayatData() {
-        if (Array.isArray(dbRiwayatList) && dbRiwayatList.length > 0) {
-            const activeDbList = dbRiwayatList.filter(item => !item.status || item.status.toLowerCase() !== 'dibatalkan');
-            localStorage.setItem('pk_user_riwayat', JSON.stringify(activeDbList));
-            return activeDbList;
-        }
-
-        let list = null;
-        const stored = localStorage.getItem('pk_user_riwayat');
-        if (stored) {
-            try { list = JSON.parse(stored); } catch(e) { list = null; }
-        }
-        if (!Array.isArray(list) || list.length === 0) {
-            list = [...defaultRiwayatList];
-        }
-
-        // Filter keluar pengajuan yang berstatus dibatalkan agar hilang dari riwayat
-        list = list.filter(item => !item.status || item.status.toLowerCase() !== 'dibatalkan');
-        return list;
+        return userRiwayatList.filter(item => !item.status || item.status.toLowerCase() !== 'dibatalkan');
     }
 
     function saveRiwayatData(data) {
-        localStorage.setItem('pk_user_riwayat', JSON.stringify(data));
+        userRiwayatList = data;
     }
 
     function formatRupiah(num) {
@@ -1056,7 +995,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
         }
     });
 
-    function batalkanPengajuan(id) {
+    async function batalkanPengajuan(id) {
         if (confirm(`Apakah Anda yakin ingin membatalkan pengajuan #${id}?`)) {
             let list = getRiwayatData();
             // Hapus pengajuan dari daftar riwayat agar barang hilang dari halaman
@@ -1067,20 +1006,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
                 const fd = new FormData();
                 fd.append('action', 'cancel');
                 fd.append('transaction_id', id);
-                fetch('<?= route('/riwayat.php') ?>', { method: 'POST', body: fd }).catch(() => {});
-            } catch(e) {}
-
-            try {
-                const sellerStored = localStorage.getItem('pk_penjual_barang');
-                if (sellerStored) {
-                    const sellerList = JSON.parse(sellerStored);
-                    sellerList.forEach(prod => {
-                        if (Array.isArray(prod.pengajuanList)) {
-                            prod.pengajuanList = prod.pengajuanList.filter(p => p.id !== id);
-                        }
-                    });
-                    localStorage.setItem('pk_penjual_barang', JSON.stringify(sellerList));
-                }
+                await fetch('<?= route('/riwayat.php') ?>', { method: 'POST', body: fd });
             } catch(e) {}
 
             closeDetailModal();
