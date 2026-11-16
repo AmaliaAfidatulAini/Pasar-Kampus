@@ -5,6 +5,8 @@ $isLoggedIn = !empty($session);
 $userName = $session['name'] ?? 'Pengguna';
 $displayName = $session['name'] ?? $session['email'] ?? 'Pengguna';
 $initial = strtoupper(substr($displayName, 0, 1));
+$initialCategory = trim((string)($_GET['category'] ?? ''));
+$initialSearch = trim((string)($_GET['q'] ?? $_GET['search'] ?? ''));
 $allProducts = get_catalog_products();
 ?>
 <!DOCTYPE html>
@@ -1153,7 +1155,7 @@ $allProducts = get_catalog_products();
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
                 </span>
-                <input type="text" id="dashSearch" oninput="applyCatalogFilters()" placeholder="Cari barang....">
+                <input type="text" id="dashSearch" oninput="applyCatalogFilters()" placeholder="Cari barang...." value="<?= esc($initialSearch) ?>">
             </div>
 
             <nav class="pk-nav-links">
@@ -1253,10 +1255,12 @@ $allProducts = get_catalog_products();
                         <div>
                             <div class="pk-filter-group-title">KATEGORI</div>
                             <ul class="pk-filter-list" id="sidebarCatList">
-                                <li class="pk-filter-item" onclick="selectCategory('Buku & Akademik', this)">Buku &amp; Akademik</li>
-                                <li class="pk-filter-item" onclick="selectCategory('Perlengkapan Kos', this)">Perlengkapan Kos</li>
-                                <li class="pk-filter-item" onclick="selectCategory('Fashion & Apparel', this)">Fashion &amp; Apparel</li>
+                                <li class="pk-filter-item" onclick="selectCategory('Buku', this)">Buku</li>
                                 <li class="pk-filter-item" onclick="selectCategory('Elektronik', this)">Elektronik</li>
+                                <li class="pk-filter-item" onclick="selectCategory('Perlengkapan Kos', this)">Perlengkapan Kos</li>
+                                <li class="pk-filter-item" onclick="selectCategory('Pakaian', this)">Pakaian</li>
+                                <li class="pk-filter-item" onclick="selectCategory('ATK', this)">ATK</li>
+                                <li class="pk-filter-item" onclick="selectCategory('Lainnya', this)">Lainnya</li>
                             </ul>
                             <div class="pk-see-more" onclick="toggleExpandList('sidebarCatList', this)">Lihat semua &#x25BE;</div>
                         </div>
@@ -1400,7 +1404,7 @@ $allProducts = get_catalog_products();
                             <span>Filter</span>
                         </button>
                         <div class="pk-toolbar-count" id="itemCountDisplay">
-                            Menampilkan 1-20 dari 66 barang
+                            Menampilkan <?= count($allProducts) > 0 ? ('1-' . min(count($allProducts), 12)) : '0' ?> dari <?= count($allProducts) ?> barang
                         </div>
                     </div>
 
@@ -1493,7 +1497,7 @@ $allProducts = get_catalog_products();
     <script>
         const rawProducts = <?= json_encode($allProducts, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
         
-        let selectedCategory = '';
+        let selectedCategory = <?= json_encode($initialCategory) ?>;
         let selectedTag = '';
         let conditionActive = false; // Status apakah filter kondisi sedang aktif digunakan
         let currentPage = 1;
@@ -1622,8 +1626,12 @@ $allProducts = get_catalog_products();
 
             const filtered = rawProducts.filter(item => {
                 // Category match
-                if (selectedCategory && item.category.toLowerCase() !== selectedCategory.toLowerCase()) {
-                    return false;
+                if (selectedCategory) {
+                    const itemCat = (item.category || '').toLowerCase();
+                    const selCat = selectedCategory.toLowerCase();
+                    if (!itemCat.includes(selCat) && !selCat.includes(itemCat)) {
+                        return false;
+                    }
                 }
 
                 // Tag match
@@ -1695,13 +1703,31 @@ $allProducts = get_catalog_products();
             }
 
             if (empty) empty.style.display = 'none';
-            if (paginationBar) paginationBar.style.display = 'flex';
-            if (countDisplay) {
-                countDisplay.innerText = `Menampilkan 1-${Math.min(items.length, 20)} dari ${Math.max(items.length, 66)} barang`;
-            }
+            const totalItems = items.length;
+            const totalPages = Math.ceil(totalItems / pageSize);
+            if (currentPage > totalPages && totalPages > 0) currentPage = 1;
 
             const startIdx = (currentPage - 1) * pageSize;
-            const pageItems = items.slice(startIdx, startIdx + pageSize);
+            const endIdx = Math.min(startIdx + pageSize, totalItems);
+            const pageItems = items.slice(startIdx, endIdx);
+
+            if (countDisplay) {
+                countDisplay.innerText = `Menampilkan ${startIdx + 1}-${endIdx} dari ${totalItems} barang`;
+            }
+
+            if (paginationBar) {
+                if (totalPages <= 1) {
+                    paginationBar.style.display = 'none';
+                } else {
+                    paginationBar.style.display = 'flex';
+                    let pageHtml = `<button type="button" class="pk-page-btn" onclick="changePage('prev', ${totalPages})">&lt;</button>`;
+                    for (let p = 1; p <= totalPages; p++) {
+                        pageHtml += `<button type="button" class="pk-page-btn ${p === currentPage ? 'active' : ''}" onclick="setPage(${p})">${p}</button>`;
+                    }
+                    pageHtml += `<button type="button" class="pk-page-btn" onclick="changePage('next', ${totalPages})">&gt;</button>`;
+                    paginationBar.innerHTML = pageHtml;
+                }
+            }
 
             grid.innerHTML = pageItems.map(item => `
                 <div class="product-card" onclick="if (!event.target.closest('a')) goToProductDetail(${item.id})" style="cursor: pointer;">
@@ -1719,7 +1745,7 @@ $allProducts = get_catalog_products();
                     </div>
                     <div class="product-footer">
                         <div class="product-price-box">
-                            ${item.original_price ? `<span class="orig-price">Rp. ${Number(item.original_price).toLocaleString('id-ID')}</span>` : ''}
+                            ${item.original_price && item.original_price > item.price ? `<span class="orig-price">Rp. ${Number(item.original_price).toLocaleString('id-ID')}</span>` : ''}
                             <div class="cur-price">Rp. ${Number(item.price).toLocaleString('id-ID')}</div>
                         </div>
                         <a href="<?= route('/barang') ?>?id=${encodeURIComponent(item.id)}" class="btn-product-detail">
@@ -1747,10 +1773,10 @@ $allProducts = get_catalog_products();
             window.scrollTo({ top: 380, behavior: 'smooth' });
         }
 
-        function changePage(direction) {
+        function changePage(direction, totalPages = 999) {
             if (direction === 'prev' && currentPage > 1) {
                 setPage(currentPage - 1);
-            } else if (direction === 'next' && currentPage < 5) {
+            } else if (direction === 'next' && currentPage < totalPages) {
                 setPage(currentPage + 1);
             }
         }
@@ -1790,6 +1816,24 @@ $allProducts = get_catalog_products();
                 if (!dropdown.contains(event.target) && (!btn || !btn.contains(event.target))) {
                     closeProfileDropdown();
                 }
+            }
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+            // Clean up legacy localStorage caches so DB is always the single source of truth
+            try {
+                localStorage.removeItem('pk_penjual_barang');
+                localStorage.removeItem('pk_user_riwayat');
+            } catch(e) {}
+
+            if (selectedCategory) {
+                document.querySelectorAll('#sidebarCatList .pk-filter-item').forEach(el => {
+                    if (el.innerText.trim().toLowerCase() === selectedCategory.toLowerCase()) {
+                        el.classList.add('active');
+                    }
+                });
+            }
+            if (selectedCategory || (document.getElementById('dashSearch')?.value || '').trim()) {
+                applyCatalogFilters();
             }
         });
     </script>

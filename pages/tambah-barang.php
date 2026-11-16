@@ -2,10 +2,25 @@
 $session = session_include('/login');
 $userId = (int) ($session['user_id'] ?? 0);
 
+if ($userId <= 0) {
+    if (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json')) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Silakan login terlebih dahulu untuk menambah barang.']);
+        exit;
+    }
+    flash('error', 'Silakan login terlebih dahulu.');
+    redirect('/login', 302);
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $namaBarang = trim((string)($_POST['nama_barang'] ?? $_POST['namaBarang'] ?? ''));
     $kategoriName = trim((string)($_POST['kategori'] ?? ''));
     $harga = (int) ($_POST['harga'] ?? 0);
+    $hargaAsli = (int) ($_POST['harga_asli'] ?? $_POST['original_price'] ?? $harga);
+    if ($hargaAsli < $harga) {
+        $hargaAsli = $harga;
+    }
     $kondisiStr = trim((string)($_POST['kondisi'] ?? 'Sangat Bagus'));
     $deskripsi = trim((string)($_POST['deskripsi'] ?? ''));
     $tagsRaw = $_POST['tags'] ?? [];
@@ -15,7 +30,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $tagsArr = (array) $tagsRaw;
     }
 
-    // Map condition to 1..4
+    // Server-Side Validations
+    $errors = [];
+    if ($namaBarang === '' || mb_strlen($namaBarang) < 3) {
+        $errors[] = 'Nama barang minimal 3 karakter.';
+    } elseif (mb_strlen($namaBarang) > 255) {
+        $errors[] = 'Nama barang maksimal 255 karakter.';
+    }
+
+    if ($kategoriName === '') {
+        $errors[] = 'Silakan pilih kategori barang.';
+    }
+
+    if ($harga <= 0) {
+        $errors[] = 'Harga barang harus lebih dari Rp. 0.';
+    }
+
+    if ($deskripsi === '' || mb_strlen($deskripsi) < 5) {
+        $errors[] = 'Deskripsi barang minimal 5 karakter agar calon pembeli mendapatkan informasi jelas.';
+    }
+
     $conditionMap = [
         'Sangat Bagus' => 4,
         'Baik' => 3,
@@ -23,6 +57,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'Bekas' => 1
     ];
     $conditionVal = $conditionMap[$kondisiStr] ?? 3;
+
+    if (!empty($errors)) {
+        $errMsg = implode(' ', $errors);
+        if (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json')) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $errMsg]);
+            exit;
+        }
+        flash('error', $errMsg);
+        redirect('/tambah-barang.php', 302);
+        exit;
+    }
 
     // Resolve category_id
     $catRow = executeQuery("SELECT categories_id FROM categories WHERE category_name ILIKE :cat LIMIT 1", ['cat' => $kategoriName], 'fetch');
@@ -44,11 +90,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $coverFileName = '';
     $coverMime = '';
     $coverSize = 0;
+    $allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/jpg'];
 
     if (isset($_FILES['imgCover']) && $_FILES['imgCover']['error'] === UPLOAD_ERR_OK) {
+        if ($_FILES['imgCover']['size'] > 5 * 1024 * 1024) {
+            $errMsg = 'Ukuran foto cover produk maksimal 5MB.';
+            if (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json')) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => $errMsg]);
+                exit;
+            }
+            flash('error', $errMsg);
+            redirect('/tambah-barang.php', 302);
+            exit;
+        }
+
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
         $mime = finfo_file($finfo, $_FILES['imgCover']['tmp_name']);
         finfo_close($finfo);
+
+        if (!in_array($mime, $allowedMimes, true)) {
+            $errMsg = 'Format gambar cover tidak didukung. Gunakan JPG, PNG, atau WEBP.';
+            if (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json')) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => $errMsg]);
+                exit;
+            }
+            flash('error', $errMsg);
+            redirect('/tambah-barang.php', 302);
+            exit;
+        }
 
         $ext = pathinfo($_FILES['imgCover']['name'], PATHINFO_EXTENSION);
         if (!$ext) $ext = 'jpg';
@@ -61,10 +132,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Insert Product into Database
+    // Insert Product into Database with status 'Tersedia'
     $newProd = executeQuery(
-        "INSERT INTO products (user_id, category_id, item_name, description, price, condition, status, delivery_methods, created_at, updated_at) 
-         VALUES (:uid, :cat, :name, :desc, :price, :cond, 'Tersedia', 'COD Kampus', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) 
+        "INSERT INTO products (user_id, category_id, item_name, description, price, original_price, condition, status, delivery_methods, created_at, updated_at) 
+         VALUES (:uid, :cat, :name, :desc, :price, :orig, :cond, 'Tersedia', 'COD Kampus', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) 
          RETURNING product_id",
         [
             'uid' => $userId,
@@ -72,6 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'name' => $namaBarang,
             'desc' => $deskripsi,
             'price' => $harga,
+            'orig' => $hargaAsli,
             'cond' => $conditionVal
         ],
         'fetch'
@@ -101,29 +173,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         for ($i = 1; $i <= 5; $i++) {
             $thumbKey = 'imgThumb' . $i;
             if (isset($_FILES[$thumbKey]) && $_FILES[$thumbKey]['error'] === UPLOAD_ERR_OK) {
-                $finfo = finfo_open(FILEINFO_MIME_TYPE);
-                $mime = finfo_file($finfo, $_FILES[$thumbKey]['tmp_name']);
-                finfo_close($finfo);
+                if ($_FILES[$thumbKey]['size'] <= 5 * 1024 * 1024) {
+                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                    $mime = finfo_file($finfo, $_FILES[$thumbKey]['tmp_name']);
+                    finfo_close($finfo);
 
-                $ext = pathinfo($_FILES[$thumbKey]['name'], PATHINFO_EXTENSION);
-                if (!$ext) $ext = 'jpg';
-                $thumbName = 'prod_' . $userId . '_' . time() . '_thumb' . $i . '.' . strtolower($ext);
+                    if (in_array($mime, $allowedMimes, true)) {
+                        $ext = pathinfo($_FILES[$thumbKey]['name'], PATHINFO_EXTENSION);
+                        if (!$ext) $ext = 'jpg';
+                        $thumbName = 'prod_' . $userId . '_' . time() . '_thumb' . $i . '.' . strtolower($ext);
 
-                if (move_uploaded_file($_FILES[$thumbKey]['tmp_name'], $targetDir . '/' . $thumbName)) {
-                    $thumbLink = upload('products/' . $thumbName);
-                    try {
-                        executeQuery(
-                            "INSERT INTO attachments (product_id, report_id, attachment_type, file_path, file_name, file_type, file_size, created_at, updated_at) 
-                             VALUES (:pid, NULL, 2, :path, :name, :type, :size, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
-                            [
-                                'pid' => $productId,
-                                'path' => $thumbLink,
-                                'name' => $thumbName,
-                                'type' => $mime,
-                                'size' => (int) $_FILES[$thumbKey]['size']
-                            ]
-                        );
-                    } catch (Throwable $e) {}
+                        if (move_uploaded_file($_FILES[$thumbKey]['tmp_name'], $targetDir . '/' . $thumbName)) {
+                            $thumbLink = upload('products/' . $thumbName);
+                            try {
+                                executeQuery(
+                                    "INSERT INTO attachments (product_id, report_id, attachment_type, file_path, file_name, file_type, file_size, created_at, updated_at) 
+                                     VALUES (:pid, NULL, 2, :path, :name, :type, :size, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+                                    [
+                                        'pid' => $productId,
+                                        'path' => $thumbLink,
+                                        'name' => $thumbName,
+                                        'type' => $mime,
+                                        'size' => (int) $_FILES[$thumbKey]['size']
+                                    ]
+                                );
+                            } catch (Throwable $e) {}
+                        }
+                    }
                 }
             }
         }
@@ -150,7 +226,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode([
             'success' => true,
             'product_id' => $productId,
-            'message' => 'Barang jualan berhasil disimpan ke database!',
+            'message' => 'Barang jualan berhasil disimpan ke database dan langsung ditayangkan di katalog pembeli!',
             'redirect' => route('/dashboard-penjual.php')
         ]);
         exit;

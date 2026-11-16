@@ -89,58 +89,31 @@ if (!isset($_GET['id']) || trim((string)$_GET['id']) === '') {
     exit;
 }
 
-$productId = $_GET['id'];
+$productId = (int) $_GET['id'];
 $product = get_catalog_product_by_id($productId);
-$allProducts = get_catalog_products();
-
-// Resolve matching product in DB and seller info
-$dbProductId = null;
-$sellerName = 'Penjual Kampus';
-$sellerPhone = '081234567890';
-
-try {
-    $match = executeQuery(
-        "SELECT p.product_id, p.user_id, COALESCE(up.name, 'Penjual Kampus') AS seller_name, COALESCE(up.phone, '081234567890') AS seller_phone
-         FROM products p
-         LEFT JOIN user_profiles up ON up.user_id = p.user_id
-         WHERE p.product_id = :id
-         LIMIT 1",
-        ['id' => (int)$productId],
-        'fetch'
-    );
-    if ($match) {
-        $dbProductId = (int) $match['product_id'];
-        $sellerName = $match['seller_name'];
-        $sellerPhone = $match['seller_phone'] ?: '081234567890';
-    } else {
-        $matchTitle = executeQuery(
-            "SELECT p.product_id, p.user_id, COALESCE(up.name, 'Penjual Kampus') AS seller_name, COALESCE(up.phone, '081234567890') AS seller_phone
-             FROM products p
-             LEFT JOIN user_profiles up ON up.user_id = p.user_id
-             WHERE p.item_name ILIKE :title
-             LIMIT 1",
-            ['title' => $product['title']],
-            'fetch'
-        );
-        if ($matchTitle) {
-            $dbProductId = (int) $matchTitle['product_id'];
-            $sellerName = $matchTitle['seller_name'];
-            $sellerPhone = $matchTitle['seller_phone'] ?: '081234567890';
-        }
-    }
-} catch (Throwable $e) {
-    // Database query fallback
+if (!$product) {
+    flash('error', 'Barang tidak ditemukan atau telah dihapus.');
+    redirect('/dashboard-utama.php', 302);
+    exit;
 }
+
+$allProducts = get_catalog_products();
+$dbProductId = (int) $product['id'];
+$sellerUserId = (int) $product['user_id'];
+$sellerName = $product['seller_name'];
+$sellerPhone = $product['seller_phone'];
+$buyerId = $session['user_id'] ?? null;
+$isOwner = $isLoggedIn && ($buyerId !== null) && ($sellerUserId === (int)$buyerId);
+$isAvailable = in_array(strtoupper((string)($product['status'] ?? '')), ['TERSEDIA', 'ONSELL'], true);
 
 // Check if buyer has already requested this product
 $alreadyRequested = false;
-$buyerId = $session['user_id'] ?? null;
 if ($isLoggedIn && $buyerId && $dbProductId) {
     try {
         $checkExisting = executeQuery(
             "SELECT transaction_id FROM requests 
              WHERE user_id = :uid AND product_id = :pid AND status IN ('PENDING', 'PROCESS')",
-            ['uid' => $buyerId, 'pid' => $dbProductId],
+            ['uid' => (int)$buyerId, 'pid' => $dbProductId],
             'fetch'
         );
         if ($checkExisting) {
@@ -151,8 +124,10 @@ if ($isLoggedIn && $buyerId && $dbProductId) {
 
 // Handle Purchase Request Submission (POST)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'ajukan_pembelian')) {
+    $isJson = isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json');
+
     if (!$isLoggedIn) {
-        if (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json')) {
+        if ($isJson) {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'redirect' => route('/login')]);
             exit;
@@ -161,12 +136,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'ajuk
         exit;
     }
 
-    $buyerId = $session['user_id'] ?? null;
+    $buyerId = (int)($session['user_id'] ?? 0);
 
-    // Prevent duplicate requests for the same product
+    // Validation 1: Seller cannot buy own product
+    if ($isOwner) {
+        flash('error', 'Anda tidak dapat mengajukan pembelian untuk barang jualan Anda sendiri.');
+        if ($isJson) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'Anda tidak dapat mengajukan pembelian untuk barang jualan Anda sendiri.'
+            ]);
+            exit;
+        }
+        redirect('/barang?id=' . $productId, 302);
+        exit;
+    }
+
+    // Validation 2: Product must be available
+    if (!$isAvailable) {
+        flash('warning', 'Barang ini sedang tidak dapat diajukan pembelian (Status: ' . $product['status'] . ').');
+        if ($isJson) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'Barang ini sedang tidak dapat diajukan pembelian (Status: ' . $product['status'] . ').'
+            ]);
+            exit;
+        }
+        redirect('/barang?id=' . $productId, 302);
+        exit;
+    }
+
+    // Validation 3: Prevent duplicate request
     if ($alreadyRequested) {
         flash('warning', 'Anda sudah mengajukan pembelian untuk barang ini.');
-        if (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json')) {
+        if ($isJson) {
             header('Content-Type: application/json');
             echo json_encode([
                 'success' => false,
@@ -181,7 +186,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'ajuk
     }
 
     $newTxId = null;
-
     if ($buyerId && $dbProductId) {
         try {
             $ins = executeQuery(
@@ -205,7 +209,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'ajuk
 
     flash('success', 'Pengajuan pembelian berhasil dibuat!');
 
-    if (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json')) {
+    if ($isJson) {
         header('Content-Type: application/json');
         echo json_encode([
             'success' => true,
@@ -1240,9 +1244,23 @@ if (count($recommendations) < 4) {
                     <div class="pk-detail-actions">
                         <button type="button" class="pk-btn-report" onclick="openReportModal()">Laporkan</button>
                         <?php if ($isLoggedIn): ?>
-                            <button type="button" class="pk-btn-buy" id="btnAjukanPembelian" onclick="handleBuyButtonClick()">
-                                <?= $alreadyRequested ? 'Sudah Diajukan' : 'Ajukan Pembelian' ?>
-                            </button>
+                            <?php if ($isOwner): ?>
+                                <button type="button" class="pk-btn-buy" disabled style="background-color: #64748B; border-color: #64748B; cursor: not-allowed;" title="Anda adalah pemilik/penjual produk ini">
+                                    Barang Jualan Anda
+                                </button>
+                            <?php elseif (!$isAvailable): ?>
+                                <button type="button" class="pk-btn-buy" disabled style="background-color: #94A3B8; border-color: #94A3B8; cursor: not-allowed;">
+                                    Status: <?= esc($product['status']) ?>
+                                </button>
+                            <?php elseif ($alreadyRequested): ?>
+                                <button type="button" class="pk-btn-buy" id="btnAjukanPembelian" disabled style="background-color: #94A3B8; border-color: #94A3B8; cursor: not-allowed;">
+                                    Sudah Diajukan
+                                </button>
+                            <?php else: ?>
+                                <button type="button" class="pk-btn-buy" id="btnAjukanPembelian" onclick="handleBuyButtonClick()">
+                                    Ajukan Pembelian
+                                </button>
+                            <?php endif; ?>
                         <?php else: ?>
                             <a href="<?= route('/login') ?>" class="pk-btn-buy" style="display: inline-flex; align-items: center; justify-content: center; text-decoration: none;">Ajukan Pembelian</a>
                         <?php endif; ?>
@@ -1461,21 +1479,7 @@ if (count($recommendations) < 4) {
         }
 
         function isItemAlreadyRequested() {
-            let requested = <?= $alreadyRequested ? 'true' : 'false' ?>;
-            try {
-                const stored = localStorage.getItem('pk_user_riwayat');
-                if (stored) {
-                    const list = JSON.parse(stored);
-                    if (Array.isArray(list)) {
-                        const found = list.some(item => 
-                            (item.namaBarang === <?= json_encode($product['title']) ?> || item.id === <?= (int)$productId ?>) &&
-                            (!item.status || item.status.toLowerCase() !== 'dibatalkan')
-                        );
-                        if (found) requested = true;
-                    }
-                }
-            } catch (e) {}
-            return requested;
+            return <?= $alreadyRequested ? 'true' : 'false' ?>;
         }
 
         function updateBuyButtonState() {
@@ -1502,8 +1506,18 @@ if (count($recommendations) < 4) {
                 return;
             <?php endif; ?>
 
+            <?php if ($isOwner): ?>
+                alert('Anda tidak dapat membeli barang jualan Anda sendiri.');
+                return;
+            <?php endif; ?>
+
+            <?php if (!$isAvailable): ?>
+                alert('Barang ini sedang tidak dapat diajukan pembelian.');
+                return;
+            <?php endif; ?>
+
             if (isItemAlreadyRequested()) {
-                alert('Anda sudah mengajukan pembelian untuk barang ini. Pembeli tidak dapat mengajukan barang yang sama lebih dari 1 kali.');
+                alert('Anda sudah mengajukan pembelian untuk barang ini.');
                 window.location.href = '<?= route('/riwayat.php') ?>';
                 return;
             }
@@ -1518,7 +1532,7 @@ if (count($recommendations) < 4) {
             <?php endif; ?>
 
             if (isItemAlreadyRequested()) {
-                alert('Anda sudah mengajukan pembelian untuk barang ini. Pembeli tidak dapat mengajukan barang yang sama lebih dari 1 kali.');
+                alert('Anda sudah mengajukan pembelian untuk barang ini.');
                 window.location.href = '<?= route('/riwayat.php') ?>';
                 return;
             }
@@ -1532,7 +1546,7 @@ if (count($recommendations) < 4) {
 
         async function confirmPurchase() {
             if (isItemAlreadyRequested()) {
-                alert('Anda sudah mengajukan pembelian untuk barang ini. Pembeli tidak dapat mengajukan barang yang sama lebih dari 1 kali.');
+                alert('Anda sudah mengajukan pembelian untuk barang ini.');
                 closeBuyModal();
                 window.location.href = '<?= route('/riwayat.php') ?>';
                 return;
@@ -1544,39 +1558,6 @@ if (count($recommendations) < 4) {
                 btn.innerText = 'Mengajukan...';
             }
 
-            const now = new Date();
-            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-            const formattedDate = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
-
-            // 1. Ambil data riwayat yang tersimpan di localStorage
-            let riwayatList = [];
-            try {
-                const stored = localStorage.getItem('pk_user_riwayat');
-                if (stored) {
-                    riwayatList = JSON.parse(stored);
-                }
-            } catch (e) {
-                riwayatList = [];
-            }
-
-            let nextId = 16;
-            if (Array.isArray(riwayatList) && riwayatList.length > 0) {
-                const maxId = Math.max(...riwayatList.map(item => parseInt(item.id) || 0));
-                nextId = maxId + 1;
-            }
-
-            const newRiwayat = {
-                id: nextId,
-                namaBarang: <?= json_encode($product['title']) ?>,
-                penjual: <?= json_encode($sellerName) ?>,
-                penjualDisplay: <?= json_encode($sellerName) ?>,
-                tanggal: formattedDate,
-                harga: <?= (int)$product['price'] ?>,
-                status: "Pending",
-                teleponPenjual: <?= json_encode($sellerPhone) ?>
-            };
-
-            // 2. Simpan juga ke database PostgreSQL via fetch POST
             try {
                 const formData = new FormData();
                 formData.append('action', 'ajukan_pembelian');
@@ -1588,51 +1569,34 @@ if (count($recommendations) < 4) {
                     body: formData
                 });
 
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data && data.transaction_id) {
-                        newRiwayat.id = data.transaction_id;
+                const data = await res.json();
+                if (data && data.success) {
+                    closeBuyModal();
+                    window.location.href = data.redirect || '<?= route('/riwayat.php') ?>';
+                } else {
+                    alert((data && data.message) ? data.message : 'Gagal mengajukan pembelian.');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerText = 'Ajukan Pembelian';
+                    }
+                    if (data && data.redirect) {
+                        window.location.href = data.redirect;
                     }
                 }
             } catch (err) {
-                console.warn('Sync to database warning:', err);
+                console.error('Error submitting purchase request:', err);
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = window.location.href;
+                const act = document.createElement('input');
+                act.type = 'hidden'; act.name = 'action'; act.value = 'ajukan_pembelian';
+                form.appendChild(act);
+                const pid = document.createElement('input');
+                pid.type = 'hidden'; pid.name = 'product_id'; pid.value = '<?= (int)$productId ?>';
+                form.appendChild(pid);
+                document.body.appendChild(form);
+                form.submit();
             }
-
-            // 3. Simpan ke localStorage pk_user_riwayat
-            if (!Array.isArray(riwayatList)) {
-                riwayatList = [];
-            }
-            riwayatList.unshift(newRiwayat);
-            try {
-                localStorage.setItem('pk_user_riwayat', JSON.stringify(riwayatList));
-            } catch (e) {
-                console.error('LocalStorage save error:', e);
-            }
-
-            // 4. Sinkronkan dengan data penjual di localStorage jika ada
-            try {
-                const sellerStored = localStorage.getItem('pk_penjual_barang');
-                if (sellerStored) {
-                    const sellerList = JSON.parse(sellerStored);
-                    const targetProduct = sellerList.find(b => b.id === <?= (int)$productId ?> || b.namaBarang === <?= json_encode($product['title']) ?>);
-                    if (targetProduct) {
-                        if (!targetProduct.pengajuanList) targetProduct.pengajuanList = [];
-                        targetProduct.pengajuanList.unshift({
-                            id: newRiwayat.id,
-                            pembeli: <?= json_encode($userName) ?>,
-                            kampus: <?= json_encode($session['campus'] ?? 'Universitas Brawijaya') ?>,
-                            wa: '081234567899',
-                            waktu: formattedDate,
-                            status: 'Pending'
-                        });
-                        localStorage.setItem('pk_penjual_barang', JSON.stringify(sellerList));
-                    }
-                }
-            } catch (e) {}
-
-            closeBuyModal();
-            // 5. Arahkan pembeli ke halaman riwayat pengajuan pembelian
-            window.location.href = '<?= route('/riwayat.php') ?>';
         }
 
         function openReportModal() {
@@ -1736,6 +1700,10 @@ if (count($recommendations) < 4) {
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            try {
+                localStorage.removeItem('pk_user_riwayat');
+                localStorage.removeItem('pk_penjual_barang');
+            } catch(e) {}
             updateBuyButtonState();
         });
     </script>

@@ -2,36 +2,80 @@
 $session = session_include('/login');
 $userId = (int) ($session['user_id'] ?? 0);
 
+if ($userId <= 0) {
+    redirect('/login', 302);
+    exit;
+}
+
 // Handle Actions (Terima, Tolak, Batalkan, Selesaikan, Hapus)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
     $txId = (int) ($_POST['transaction_id'] ?? 0);
     $barangId = (int) ($_POST['barang_id'] ?? $_POST['product_id'] ?? 0);
 
-    if ($action === 'terima_pengajuan' && $txId) {
-        $req = executeQuery("SELECT product_id, user_id FROM requests WHERE transaction_id = :id", ['id' => $txId], 'fetch');
+    if ($action === 'terima_pengajuan' && $txId && $userId) {
+        $req = executeQuery(
+            "SELECT r.transaction_id, r.product_id, r.user_id 
+             FROM requests r 
+             JOIN products p ON p.product_id = r.product_id 
+             WHERE r.transaction_id = :id AND p.user_id = :uid", 
+            ['id' => $txId, 'uid' => $userId], 
+            'fetch'
+        );
         if ($req) {
             $pid = (int) $req['product_id'];
             executeQuery("UPDATE requests SET status = 'PROCESS', updated_at = CURRENT_TIMESTAMP WHERE transaction_id = :id", ['id' => $txId]);
-            executeQuery("UPDATE products SET status = 'Proses', updated_at = CURRENT_TIMESTAMP WHERE product_id = :pid", ['pid' => $pid]);
+            executeQuery("UPDATE products SET status = 'Proses', updated_at = CURRENT_TIMESTAMP WHERE product_id = :pid AND user_id = :uid", ['pid' => $pid, 'uid' => $userId]);
+            // Reject other pending requests for this product
+            executeQuery("UPDATE requests SET status = 'CANCELLED', updated_at = CURRENT_TIMESTAMP WHERE product_id = :pid AND transaction_id != :id AND status = 'PENDING'", ['pid' => $pid, 'id' => $txId]);
         }
-    } elseif ($action === 'tolak_pengajuan' && $txId) {
-        executeQuery("UPDATE requests SET status = 'CANCELLED', updated_at = CURRENT_TIMESTAMP WHERE transaction_id = :id", ['id' => $txId]);
-    } elseif ($action === 'batalkan_pengajuan_modal' && $txId) {
-        $req = executeQuery("SELECT product_id FROM requests WHERE transaction_id = :id", ['id' => $txId], 'fetch');
-        executeQuery("UPDATE requests SET status = 'CANCELLED', updated_at = CURRENT_TIMESTAMP WHERE transaction_id = :id", ['id' => $txId]);
-        $targetPid = $barangId ?: ($req ? (int)$req['product_id'] : 0);
-        if ($targetPid) {
-            executeQuery("UPDATE products SET status = 'Tersedia', updated_at = CURRENT_TIMESTAMP WHERE product_id = :pid", ['pid' => $targetPid]);
+    } elseif ($action === 'tolak_pengajuan' && $txId && $userId) {
+        $req = executeQuery(
+            "SELECT r.transaction_id, r.product_id 
+             FROM requests r 
+             JOIN products p ON p.product_id = r.product_id 
+             WHERE r.transaction_id = :id AND p.user_id = :uid", 
+            ['id' => $txId, 'uid' => $userId], 
+            'fetch'
+        );
+        if ($req) {
+            executeQuery("UPDATE requests SET status = 'CANCELLED', updated_at = CURRENT_TIMESTAMP WHERE transaction_id = :id", ['id' => $txId]);
         }
-    } elseif ($action === 'batalkan_proses' && $barangId) {
-        executeQuery("UPDATE products SET status = 'Tersedia', updated_at = CURRENT_TIMESTAMP WHERE product_id = :pid", ['pid' => $barangId]);
-        executeQuery("UPDATE requests SET status = 'CANCELLED', updated_at = CURRENT_TIMESTAMP WHERE product_id = :pid AND status = 'PROCESS'", ['pid' => $barangId]);
-    } elseif ($action === 'selesaikan_transaksi' && $barangId) {
-        executeQuery("UPDATE products SET status = 'Terjual', updated_at = CURRENT_TIMESTAMP WHERE product_id = :pid", ['pid' => $barangId]);
-        executeQuery("UPDATE requests SET status = 'COMPLETED', completed_date = CURRENT_DATE, updated_at = CURRENT_TIMESTAMP WHERE product_id = :pid AND status = 'PROCESS'", ['pid' => $barangId]);
+    } elseif ($action === 'batalkan_pengajuan_modal' && $txId && $userId) {
+        $req = executeQuery(
+            "SELECT r.transaction_id, r.product_id 
+             FROM requests r 
+             JOIN products p ON p.product_id = r.product_id 
+             WHERE r.transaction_id = :id AND p.user_id = :uid", 
+            ['id' => $txId, 'uid' => $userId], 
+            'fetch'
+        );
+        if ($req) {
+            $pid = (int) $req['product_id'];
+            executeQuery("UPDATE requests SET status = 'CANCELLED', updated_at = CURRENT_TIMESTAMP WHERE transaction_id = :id", ['id' => $txId]);
+            $stillProcess = executeQuery("SELECT transaction_id FROM requests WHERE product_id = :pid AND status = 'PROCESS'", ['pid' => $pid], 'fetch');
+            if (!$stillProcess) {
+                executeQuery("UPDATE products SET status = 'Tersedia', updated_at = CURRENT_TIMESTAMP WHERE product_id = :pid AND user_id = :uid", ['pid' => $pid, 'uid' => $userId]);
+            }
+        }
+    } elseif ($action === 'batalkan_proses' && $barangId && $userId) {
+        $p = executeQuery("SELECT product_id FROM products WHERE product_id = :pid AND user_id = :uid", ['pid' => $barangId, 'uid' => $userId], 'fetch');
+        if ($p) {
+            executeQuery("UPDATE products SET status = 'Tersedia', updated_at = CURRENT_TIMESTAMP WHERE product_id = :pid AND user_id = :uid", ['pid' => $barangId, 'uid' => $userId]);
+            executeQuery("UPDATE requests SET status = 'CANCELLED', updated_at = CURRENT_TIMESTAMP WHERE product_id = :pid AND status = 'PROCESS'", ['pid' => $barangId]);
+        }
+    } elseif ($action === 'selesaikan_transaksi' && $barangId && $userId) {
+        $p = executeQuery("SELECT product_id FROM products WHERE product_id = :pid AND user_id = :uid", ['pid' => $barangId, 'uid' => $userId], 'fetch');
+        if ($p) {
+            executeQuery("UPDATE products SET status = 'Terjual', updated_at = CURRENT_TIMESTAMP WHERE product_id = :pid AND user_id = :uid", ['pid' => $barangId, 'uid' => $userId]);
+            executeQuery("UPDATE requests SET status = 'COMPLETED', completed_date = CURRENT_DATE, updated_at = CURRENT_TIMESTAMP WHERE product_id = :pid AND status = 'PROCESS'", ['pid' => $barangId]);
+        }
     } elseif ($action === 'hapus_barang' && $barangId && $userId) {
-        executeQuery("DELETE FROM products WHERE product_id = :pid AND user_id = :uid", ['pid' => $barangId, 'uid' => $userId]);
+        $p = executeQuery("SELECT product_id FROM products WHERE product_id = :pid AND user_id = :uid", ['pid' => $barangId, 'uid' => $userId], 'fetch');
+        if ($p) {
+            executeQuery("UPDATE products SET status = 'Dihapus', updated_at = CURRENT_TIMESTAMP WHERE product_id = :pid AND user_id = :uid", ['pid' => $barangId, 'uid' => $userId]);
+            executeQuery("UPDATE requests SET status = 'CANCELLED', updated_at = CURRENT_TIMESTAMP WHERE product_id = :pid AND status IN ('PENDING', 'PROCESS')", ['pid' => $barangId]);
+        }
     }
 
     if (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json')) {
@@ -52,11 +96,18 @@ if ($userId) {
                 COALESCE(c.category_name, 'Lainnya') AS kategori,
                 p.status,
                 COALESCE(p.moderation_note, '') AS \"alasanAdmin\",
+                TO_CHAR(p.updated_at, 'DD Mon YYYY') AS \"tglUpdate\",
                 COALESCE(a.file_path, 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=300') AS gambar
          FROM products p
          LEFT JOIN categories c ON c.categories_id = p.category_id
-         LEFT JOIN attachments a ON a.product_id = p.product_id AND a.attachment_type = 1
-         WHERE p.user_id = :user_id
+         LEFT JOIN LATERAL (
+             SELECT file_path
+             FROM attachments
+             WHERE product_id = p.product_id
+             ORDER BY attachment_type ASC, attachment_id ASC
+             LIMIT 1
+         ) a ON TRUE
+         WHERE p.user_id = :user_id AND p.status != 'Dihapus'
          ORDER BY p.product_id DESC",
         ['user_id' => $userId],
         'fetchAll'
@@ -65,6 +116,8 @@ if ($userId) {
     foreach ($sellerProductsDb as &$sp) {
         $sp['id'] = (int) $sp['id'];
         $sp['harga'] = (int) $sp['harga'];
+        $sp['tglTerjual'] = $sp['tglUpdate'];
+        $sp['tglDitolak'] = $sp['tglUpdate'];
         $reqs = executeQuery(
             "SELECT r.transaction_id AS id,
                     COALESCE(up.name, 'Pembeli') AS pembeli,
@@ -267,25 +320,15 @@ if ($userId) {
     </div>
 
     <script>
-        const dbSellerProducts = <?= json_encode($sellerProductsDb, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?> || [];
+        let dbSellerProducts = <?= json_encode($sellerProductsDb, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?> || [];
 
+        // Always read from database data directly. Never use localStorage so different users are never cross-polluted!
         function getPenjualData() {
-            if (Array.isArray(dbSellerProducts) && dbSellerProducts.length > 0) {
-                localStorage.setItem('pk_penjual_barang', JSON.stringify(dbSellerProducts));
-                return dbSellerProducts;
-            }
-            const stored = localStorage.getItem('pk_penjual_barang');
-            if (stored) {
-                try {
-                    const parsed = JSON.parse(stored);
-                    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-                } catch(e){}
-            }
             return dbSellerProducts || [];
         }
 
         function savePenjualData(data) {
-            localStorage.setItem('pk_penjual_barang', JSON.stringify(data));
+            dbSellerProducts = data;
         }
 
         function formatRupiah(num) {
@@ -300,6 +343,19 @@ if ($userId) {
             const fKat = document.getElementById('filterKategori').value;
             const fSearch = document.getElementById('filterSearch').value.toLowerCase();
 
+            const container = document.getElementById('barangCardList');
+            if (list.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding: 48px 20px; background: #FFF; border-radius: 12px; border: 1px dashed var(--pk-border); margin: 20px 0;">
+                        <div style="font-size: 2.2rem; margin-bottom: 8px;">📦</div>
+                        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--pk-navy); margin-bottom: 6px;">Belum Ada Barang Jualan</h3>
+                        <p style="font-size: 0.85rem; color: #64748B; margin-bottom: 16px;">Anda belum mengunggah barang jualan apapun. Klik tombol "Tambah Barang Baru" untuk mulai menjual barang bekas kampus Anda.</p>
+                        <a href="<?= route('/tambah-barang.php') ?>" class="btn-tambah" style="display: inline-flex; align-items: center; justify-content: center; text-decoration: none;">+ Tambah Barang Baru</a>
+                    </div>
+                `;
+                return;
+            }
+
             const filtered = list.filter(item => {
                 const matchStatus = (fStatus === 'Semua') || (item.status === fStatus);
                 const matchKat = (fKat === 'Semua') || (item.kategori === fKat);
@@ -307,9 +363,8 @@ if ($userId) {
                 return matchStatus && matchKat && matchSearch;
             });
 
-            const container = document.getElementById('barangCardList');
             if (filtered.length === 0) {
-                container.innerHTML = `<div style="text-align:center; padding: 40px; color: #94A3B8;">Tidak ada barang jualan yang sesuai filter.</div>`;
+                container.innerHTML = `<div style="text-align:center; padding: 40px; color: #94A3B8;">Tidak ada barang jualan yang sesuai filter pencarian.</div>`;
                 return;
             }
 
@@ -561,7 +616,13 @@ if ($userId) {
             }
         }
 
-        document.addEventListener('DOMContentLoaded', renderBarangList);
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                localStorage.removeItem('pk_penjual_barang');
+                localStorage.removeItem('pk_user_riwayat');
+            } catch(e) {}
+            renderBarangList();
+        });
     </script>
 </body>
 </html>
