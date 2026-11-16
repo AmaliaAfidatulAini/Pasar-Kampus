@@ -11,4 +11,4 @@ The admin category page follows the users-page shell: shared header/footer props
 The admin dashboard includes a responsive campus-user pie chart with a readable count-and-percentage legend; when no users are available, it shows an empty state instead.
 The admin user form requires email, password, and role on create and edit; passwords must contain at least 8 characters and are stored as hashes.
 User edits validate NIM as text before checking its 50-character limit, so numeric-only NIMs remain valid.
-User create and edit forms include optional profile details for name, phone, campus, student number, subdistrict, district, and coordinates. Category preferences use the `user_preferences` junction table and can be selected as multiple categories in the admin form. The profile inputs use two columns on desktop and one on mobile.
+User create and edit forms include optional profile details for name, phone, campus, student number, subdistrict, and district. Category preferences use the `user_preferences` junction table and can be selected as multiple categories. The profile inputs use two columns on desktop and one on mobile.

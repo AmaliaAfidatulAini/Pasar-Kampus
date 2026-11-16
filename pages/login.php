@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = (object) $validation->validated();
 
         $user = executeQuery(
-            "SELECT u.*, p.name, p.phone, p.campus, p.gender, p.birth_date, p.address, p.subdistrict, p.district, p.avatar_url 
+            "SELECT u.*, p.name, p.phone, p.campus, p.subdistrict, p.district
             FROM users u 
             LEFT JOIN user_profiles p ON u.user_id = p.user_id 
             WHERE u.email = :email AND (u.deleted_at IS FALSE OR u.deleted_at IS NULL)", 

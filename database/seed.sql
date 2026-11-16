@@ -31,11 +31,11 @@ VALUES
 ('Pakaian'),
 ('Lainnya');
 
+-- User Preferences dummy
 INSERT INTO user_preferences (profile_id, category_id)
 SELECT profiles.profile_id, categories.categories_id
 FROM user_profiles profiles
 JOIN users ON users.user_id = profiles.user_id
-JOIN categories ON categories.category_name = preference_data.category_name
 JOIN (VALUES
     ('fami@test.com', 'Buku'),
     ('fami@test.com', 'ATK'),
@@ -47,7 +47,8 @@ JOIN (VALUES
     ('bima.dummy@pasarkampus.local', 'Perlengkapan Kos'),
     ('nisa.dummy@pasarkampus.local', 'Buku'),
     ('nisa.dummy@pasarkampus.local', 'Elektronik')
-) AS preference_data(email, category_name) ON preference_data.email = users.email;
+) AS preference_data(email, category_name) ON preference_data.email = users.email
+JOIN categories ON categories.category_name = preference_data.category_name;
 
 
 -- Tag Dummy
@@ -181,24 +182,28 @@ JOIN products AS product_rows ON product_rows.item_name = seed_requests.item_nam
 
 -- Report Dummy
 INSERT INTO reports (user_id, product_id, report_type, description, created_at, review_status, decision)
-VALUES
- (2, (SELECT product_id FROM products WHERE item_name = 'Buku Algoritma dan Pemrograman'), 'Barang palsu', 'Deskripsi barang tidak sesuai dengan kondisi yang ditawarkan.', '2026-01-05 00:00:00', 'Menunggu', NULL),
- (3, (SELECT product_id FROM products WHERE item_name = 'Kalkulator Scientific'), 'Penipuan pembayaran', 'Penjual meminta pembayaran di luar prosedur transaksi.', '2026-01-08 00:00:00', 'Menunggu', NULL),
- (4, (SELECT product_id FROM products WHERE item_name = 'Headset Kabel'), 'Ghosting COD', 'Pengguna tidak hadir pada waktu dan lokasi COD yang disepakati.', '2026-01-12 00:00:00', 'Menunggu', NULL),
- (5, (SELECT product_id FROM products WHERE item_name = 'Keyboard Mechanical 87 Keys'), 'Barang tidak sesuai', 'Barang yang diterima berbeda dari foto dan deskripsi.', '2026-01-16 00:00:00', 'Menunggu', NULL),
- (6, NULL, 'Akun mencurigakan', 'Akun mengirimkan tautan pembayaran yang tidak dikenal.', '2026-01-20 00:00:00', 'Menunggu', NULL),
- (2, (SELECT product_id FROM products WHERE item_name = 'Jaket Kampus Navy'), 'Konten tidak pantas', 'Deskripsi barang mengandung konten yang tidak sesuai.', '2026-01-24 00:00:00', 'Menunggu', NULL),
- (3, (SELECT product_id FROM products WHERE item_name = 'Mouse Wireless'), 'Harga menyesatkan', 'Harga pada iklan berbeda dengan harga saat transaksi.', '2026-01-28 00:00:00', 'Menunggu', NULL),
- (4, NULL, 'Transaksi di luar platform', 'Pengguna mengarahkan transaksi ke kanal pembayaran pribadi.', '2026-02-02 00:00:00', 'Menunggu', NULL),
- (5, (SELECT product_id FROM products WHERE item_name = 'Lampu Meja Belajar'), 'Barang rusak', 'Barang diterima dalam kondisi rusak tanpa keterangan sebelumnya.', '2026-02-06 00:00:00', 'Menunggu', NULL),
- (6, NULL, 'Identitas tidak jelas', 'Informasi identitas penjual tidak dapat dikonfirmasi.', '2026-02-10 00:00:00', 'Menunggu', NULL),
- (2, (SELECT product_id FROM products WHERE item_name = 'Komik Petualangan Volume 1-5'), 'Spam katalog', 'Pengguna mengunggah iklan yang sama berulang kali.', '2026-02-14 00:00:00', 'Menunggu', NULL),
- (3, NULL, 'Pelanggaran komunikasi', 'Pesan transaksi berisi ancaman kepada pengguna lain.', '2026-02-18 00:00:00', 'Menunggu', NULL),
- (4, (SELECT product_id FROM products WHERE item_name = 'Kalkulator Scientific'), 'Penipuan pembayaran', 'Bukti pembayaran yang dikirimkan tidak dapat diverifikasi.', '2026-02-22 00:00:00', 'Selesai', 'Suspend'),
- (5, (SELECT product_id FROM products WHERE item_name = 'Headset Kabel'), 'Barang palsu', 'Produk bermerek diduga bukan barang asli.', '2026-02-26 00:00:00', 'Selesai', 'Banned'),
- (6, NULL, 'Ghosting COD', 'Pelapor dan terlapor menyelesaikan masalah setelah klarifikasi.', '2026-03-02 00:00:00', 'Diabaikan', 'Abaikan'),
- (2, NULL, 'Laporan tidak valid', 'Laporan tidak memiliki informasi yang cukup untuk diproses.', '2026-03-06 00:00:00', 'Diabaikan', 'Abaikan'),
- (3, (SELECT product_id FROM products WHERE item_name = 'Buku Algoritma dan Pemrograman'), 'Barang tidak sesuai', 'Pelanggaran terkonfirmasi setelah pemeriksaan admin.', '2026-03-10 00:00:00', 'Selesai', 'Suspend'),
- (4, NULL, 'Akun mencurigakan', 'Aktivitas akun menunjukkan pola penipuan berulang.', '2026-03-14 00:00:00', 'Selesai', 'Banned'),
- (5, (SELECT product_id FROM products WHERE item_name = 'Jaket Kampus Navy'), 'Konten tidak pantas', 'Konten dihapus setelah ditinjau oleh admin.', '2026-03-18 00:00:00', 'Diabaikan', 'Abaikan'),
- (6, (SELECT product_id FROM products WHERE item_name = 'Mouse Wireless'), 'Spam katalog', 'Laporan ditutup karena iklan sudah dihapus oleh pemiliknya.', '2026-03-22 00:00:00', 'Diabaikan', 'Abaikan');
+SELECT reporters.user_id, products.product_id, report_data.report_type, report_data.description, report_data.created_at, report_data.review_status, report_data.decision
+FROM (VALUES
+    ('fami@test.com', 'Buku Algoritma dan Pemrograman', 'Barang palsu', 'Deskripsi barang tidak sesuai dengan kondisi yang ditawarkan.', TIMESTAMP '2026-01-05 00:00:00', 'Menunggu', NULL),
+    ('sando@test.com', 'Kalkulator Scientific', 'Penipuan pembayaran', 'Penjual meminta pembayaran di luar prosedur transaksi.', TIMESTAMP '2026-01-08 00:00:00', 'Menunggu', NULL),
+    ('rani.dummy@pasarkampus.local', 'Headset Kabel', 'Ghosting COD', 'Pengguna tidak hadir pada waktu dan lokasi COD yang disepakati.', TIMESTAMP '2026-01-12 00:00:00', 'Menunggu', NULL),
+    ('bima.dummy@pasarkampus.local', 'Keyboard Mechanical 87 Keys', 'Barang tidak sesuai', 'Barang yang diterima berbeda dari foto dan deskripsi.', TIMESTAMP '2026-01-16 00:00:00', 'Menunggu', NULL),
+    ('nisa.dummy@pasarkampus.local', NULL, 'Akun mencurigakan', 'Akun mengirimkan tautan pembayaran yang tidak dikenal.', TIMESTAMP '2026-01-20 00:00:00', 'Menunggu', NULL),
+    ('fami@test.com', 'Jaket Kampus Navy', 'Konten tidak pantas', 'Deskripsi barang mengandung konten yang tidak sesuai.', TIMESTAMP '2026-01-24 00:00:00', 'Menunggu', NULL),
+    ('sando@test.com', 'Mouse Wireless', 'Harga menyesatkan', 'Harga pada iklan berbeda dengan harga saat transaksi.', TIMESTAMP '2026-01-28 00:00:00', 'Menunggu', NULL),
+    ('rani.dummy@pasarkampus.local', NULL, 'Transaksi di luar platform', 'Pengguna mengarahkan transaksi ke kanal pembayaran pribadi.', TIMESTAMP '2026-02-02 00:00:00', 'Menunggu', NULL),
+    ('bima.dummy@pasarkampus.local', 'Lampu Meja Belajar', 'Barang rusak', 'Barang diterima dalam kondisi rusak tanpa keterangan sebelumnya.', TIMESTAMP '2026-02-06 00:00:00', 'Menunggu', NULL),
+    ('nisa.dummy@pasarkampus.local', NULL, 'Identitas tidak jelas', 'Informasi identitas penjual tidak dapat dikonfirmasi.', TIMESTAMP '2026-02-10 00:00:00', 'Menunggu', NULL),
+    ('fami@test.com', 'Komik Petualangan Volume 1-5', 'Spam katalog', 'Pengguna mengunggah iklan yang sama berulang kali.', TIMESTAMP '2026-02-14 00:00:00', 'Menunggu', NULL),
+    ('sando@test.com', NULL, 'Pelanggaran komunikasi', 'Pesan transaksi berisi ancaman kepada pengguna lain.', TIMESTAMP '2026-02-18 00:00:00', 'Menunggu', NULL),
+    ('rani.dummy@pasarkampus.local', 'Kalkulator Scientific', 'Penipuan pembayaran', 'Bukti pembayaran yang dikirimkan tidak dapat diverifikasi.', TIMESTAMP '2026-02-22 00:00:00', 'Selesai', 'Suspend'),
+    ('bima.dummy@pasarkampus.local', 'Headset Kabel', 'Barang palsu', 'Produk bermerek diduga bukan barang asli.', TIMESTAMP '2026-02-26 00:00:00', 'Selesai', 'Banned'),
+    ('nisa.dummy@pasarkampus.local', NULL, 'Ghosting COD', 'Pelapor dan terlapor menyelesaikan masalah setelah klarifikasi.', TIMESTAMP '2026-03-02 00:00:00', 'Diabaikan', 'Abaikan'),
+    ('fami@test.com', NULL, 'Laporan tidak valid', 'Laporan tidak memiliki informasi yang cukup untuk diproses.', TIMESTAMP '2026-03-06 00:00:00', 'Diabaikan', 'Abaikan'),
+    ('sando@test.com', 'Buku Algoritma dan Pemrograman', 'Barang tidak sesuai', 'Pelanggaran terkonfirmasi setelah pemeriksaan admin.', TIMESTAMP '2026-03-10 00:00:00', 'Selesai', 'Suspend'),
+    ('rani.dummy@pasarkampus.local', NULL, 'Akun mencurigakan', 'Aktivitas akun menunjukkan pola penipuan berulang.', TIMESTAMP '2026-03-14 00:00:00', 'Selesai', 'Banned'),
+    ('bima.dummy@pasarkampus.local', 'Jaket Kampus Navy', 'Konten tidak pantas', 'Konten dihapus setelah ditinjau oleh admin.', TIMESTAMP '2026-03-18 00:00:00', 'Diabaikan', 'Abaikan'),
+    ('nisa.dummy@pasarkampus.local', 'Mouse Wireless', 'Spam katalog', 'Laporan ditutup karena iklan sudah dihapus oleh pemiliknya.', TIMESTAMP '2026-03-22 00:00:00', 'Diabaikan', 'Abaikan')
+) AS report_data(reporter_email, item_name, report_type, description, created_at, review_status, decision)
+JOIN users reporters ON reporters.email = report_data.reporter_email
+LEFT JOIN products ON products.item_name = report_data.item_name;

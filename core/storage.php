@@ -17,7 +17,7 @@ function storeFile(string $target_dir, array $file, string $new_namefile): bool 
 		return false;
 	}
 	$target = rtrim($base . '/' . trim($target_dir, '/'), '/');
-	if (!is_dir($target) && !mkdir($target, 0775, true) && !is_dir($target)) {
+    if (!is_dir($target) && !@mkdir($target, 0775, true) && !is_dir($target)) {
 		return false;
 	}
 	$target = realpath($target);
@@ -25,7 +25,7 @@ function storeFile(string $target_dir, array $file, string $new_namefile): bool 
 		return false;
 	}
 
-	return move_uploaded_file($file['tmp_name'], $target . DIRECTORY_SEPARATOR . $new_namefile);
+    return @move_uploaded_file($file['tmp_name'], $target . DIRECTORY_SEPARATOR . $new_namefile);
 }
 
 function checkFile(string $dir_file): bool {

@@ -37,7 +37,6 @@ function admin_handle_user_query(string $redirect): void
                     COALESCE(p.campus, '') AS campus,
                     COALESCE(p.subdistrict, '') AS subdistrict,
                     COALESCE(p.district, '') AS district,
-                    COALESCE(p.coordinates, '') AS coordinates,
                     COALESCE((
                         SELECT json_agg(up.category_id ORDER BY up.category_id)
                         FROM user_preferences up
@@ -197,7 +196,6 @@ function admin_user_profile_values(array $input): array
         'nim' => ['student_number', 50],
         'subdistrict' => ['subdistrict', 255],
         'district' => ['district', 200],
-        'coordinates' => ['coordinates', 255],
     ];
     $profile = [];
     foreach ($fields as $field => [$column, $maxLength]) {
@@ -232,8 +230,8 @@ function admin_handle_user_post(string $redirect): void
             try {
                 $user = fetch(executeQuery("INSERT INTO users (email, password, role, account_status) VALUES (?, ?, ?, 'Aktif') RETURNING user_id", [$result->email, password_hash($result->password, PASSWORD_DEFAULT), $result->role === 'Admin' ? 'admin' : 'user']));
                 $profileRow = fetch(executeQuery(
-                    'INSERT INTO user_profiles (user_id, name, phone, campus, student_number, subdistrict, district, coordinates) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING profile_id',
-                    [(int) $user['user_id'], $profile['name'], $profile['phone'], $profile['campus'], $profile['student_number'], $profile['subdistrict'], $profile['district'], $profile['coordinates']]
+                    'INSERT INTO user_profiles (user_id, name, phone, campus, student_number, subdistrict, district) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING profile_id',
+                    [(int) $user['user_id'], $profile['name'], $profile['phone'], $profile['campus'], $profile['student_number'], $profile['subdistrict'], $profile['district']]
                 ));
                 admin_sync_user_preferences((int) $profileRow['profile_id'], $preferenceIds);
                 $pdo->commit();
@@ -285,17 +283,16 @@ function admin_handle_user_post(string $redirect): void
                 }
                 executeQuery('UPDATE users SET email = ?, role = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?', [$result->email, $result->role === 'Admin' ? 'admin' : 'user', $id]);
                 $existingProfile = fetch(executeQuery('SELECT profile_id FROM user_profiles WHERE user_id = ? ORDER BY profile_id DESC LIMIT 1', [$id]));
-                $profileValues = [$profile['name'], $profile['phone'], $profile['campus'], $profile['student_number'], $profile['subdistrict'], $profile['district'], $profile['coordinates']];
                 if ($existingProfile) {
                     $profileId = (int) $existingProfile['profile_id'];
                     executeQuery(
-                        'UPDATE user_profiles SET name = ?, phone = ?, campus = ?, student_number = ?, subdistrict = ?, district = ?, coordinates = ?, updated_at = CURRENT_TIMESTAMP WHERE profile_id = ?',
-                        [...$profileValues, $profileId]
+                        'UPDATE user_profiles SET name = ?, phone = ?, campus = ?, student_number = ?, subdistrict = ?, district = ?, updated_at = CURRENT_TIMESTAMP WHERE profile_id = ?',
+                        [$profile['name'], $profile['phone'], $profile['campus'], $profile['student_number'], $profile['subdistrict'], $profile['district'], $profileId]
                     );
                 } else {
                     $profileRow = fetch(executeQuery(
-                        'INSERT INTO user_profiles (user_id, name, phone, campus, student_number, subdistrict, district, coordinates) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING profile_id',
-                        [$id, ...$profileValues]
+                        'INSERT INTO user_profiles (user_id, name, phone, campus, student_number, subdistrict, district) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING profile_id',
+                        [$id, $profile['name'], $profile['phone'], $profile['campus'], $profile['student_number'], $profile['subdistrict'], $profile['district']]
                     ));
                     $profileId = (int) $profileRow['profile_id'];
                 }

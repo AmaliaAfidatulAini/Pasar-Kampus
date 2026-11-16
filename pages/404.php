@@ -1,4 +1,4 @@
-<?php Component::include("section/header", ["title" => "Halaman Tidak Ditemukan"]) ?>
+<?php Component::include("user/header", ["title" => "Halaman Tidak Ditemukan"]) ?>
 
 <main class="lp-error-page lp-error-not-found">
     <section class="lp-error-content" aria-labelledby="error-title">
@@ -24,4 +24,4 @@
     </section>
 </main>
 
-<?php Component::include("section/footer") ?>
+<?php Component::include("user/footer") ?>

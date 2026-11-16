@@ -50,16 +50,25 @@ Component::include('admin/header', [
                     <div class="admin-info-row"><span class="admin-info-label">Pelapor:</span><span id="tinjauPelapor" class="admin-info-value"></span></div>
                     <div class="admin-info-row"><span class="admin-info-label">Terlapor:</span><span id="tinjauTerlapor" class="admin-info-value"></span></div>
                     <div class="admin-info-row"><span class="admin-info-label">Alasan Aduan:</span><span id="tinjauAlasan" class="admin-info-value"></span></div>
-                    <div class="admin-info-row report-description-row"><span class="admin-info-label">Deskripsi Pengaduan:</span><span id="tinjauDeskripsi" class="report-description"></span></div>
+                    <div class="admin-info-row report-description-row">
+                        <span class="admin-info-label">Deskripsi Pengaduan:</span>
+                        <span id="tinjauDeskripsi" class="report-description"></span>
+                    </div>
                 </div>
                 <div class="admin-form-group"><span class="admin-form-label">Bukti Foto Pengaduan</span>
                     <div id="tinjauEvidenceGallery" class="admin-evidence-gallery"></div>
                 </div>
                 <div class="admin-form-group report-decision-group"><span class="admin-form-label">Tindakan Admin</span>
                     <div class="admin-radio-group">
-                        <label class="admin-radio-label"><input type="radio" name="decision" value="Abaikan" required><span><strong>Abaikan Laporan</strong> (Laporan Tidak Valid / Salah Paham)</span></label>
-                        <label class="admin-radio-label"><input type="radio" name="decision" value="Suspend" required><span><strong>Suspend Akun Terlapor</strong> (Sanksi Sementara &amp; Peringatan)</span></label>
-                        <label class="admin-radio-label"><input type="radio" name="decision" value="Banned" required><span><strong>Banned Permanen Akun Terlapor</strong> (Sanksi Berat Penipuan)</span></label>
+                        <label class="admin-radio-label"><input type="radio" name="decision" value="Abaikan" required>
+                            <span><strong>Abaikan Laporan</strong> <br>Laporan Tidak Valid / Salah Paham</span>
+                        </label>
+                        <label class="admin-radio-label"><input type="radio" name="decision" value="Suspend" required>
+                            <span><strong>Suspend Akun Terlapor</strong><br> Sanksi Sementara &amp; Peringatan</span>
+                        </label>
+                        <label class="admin-radio-label"><input type="radio" name="decision" value="Banned" required>
+                            <span><strong>Banned Permanen Akun Terlapor</strong><br> Sanksi Berat Penipuan</span>
+                        </label>
                     </div>
                 </div>
             </div>

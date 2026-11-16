@@ -24,10 +24,6 @@ CREATE TABLE user_profiles (
     student_number VARCHAR(50),
     subdistrict VARCHAR(255),
     district VARCHAR(200),
-    coordinates VARCHAR(255),
-    gender VARCHAR(20),
-    birth_date VARCHAR(50),
-    avatar_url VARCHAR(255),
     CONSTRAINT fk_user_profiles_users FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -49,6 +45,7 @@ CREATE TABLE categories (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
 CREATE TABLE user_preferences (
     profile_id INT NOT NULL,
     category_id INT NOT NULL,

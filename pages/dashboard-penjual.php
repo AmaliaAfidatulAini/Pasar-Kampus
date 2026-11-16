@@ -203,7 +203,7 @@ if ($userId) {
             <a href="<?= route('/dashboard-utama.php') ?>" class="pk-nav-logo">PasarKampus</a>
             <div class="pk-nav-links">
                 <a href="<?= route('/riwayat.php') ?>">Riwayat</a>
-                <a href="<?= route('/profil.php') ?>">Profil</a>
+                <a href="<?= route('/profile') ?>">Profil</a>
             </div>
         </div>
     </header>

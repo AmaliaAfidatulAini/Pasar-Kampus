@@ -1,4 +1,4 @@
-<?php Component::include("section/header", ["title" => "Akses Ditolak"]) ?>
+<?php Component::include("user/header", ["title" => "Akses Ditolak"]) ?>
 
 <main class="lp-error-page lp-error-forbidden">
     <section class="lp-error-content" aria-labelledby="error-title">
@@ -24,4 +24,4 @@
     </section>
 </main>
 
-<?php Component::include("section/footer") ?>
+<?php Component::include("user/footer") ?>

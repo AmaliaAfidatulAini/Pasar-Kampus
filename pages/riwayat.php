@@ -709,7 +709,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
             </div>
 
             <div class="pk-nav-menu">
-                <a href="<?= route('/profile.php') ?>" class="pk-nav-link">Profil</a>
+                <a href="<?= route('/profile') ?>" class="pk-nav-link">Profil</a>
                 <a href="<?= route('/dashboard-utama.php') ?>" class="pk-nav-link">Katalog</a>
                 <a href="<?= route('/#faq') ?>" class="pk-nav-link">butuh bantuan?</a>
             </div>

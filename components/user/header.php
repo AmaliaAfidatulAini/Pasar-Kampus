@@ -1,17 +1,22 @@
 <?php
 // COMPONENTS PROPS //
 $title = $title ?? "";
+$styles = $styles ?? "";
 // END OF COMPONENTS PROPS //
+
 $session = get_session();
 $profileName = ($session['role'] ?? '') === 'admin' ? 'Administrator' : 'No Name';
+
 if ($session && isset($session['user_id'])) {
     $profile = executeQuery(
         'SELECT name FROM user_profiles WHERE user_id = ? ORDER BY profile_id DESC LIMIT 1',
         [$session['user_id']],
         'fetch'
     ) ?: [];
-$profileName = trim((string) ($profile['name'] ?? '')) ?: $profileName;
+
+    $profileName = trim((string) ($profile['name'] ?? '')) ?: $profileName;
 }
+
 $initial = strtoupper(substr($profileName, 0, 1));
 ?>
 
@@ -29,6 +34,7 @@ $initial = strtoupper(substr($profileName, 0, 1));
     <!-- CSS Stylesheet -->
     <link rel="stylesheet" href="<?= asset("css/style.css") ?>">
     <link rel="stylesheet" href="<?= asset("css/flasher.css") ?>">
+    <?= $styles ?>
 </head>
 <body class="lp-body">
 
@@ -78,15 +84,15 @@ $initial = strtoupper(substr($profileName, 0, 1));
                                     <strong style="display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><?= esc($profileName) ?></strong>
                                     <span style="display: block; color: #64748B; font-size: 0.82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><?= esc((string) ($session['email'] ?? '')) ?></span>
                                 </div>
-                                <a href="<?= route('/dashboard_penjual.php') ?>" class="lp-dropdown-item">
+                                <a href="<?= route('/dashboard_penjual') ?>" class="lp-dropdown-item">
                                     <i data-lucide="package" class="lp-dropdown-icon" aria-hidden="true"></i>
                                     <span>Daftar Barang</span>
                                 </a>
-                                <a href="<?= route('/pengajuan.php') ?>" class="lp-dropdown-item">
+                                <a href="<?= route('/pengajuan') ?>" class="lp-dropdown-item">
                                     <i data-lucide="history" class="lp-dropdown-icon" aria-hidden="true"></i>
                                     <span>Riwayat Pengajuan</span>
                                 </a>
-                                <a href="<?= route('/profil.php') ?>" class="lp-dropdown-item">
+                                <a href="<?= route('/profile') ?>" class="lp-dropdown-item">
                                     <i data-lucide="user-round" class="lp-dropdown-icon" aria-hidden="true"></i>
                                     <span>Profil Pengguna</span>
                                 </a>

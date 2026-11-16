@@ -1,5 +1,4 @@
 <?php 
-Component::include("section/header", ["title" => "Beranda"]);
 $stmt = executeQuery(
     "SELECT p.*,
             COALESCE(c.category_name, '') AS category_name,
@@ -18,6 +17,8 @@ $stmt = executeQuery(
 );
 $barang = fetchAll($stmt);
 ?>
+
+<?php Component::include("user/header", ["title" => "Beranda"]); ?>
 
 <main>
     <!-- ================= 1. HERO SECTION - Pusat Jual-Beli Barang Bekas ================= -->
@@ -446,4 +447,4 @@ $barang = fetchAll($stmt);
 </script>
 <?php $script = Component::endFlush() ?>
 
-<?php Component::include("section/footer", compact("script")); ?>
+<?php Component::include("user/footer", compact("script")); ?>

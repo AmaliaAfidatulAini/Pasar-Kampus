@@ -1,5 +1,5 @@
-<?php Component::include("section/header", ["title" => "laporan"]) ?>
+<?php Component::include("user/header", ["title" => "laporan"]) ?>
 
 <h1>Ini laporan</h1>
 
-<?php Component::include("section/footer") ?>
+<?php Component::include("user/footer") ?>

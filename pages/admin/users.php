@@ -105,10 +105,6 @@ $session = get_session();
                         <label class="admin-form-label" for="userSubdistrict">Kecamatan</label>
                         <input type="text" name="subdistrict" id="userSubdistrict" maxlength="255" class="admin-form-input" placeholder="Kecamatan">
                     </div>
-                    <div class="admin-form-group">
-                        <label class="admin-form-label" for="userCoordinates">Koordinat</label>
-                        <input type="text" name="coordinates" id="userCoordinates" maxlength="255" class="admin-form-input" placeholder="Latitude, longitude">
-                    </div>
                 </div>
                 <div id="userSanctionFields" hidden>
                     <hr class="user-profile-divider">
@@ -160,7 +156,6 @@ $session = get_session();
         });
         field('subdistrict').value = editing ? user.subdistrict : '';
         field('district').value = editing ? user.district : '';
-        field('coordinates').value = editing ? user.coordinates : '';
         field('email').value = editing ? user.email : '';
         field('password').required = !editing;
         document.getElementById('userPasswordRequired').hidden = editing;

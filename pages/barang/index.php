@@ -1156,7 +1156,7 @@ if (count($recommendations) < 4) {
             <nav class="pk-nav-links">
                 <?php if ($isLoggedIn): ?>
                     <a href="<?= route('/riwayat.php') ?>" class="pk-nav-link">Riwayat</a>
-                    <a href="<?= route('/profil.php') ?>" class="pk-nav-link">Profil</a>
+                    <a href="<?= route('/profile') ?>" class="pk-nav-link">Profil</a>
                 <?php else: ?>
                     <a href="<?= route('/login') ?>" class="pk-btn-masuk">Masuk</a>
                 <?php endif; ?>
