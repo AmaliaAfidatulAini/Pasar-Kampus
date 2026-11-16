@@ -24,7 +24,7 @@ if ($userId) {
              FROM requests r
              LEFT JOIN products p ON p.product_id = r.product_id
              LEFT JOIN user_profiles sp ON sp.user_id = p.user_id
-             WHERE r.user_id = :user_id
+             WHERE r.user_id = :user_id AND r.status != 'CANCELLED'
              ORDER BY r.transaction_id DESC",
             ['user_id' => $userId],
             'fetchAll'
@@ -43,10 +43,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
     $cancelId = (int) ($_POST['transaction_id'] ?? 0);
     if ($cancelId && $userId) {
         try {
+            $req = executeQuery("SELECT product_id, status FROM requests WHERE transaction_id = :id AND user_id = :uid", ['id' => $cancelId, 'uid' => $userId], 'fetch');
             executeQuery(
                 "UPDATE requests SET status = 'CANCELLED', updated_at = CURRENT_TIMESTAMP WHERE transaction_id = :id AND user_id = :uid",
                 ['id' => $cancelId, 'uid' => $userId]
             );
+            if ($req && ($req['status'] === 'PROCESS')) {
+                executeQuery("UPDATE products SET status = 'Tersedia', updated_at = CURRENT_TIMESTAMP WHERE product_id = :pid AND status = 'Proses'", ['pid' => $req['product_id']]);
+            }
         } catch (Throwable $e) {}
     }
     if (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json')) {
@@ -864,6 +868,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
     ];
 
     function getRiwayatData() {
+        if (Array.isArray(dbRiwayatList) && dbRiwayatList.length > 0) {
+            const activeDbList = dbRiwayatList.filter(item => !item.status || item.status.toLowerCase() !== 'dibatalkan');
+            localStorage.setItem('pk_user_riwayat', JSON.stringify(activeDbList));
+            return activeDbList;
+        }
+
         let list = null;
         const stored = localStorage.getItem('pk_user_riwayat');
         if (stored) {
@@ -873,19 +883,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
             list = [...defaultRiwayatList];
         }
 
-        // Sinkronisasi data dari database jika ada
-        if (Array.isArray(dbRiwayatList) && dbRiwayatList.length > 0) {
-            dbRiwayatList.forEach(dbItem => {
-                const existingIndex = list.findIndex(item => item.id === dbItem.id);
-                if (existingIndex === -1) {
-                    list.unshift(dbItem);
-                } else {
-                    list[existingIndex] = { ...list[existingIndex], ...dbItem };
-                }
-            });
-        }
-
-        localStorage.setItem('pk_user_riwayat', JSON.stringify(list));
+        // Filter keluar pengajuan yang berstatus dibatalkan agar hilang dari riwayat
+        list = list.filter(item => !item.status || item.status.toLowerCase() !== 'dibatalkan');
         return list;
     }
 
@@ -1060,20 +1059,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
     function batalkanPengajuan(id) {
         if (confirm(`Apakah Anda yakin ingin membatalkan pengajuan #${id}?`)) {
             let list = getRiwayatData();
-            const item = list.find(r => r.id === id);
-            if (item) {
-                item.status = "Dibatalkan";
-                saveRiwayatData(list);
-                try {
-                    const fd = new FormData();
-                    fd.append('action', 'cancel');
-                    fd.append('transaction_id', id);
-                    fetch('<?= route('/riwayat.php') ?>', { method: 'POST', body: fd }).catch(() => {});
-                } catch(e) {}
-                closeDetailModal();
-                renderTable();
-                alert(`Pengajuan #${id} berhasil dibatalkan.`);
-            }
+            // Hapus pengajuan dari daftar riwayat agar barang hilang dari halaman
+            list = list.filter(r => r.id !== id);
+            saveRiwayatData(list);
+
+            try {
+                const fd = new FormData();
+                fd.append('action', 'cancel');
+                fd.append('transaction_id', id);
+                fetch('<?= route('/riwayat.php') ?>', { method: 'POST', body: fd }).catch(() => {});
+            } catch(e) {}
+
+            try {
+                const sellerStored = localStorage.getItem('pk_penjual_barang');
+                if (sellerStored) {
+                    const sellerList = JSON.parse(sellerStored);
+                    sellerList.forEach(prod => {
+                        if (Array.isArray(prod.pengajuanList)) {
+                            prod.pengajuanList = prod.pengajuanList.filter(p => p.id !== id);
+                        }
+                    });
+                    localStorage.setItem('pk_penjual_barang', JSON.stringify(sellerList));
+                }
+            } catch(e) {}
+
+            closeDetailModal();
+            renderTable();
+            alert(`Pengajuan #${id} berhasil dibatalkan dan dihapus dari riwayat.`);
         }
     }
 

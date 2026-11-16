@@ -1,5 +1,165 @@
 <?php
 $session = session_include('/login');
+$userId = (int) ($session['user_id'] ?? 0);
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $namaBarang = trim((string)($_POST['nama_barang'] ?? $_POST['namaBarang'] ?? ''));
+    $kategoriName = trim((string)($_POST['kategori'] ?? ''));
+    $harga = (int) ($_POST['harga'] ?? 0);
+    $kondisiStr = trim((string)($_POST['kondisi'] ?? 'Sangat Bagus'));
+    $deskripsi = trim((string)($_POST['deskripsi'] ?? ''));
+    $tagsRaw = $_POST['tags'] ?? [];
+    if (is_string($tagsRaw)) {
+        $tagsArr = json_decode($tagsRaw, true) ?: array_filter(array_map('trim', explode(',', $tagsRaw)));
+    } else {
+        $tagsArr = (array) $tagsRaw;
+    }
+
+    // Map condition to 1..4
+    $conditionMap = [
+        'Sangat Bagus' => 4,
+        'Baik' => 3,
+        'Cukup' => 2,
+        'Bekas' => 1
+    ];
+    $conditionVal = $conditionMap[$kondisiStr] ?? 3;
+
+    // Resolve category_id
+    $catRow = executeQuery("SELECT categories_id FROM categories WHERE category_name ILIKE :cat LIMIT 1", ['cat' => $kategoriName], 'fetch');
+    if ($catRow) {
+        $categoryId = (int) $catRow['categories_id'];
+    } else {
+        $catFall = executeQuery("SELECT categories_id FROM categories WHERE category_name ILIKE 'Lainnya' LIMIT 1", [], 'fetch');
+        $categoryId = $catFall ? (int) $catFall['categories_id'] : 1;
+    }
+
+    // Prepare upload directory
+    $targetDir = BASE_PATH . '/public/uploads/products';
+    if (!is_dir($targetDir)) {
+        mkdir($targetDir, 0775, true);
+    }
+
+    // Save cover image if uploaded
+    $coverLink = 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=300';
+    $coverFileName = '';
+    $coverMime = '';
+    $coverSize = 0;
+
+    if (isset($_FILES['imgCover']) && $_FILES['imgCover']['error'] === UPLOAD_ERR_OK) {
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $_FILES['imgCover']['tmp_name']);
+        finfo_close($finfo);
+
+        $ext = pathinfo($_FILES['imgCover']['name'], PATHINFO_EXTENSION);
+        if (!$ext) $ext = 'jpg';
+        $coverFileName = 'prod_' . $userId . '_' . time() . '_cover.' . strtolower($ext);
+
+        if (move_uploaded_file($_FILES['imgCover']['tmp_name'], $targetDir . '/' . $coverFileName)) {
+            $coverLink = upload('products/' . $coverFileName);
+            $coverMime = $mime;
+            $coverSize = (int) $_FILES['imgCover']['size'];
+        }
+    }
+
+    // Insert Product into Database
+    $newProd = executeQuery(
+        "INSERT INTO products (user_id, category_id, item_name, description, price, condition, status, delivery_methods, created_at, updated_at) 
+         VALUES (:uid, :cat, :name, :desc, :price, :cond, 'Tersedia', 'COD Kampus', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) 
+         RETURNING product_id",
+        [
+            'uid' => $userId,
+            'cat' => $categoryId,
+            'name' => $namaBarang,
+            'desc' => $deskripsi,
+            'price' => $harga,
+            'cond' => $conditionVal
+        ],
+        'fetch'
+    );
+
+    $productId = $newProd['product_id'] ?? null;
+
+    if ($productId) {
+        // Insert main cover into attachments table
+        try {
+            executeQuery(
+                "INSERT INTO attachments (product_id, report_id, attachment_type, file_path, file_name, file_type, file_size, created_at, updated_at) 
+                 VALUES (:pid, NULL, 1, :path, :name, :type, :size, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+                [
+                    'pid' => $productId,
+                    'path' => $coverLink,
+                    'name' => $coverFileName ?: 'cover.jpg',
+                    'type' => $coverMime ?: 'image/jpeg',
+                    'size' => $coverSize
+                ]
+            );
+        } catch (Throwable $e) {
+            error_log('Insert product cover attachment failed: ' . $e->getMessage());
+        }
+
+        // Insert thumbnail images (1 to 5)
+        for ($i = 1; $i <= 5; $i++) {
+            $thumbKey = 'imgThumb' . $i;
+            if (isset($_FILES[$thumbKey]) && $_FILES[$thumbKey]['error'] === UPLOAD_ERR_OK) {
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                $mime = finfo_file($finfo, $_FILES[$thumbKey]['tmp_name']);
+                finfo_close($finfo);
+
+                $ext = pathinfo($_FILES[$thumbKey]['name'], PATHINFO_EXTENSION);
+                if (!$ext) $ext = 'jpg';
+                $thumbName = 'prod_' . $userId . '_' . time() . '_thumb' . $i . '.' . strtolower($ext);
+
+                if (move_uploaded_file($_FILES[$thumbKey]['tmp_name'], $targetDir . '/' . $thumbName)) {
+                    $thumbLink = upload('products/' . $thumbName);
+                    try {
+                        executeQuery(
+                            "INSERT INTO attachments (product_id, report_id, attachment_type, file_path, file_name, file_type, file_size, created_at, updated_at) 
+                             VALUES (:pid, NULL, 2, :path, :name, :type, :size, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+                            [
+                                'pid' => $productId,
+                                'path' => $thumbLink,
+                                'name' => $thumbName,
+                                'type' => $mime,
+                                'size' => (int) $_FILES[$thumbKey]['size']
+                            ]
+                        );
+                    } catch (Throwable $e) {}
+                }
+            }
+        }
+
+        // Insert Tags
+        foreach ($tagsArr as $tName) {
+            $tName = trim((string)$tName);
+            if ($tName === '') continue;
+            try {
+                $tRow = executeQuery("SELECT id_tag FROM tags WHERE name_tag ILIKE :t LIMIT 1", ['t' => $tName], 'fetch');
+                if ($tRow) {
+                    $tagId = (int) $tRow['id_tag'];
+                } else {
+                    $tIns = executeQuery("INSERT INTO tags (name_tag, created_at, updated_at) VALUES (:t, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING id_tag", ['t' => $tName], 'fetch');
+                    $tagId = (int) $tIns['id_tag'];
+                }
+                executeQuery("INSERT INTO products_tags (products_tagsid_tag, productsproduct_id, created_at, updated_at) VALUES (:tid, :pid, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING", ['tid' => $tagId, 'pid' => $productId]);
+            } catch (Throwable $e) {}
+        }
+    }
+
+    if (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json')) {
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'product_id' => $productId,
+            'message' => 'Barang jualan berhasil disimpan ke database!',
+            'redirect' => route('/dashboard-penjual.php')
+        ]);
+        exit;
+    }
+
+    flash('success', 'Barang berhasil disimpan ke database dan ditayangkan!');
+    redirect('/dashboard-penjual.php', 302);
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -182,6 +342,10 @@ $session = session_include('/login');
             font-weight: 700;
             font-size: 0.9rem;
             cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-submit:hover {
+            background: #162850;
         }
         .btn-cancel {
             background: #E2E8F0;
@@ -194,6 +358,11 @@ $session = session_include('/login');
             text-decoration: none;
             display: inline-flex;
             align-items: center;
+        }
+        @media (max-width: 768px) {
+            .pk-form-card {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -214,7 +383,7 @@ $session = session_include('/login');
             <a href="dashboard-penjual.php" class="pk-back-link">&larr; Kembali</a>
         </div>
 
-        <form id="tambahBarangForm" onsubmit="handleSaveBarang(event)">
+        <form id="tambahBarangForm" onsubmit="handleSaveBarang(event)" enctype="multipart/form-data">
             <div class="pk-form-card">
                 
                 <!-- Unggah Foto Upload UI -->
@@ -225,7 +394,7 @@ $session = session_include('/login');
                     <div class="main-photo-slot" onclick="document.getElementById('imgCover').click()">
                         <span id="coverPlaceholder">📷 Foto Utama (Katalog)</span>
                         <img id="coverPreview" src="" style="display:none;">
-                        <input type="file" id="imgCover" accept="image/*" style="display:none" onchange="previewImage(this, 'coverPreview', 'coverPlaceholder')">
+                        <input type="file" id="imgCover" name="imgCover" accept="image/*" style="display:none" onchange="previewImage(this, 'coverPreview', 'coverPlaceholder')">
                     </div>
 
                     <!-- 5 Thumbnail Gallery -->
@@ -234,7 +403,7 @@ $session = session_include('/login');
                         <div class="thumb-slot" onclick="document.getElementById('imgThumb<?= $i ?>').click()">
                             <span id="thumbPlaceholder<?= $i ?>">+<?= $i ?></span>
                             <img id="thumbPreview<?= $i ?>" src="" style="display:none;">
-                            <input type="file" id="imgThumb<?= $i ?>" accept="image/*" style="display:none" onchange="previewImage(this, 'thumbPreview<?= $i ?>', 'thumbPlaceholder<?= $i ?>')">
+                            <input type="file" id="imgThumb<?= $i ?>" name="imgThumb<?= $i ?>" accept="image/*" style="display:none" onchange="previewImage(this, 'thumbPreview<?= $i ?>', 'thumbPlaceholder<?= $i ?>')">
                         </div>
                         <?php endfor; ?>
                     </div>
@@ -244,24 +413,25 @@ $session = session_include('/login');
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Nama barang</label>
-                        <input type="text" id="namaBarang" class="pk-input" placeholder="Contoh: Tumbler Stainless 500ml" required>
+                        <input type="text" id="namaBarang" name="namaBarang" class="pk-input" placeholder="Contoh: Tumbler Stainless 500ml" required>
                     </div>
 
                     <div class="form-group">
                         <label>Kategori</label>
-                        <select id="kategori" class="pk-select" required>
+                        <select id="kategori" name="kategori" class="pk-select" required>
                             <option value="">-- Pilih Kategori --</option>
                             <option value="Buku">Buku</option>
                             <option value="Elektronik">Elektronik</option>
                             <option value="Pakaian">Pakaian</option>
-                            <option value="Perlengkapan">Perlengkapan Kos</option>
+                            <option value="Perlengkapan Kos">Perlengkapan Kos</option>
+                            <option value="ATK">ATK</option>
                             <option value="Lainnya">Lainnya</option>
                         </select>
                     </div>
 
                     <div class="form-group">
                         <label>Harga (Rp)</label>
-                        <input type="number" id="harga" class="pk-input" placeholder="Rp. 50000" required>
+                        <input type="number" id="harga" name="harga" class="pk-input" placeholder="Rp. 50000" required>
                     </div>
 
                     <div class="form-group">
@@ -291,14 +461,14 @@ $session = session_include('/login');
 
                     <div class="form-group">
                         <label>Deskripsi barang</label>
-                        <textarea id="deskripsi" class="pk-textarea" rows="3" placeholder="Jelaskan kondisi atau kelebihan barang..." required></textarea>
+                        <textarea id="deskripsi" name="deskripsi" class="pk-textarea" rows="3" placeholder="Jelaskan kondisi atau kelebihan barang..." required></textarea>
                     </div>
                 </div>
 
                 <!-- Footer CTA Bar -->
                 <div class="form-actions">
                     <a href="dashboard-penjual.php" class="btn-cancel">Batal</a>
-                    <button type="submit" class="btn-submit">Simpan & Tayangkan</button>
+                    <button type="submit" class="btn-submit" id="btnSubmitBarang">Simpan & Tayangkan</button>
                 </div>
 
             </div>
@@ -378,29 +548,41 @@ $session = session_include('/login');
             }
         }
 
-        function handleSaveBarang(e) {
+        async function handleSaveBarang(e) {
             e.preventDefault();
-            const stored = JSON.parse(localStorage.getItem('pk_penjual_barang') || '[]');
-            
-            const newBarang = {
-                id: Date.now(),
-                namaBarang: document.getElementById('namaBarang').value,
-                kategori: document.getElementById('kategori').value,
-                harga: parseInt(document.getElementById('harga').value),
-                status: "Tersedia",
-                pengajuanCount: 0,
-                pengajuanList: [],
-                gambar: document.getElementById('coverPreview').src || 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=300',
-                tags: selectedTags,
-                tglInput: new Date().toLocaleDateString('id-ID')
-            };
+            const btn = document.getElementById('btnSubmitBarang');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = 'Menyimpan ke database...';
+            }
 
-            // Simpan data di urutan teratas (paling depan)
-            stored.unshift(newBarang);
-            localStorage.setItem('pk_penjual_barang', JSON.stringify(stored));
-            
-            // Redirect kembali ke dashboard utama penjual
-            window.location.href = 'dashboard-penjual.php';
+            const form = document.getElementById('tambahBarangForm');
+            const fd = new FormData(form);
+            fd.append('tags', JSON.stringify(selectedTags));
+
+            try {
+                const res = await fetch(window.location.href, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json' },
+                    body: fd
+                });
+                const result = await res.json();
+                if (result.success) {
+                    // Invalidate stale local storage cache
+                    localStorage.removeItem('pk_penjual_barang');
+                    window.location.href = result.redirect || 'dashboard-penjual.php';
+                } else {
+                    alert(result.message || 'Gagal menyimpan barang ke database.');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerText = 'Simpan & Tayangkan';
+                    }
+                }
+            } catch (err) {
+                console.error('Error saving barang:', err);
+                form.method = 'POST';
+                form.submit();
+            }
         }
 
         document.addEventListener('DOMContentLoaded', renderTags);
