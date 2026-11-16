@@ -10,395 +10,335 @@ function format_rupiah(int|float $number): string
     return 'Rp. ' . number_format($number, 0, ',', '.');
 }
 
-function get_catalog_products(): array
+function truncate_text(string $text, int $length = 95, string $suffix = '..'): string
 {
-    static $products = null;
-    if ($products !== null) {
-        return $products;
+    if (function_exists('mb_strimwidth')) {
+        return mb_strimwidth($text, 0, $length, $suffix);
     }
-
-    $products = [
-        [
-            'id' => 1,
-            'title' => 'Keyboard Logiac - Silver',
-            'category' => 'Elektronik',
-            'condition' => 'Layak pakai',
-            'condition_spec' => 'Mulus',
-            'method' => 'COD',
-            'location' => 'Kecamatan Lowokwaru',
-            'campus' => 'Area Universitas Brawijaya',
-            'tags' => ['#RPL', '#ATK', '#CuciGudang'],
-            'original_price' => 150000,
-            'price' => 90000,
-            'image' => 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800',
-            'gallery' => [
-                'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1561154464-82e9adf32764?auto=format&fit=crop&q=80&w=800',
-            ],
-            'description' => 'Dirancang khusus untuk menunjang produktivitas tinggi, keyboard ini dilengkapi tombol responsif dengan umpan balik (tactile feedback) yang lembut. Pengalaman mengetik menjadi lebih tenang, lancar, dan akurat, sehingga Anda bisa bekerja berjam-jam tanpa terganggu suara bising.',
-            'short_desc' => 'Keyboard wireless dengan balutan warna silver elegan dan desain slim yang hemat tempat. ..'
-        ],
-        [
-            'id' => 2,
-            'title' => 'Keyboard Logiac - Silver',
-            'category' => 'Elektronik',
-            'condition' => 'Layak pakai',
-            'condition_spec' => 'Mulus',
-            'method' => 'COD',
-            'location' => 'Kecamatan Lowokwaru',
-            'campus' => 'Area Universitas Negeri Malang',
-            'tags' => ['#RPL', '#ATK', '#CuciGudang'],
-            'original_price' => 150000,
-            'price' => 90000,
-            'image' => 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800',
-            'gallery' => [
-                'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1561154464-82e9adf32764?auto=format&fit=crop&q=80&w=800',
-            ],
-            'description' => 'Dirancang khusus untuk menunjang produktivitas tinggi, keyboard ini dilengkapi tombol responsif dengan umpan balik (tactile feedback) yang lembut. Pengalaman mengetik menjadi lebih tenang, lancar, dan akurat, sehingga Anda bisa bekerja berjam-jam tanpa terganggu suara bising.',
-            'short_desc' => 'Keyboard wireless dengan balutan warna silver elegan dan desain slim yang hemat tempat. ..'
-        ],
-        [
-            'id' => 3,
-            'title' => 'Keyboard Logiac - Silver',
-            'category' => 'Elektronik',
-            'condition' => 'Layak pakai',
-            'condition_spec' => 'Mulus',
-            'method' => 'COD',
-            'location' => 'Kecamatan Lowokwaru',
-            'campus' => 'Area Politeknik Negeri Malang',
-            'tags' => ['#RPL', '#ATK', '#CuciGudang'],
-            'original_price' => 150000,
-            'price' => 90000,
-            'image' => 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800',
-            'gallery' => [
-                'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1561154464-82e9adf32764?auto=format&fit=crop&q=80&w=800',
-            ],
-            'description' => 'Dirancang khusus untuk menunjang produktivitas tinggi, keyboard ini dilengkapi tombol responsif dengan umpan balik (tactile feedback) yang lembut. Pengalaman mengetik menjadi lebih tenang, lancar, dan akurat, sehingga Anda bisa bekerja berjam-jam tanpa terganggu suara bising.',
-            'short_desc' => 'Keyboard wireless dengan balutan warna silver elegan dan desain slim yang hemat tempat. ..'
-        ],
-        [
-            'id' => 4,
-            'title' => 'Keyboard Logiac - Silver',
-            'category' => 'Elektronik',
-            'condition' => 'Layak pakai',
-            'condition_spec' => 'Mulus',
-            'method' => 'COD',
-            'location' => 'Kecamatan Lowokwaru',
-            'campus' => 'Area Universitas Terbuka',
-            'tags' => ['#RPL', '#ATK', '#CuciGudang'],
-            'original_price' => 150000,
-            'price' => 90000,
-            'image' => 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800',
-            'gallery' => [
-                'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1561154464-82e9adf32764?auto=format&fit=crop&q=80&w=800',
-            ],
-            'description' => 'Dirancang khusus untuk menunjang produktivitas tinggi, keyboard ini dilengkapi tombol responsif dengan umpan balik (tactile feedback) yang lembut. Pengalaman mengetik menjadi lebih tenang, lancar, dan akurat, sehingga Anda bisa bekerja berjam-jam tanpa terganggu suara bising.',
-            'short_desc' => 'Keyboard wireless dengan balutan warna silver elegan dan desain slim yang hemat tempat. ..'
-        ],
-        [
-            'id' => 5,
-            'title' => 'Keyboard Logiac - Silver',
-            'category' => 'Elektronik',
-            'condition' => 'Layak pakai',
-            'condition_spec' => 'Mulus',
-            'method' => 'COD',
-            'location' => 'Kecamatan Lowokwaru',
-            'campus' => 'Area Universitas Brawijaya',
-            'tags' => ['#RPL', '#ATK', '#CuciGudang'],
-            'original_price' => 150000,
-            'price' => 90000,
-            'image' => 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800',
-            'gallery' => [
-                'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1561154464-82e9adf32764?auto=format&fit=crop&q=80&w=800',
-            ],
-            'description' => 'Dirancang khusus untuk menunjang produktivitas tinggi, keyboard ini dilengkapi tombol responsif dengan umpan balik (tactile feedback) yang lembut. Pengalaman mengetik menjadi lebih tenang, lancar, dan akurat, sehingga Anda bisa bekerja berjam-jam tanpa terganggu suara bising.',
-            'short_desc' => 'Keyboard wireless dengan balutan warna silver elegan dan desain slim yang hemat tempat. ..'
-        ],
-        [
-            'id' => 6,
-            'title' => 'Keyboard Logiac - Silver',
-            'category' => 'Elektronik',
-            'condition' => 'Layak pakai',
-            'condition_spec' => 'Mulus',
-            'method' => 'COD',
-            'location' => 'Kecamatan Lowokwaru',
-            'campus' => 'Area Universitas Negeri Malang',
-            'tags' => ['#RPL', '#ATK', '#CuciGudang'],
-            'original_price' => 150000,
-            'price' => 90000,
-            'image' => 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800',
-            'gallery' => [
-                'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1561154464-82e9adf32764?auto=format&fit=crop&q=80&w=800',
-            ],
-            'description' => 'Dirancang khusus untuk menunjang produktivitas tinggi, keyboard ini dilengkapi tombol responsif dengan umpan balik (tactile feedback) yang lembut. Pengalaman mengetik menjadi lebih tenang, lancar, dan akurat, sehingga Anda bisa bekerja berjam-jam tanpa terganggu suara bising.',
-            'short_desc' => 'Keyboard wireless dengan balutan warna silver elegan dan desain slim yang hemat tempat. ..'
-        ],
-        [
-            'id' => 7,
-            'title' => 'Keyboard Logiac - Silver',
-            'category' => 'Elektronik',
-            'condition' => 'Layak pakai',
-            'condition_spec' => 'Mulus',
-            'method' => 'COD',
-            'location' => 'Kecamatan Lowokwaru',
-            'campus' => 'Area Politeknik Negeri Malang',
-            'tags' => ['#RPL', '#ATK', '#CuciGudang'],
-            'original_price' => 150000,
-            'price' => 90000,
-            'image' => 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800',
-            'gallery' => [
-                'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1561154464-82e9adf32764?auto=format&fit=crop&q=80&w=800',
-            ],
-            'description' => 'Dirancang khusus untuk menunjang produktivitas tinggi, keyboard ini dilengkapi tombol responsif dengan umpan balik (tactile feedback) yang lembut. Pengalaman mengetik menjadi lebih tenang, lancar, dan akurat, sehingga Anda bisa bekerja berjam-jam tanpa terganggu suara bising.',
-            'short_desc' => 'Keyboard wireless dengan balutan warna silver elegan dan desain slim yang hemat tempat. ..'
-        ],
-        [
-            'id' => 8,
-            'title' => 'Keyboard Logiac - Silver',
-            'category' => 'Elektronik',
-            'condition' => 'Layak pakai',
-            'condition_spec' => 'Mulus',
-            'method' => 'COD',
-            'location' => 'Kecamatan Lowokwaru',
-            'campus' => 'Area Universitas Terbuka',
-            'tags' => ['#RPL', '#ATK', '#CuciGudang'],
-            'original_price' => 150000,
-            'price' => 90000,
-            'image' => 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800',
-            'gallery' => [
-                'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1561154464-82e9adf32764?auto=format&fit=crop&q=80&w=800',
-            ],
-            'description' => 'Dirancang khusus untuk menunjang produktivitas tinggi, keyboard ini dilengkapi tombol responsif dengan umpan balik (tactile feedback) yang lembut. Pengalaman mengetik menjadi lebih tenang, lancar, dan akurat, sehingga Anda bisa bekerja berjam-jam tanpa terganggu suara bising.',
-            'short_desc' => 'Keyboard wireless dengan balutan warna silver elegan dan desain slim yang hemat tempat. ..'
-        ],
-        [
-            'id' => 9,
-            'title' => 'Keyboard Logiac - Silver',
-            'category' => 'Elektronik',
-            'condition' => 'Layak pakai',
-            'condition_spec' => 'Mulus',
-            'method' => 'COD',
-            'location' => 'Kecamatan Lowokwaru',
-            'campus' => 'Area Universitas Brawijaya',
-            'tags' => ['#RPL', '#ATK', '#CuciGudang'],
-            'original_price' => 150000,
-            'price' => 90000,
-            'image' => 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800',
-            'gallery' => [
-                'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1561154464-82e9adf32764?auto=format&fit=crop&q=80&w=800',
-            ],
-            'description' => 'Dirancang khusus untuk menunjang produktivitas tinggi, keyboard ini dilengkapi tombol responsif dengan umpan balik (tactile feedback) yang lembut. Pengalaman mengetik menjadi lebih tenang, lancar, dan akurat, sehingga Anda bisa bekerja berjam-jam tanpa terganggu suara bising.',
-            'short_desc' => 'Keyboard wireless dengan balutan warna silver elegan dan desain slim yang hemat tempat. ..'
-        ],
-        [
-            'id' => 10,
-            'title' => 'Keyboard Logiac - Silver',
-            'category' => 'Elektronik',
-            'condition' => 'Layak pakai',
-            'condition_spec' => 'Mulus',
-            'method' => 'COD',
-            'location' => 'Kecamatan Lowokwaru',
-            'campus' => 'Area Universitas Negeri Malang',
-            'tags' => ['#RPL', '#ATK', '#CuciGudang'],
-            'original_price' => 150000,
-            'price' => 90000,
-            'image' => 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800',
-            'gallery' => [
-                'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1561154464-82e9adf32764?auto=format&fit=crop&q=80&w=800',
-            ],
-            'description' => 'Dirancang khusus untuk menunjang produktivitas tinggi, keyboard ini dilengkapi tombol responsif dengan umpan balik (tactile feedback) yang lembut. Pengalaman mengetik menjadi lebih tenang, lancar, dan akurat, sehingga Anda bisa bekerja berjam-jam tanpa terganggu suara bising.',
-            'short_desc' => 'Keyboard wireless dengan balutan warna silver elegan dan desain slim yang hemat tempat. ..'
-        ],
-        [
-            'id' => 11,
-            'title' => 'Keyboard Logiac - Silver',
-            'category' => 'Elektronik',
-            'condition' => 'Layak pakai',
-            'condition_spec' => 'Mulus',
-            'method' => 'COD',
-            'location' => 'Kecamatan Lowokwaru',
-            'campus' => 'Area Politeknik Negeri Malang',
-            'tags' => ['#RPL', '#ATK', '#CuciGudang'],
-            'original_price' => 150000,
-            'price' => 90000,
-            'image' => 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800',
-            'gallery' => [
-                'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1561154464-82e9adf32764?auto=format&fit=crop&q=80&w=800',
-            ],
-            'description' => 'Dirancang khusus untuk menunjang produktivitas tinggi, keyboard ini dilengkapi tombol responsif dengan umpan balik (tactile feedback) yang lembut. Pengalaman mengetik menjadi lebih tenang, lancar, dan akurat, sehingga Anda bisa bekerja berjam-jam tanpa terganggu suara bising.',
-            'short_desc' => 'Keyboard wireless dengan balutan warna silver elegan dan desain slim yang hemat tempat. ..'
-        ],
-        [
-            'id' => 12,
-            'title' => 'Keyboard Logiac - Silver',
-            'category' => 'Elektronik',
-            'condition' => 'Layak pakai',
-            'condition_spec' => 'Mulus',
-            'method' => 'COD',
-            'location' => 'Kecamatan Lowokwaru',
-            'campus' => 'Area Universitas Terbuka',
-            'tags' => ['#RPL', '#ATK', '#CuciGudang'],
-            'original_price' => 150000,
-            'price' => 90000,
-            'image' => 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800',
-            'gallery' => [
-                'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1561154464-82e9adf32764?auto=format&fit=crop&q=80&w=800',
-            ],
-            'description' => 'Dirancang khusus untuk menunjang produktivitas tinggi, keyboard ini dilengkapi tombol responsif dengan umpan balik (tactile feedback) yang lembut. Pengalaman mengetik menjadi lebih tenang, lancar, dan akurat, sehingga Anda bisa bekerja berjam-jam tanpa terganggu suara bising.',
-            'short_desc' => 'Keyboard wireless dengan balutan warna silver elegan dan desain slim yang hemat tempat. ..'
-        ],
-        // Additional items for rich category/tag/location filtering
-        [
-            'id' => 13,
-            'title' => 'Buku Kalkulus Purcell Edisi 9',
-            'category' => 'Buku & Akademik',
-            'condition' => 'Layak pakai',
-            'condition_spec' => '95% Mulus',
-            'method' => 'COD',
-            'location' => 'Kecamatan Lowokwaru',
-            'campus' => 'Area Universitas Brawijaya',
-            'tags' => ['#ModulKuliah', '#ATK'],
-            'original_price' => 180000,
-            'price' => 85000,
-            'image' => 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&q=80&w=800',
-            'gallery' => [
-                'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1532012164546-f432f2e3edd4?auto=format&fit=crop&q=80&w=800',
-            ],
-            'description' => 'Buku teks wajib kuliah matematika dan teknik, halaman lengkap dan bersih.',
-            'short_desc' => 'Buku kalkulus Purcell edisi 9 lengkap tanpa robek.'
-        ],
-        [
-            'id' => 14,
-            'title' => 'Jas Almamater Kampus Bahan Drill',
-            'category' => 'Fashion & Apparel',
-            'condition' => 'Layak pakai',
-            'condition_spec' => 'Mulus',
-            'method' => 'COD',
-            'location' => 'Kecamatan Lowokwaru',
-            'campus' => 'Area Universitas Negeri Malang',
-            'tags' => ['#JasAlmamater'],
-            'original_price' => 200000,
-            'price' => 95000,
-            'image' => 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&q=80&w=800',
-            'gallery' => [
-                'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?auto=format&fit=crop&q=80&w=800',
-            ],
-            'description' => 'Jas almamater ukuran L bersih rapi, baru dipakai 2 kali.',
-            'short_desc' => 'Jas almamater ukuran L bersih rapi siap pakai.'
-        ],
-        [
-            'id' => 15,
-            'title' => 'Meja Belajar Lipat Kayu Minimalis',
-            'category' => 'Perlengkapan Kos',
-            'condition' => 'Layak pakai',
-            'condition_spec' => 'Normal',
-            'method' => 'COD',
-            'location' => 'Kecamatan Lowokwaru',
-            'campus' => 'Area Politeknik Negeri Malang',
-            'tags' => ['#MejaBelajar'],
-            'original_price' => 120000,
-            'price' => 60000,
-            'image' => 'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?auto=format&fit=crop&q=80&w=800',
-            'gallery' => [
-                'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=800',
-            ],
-            'description' => 'Meja lipat kos praktis mudah dipindahkan dan disimpan.',
-            'short_desc' => 'Meja lipat kayu minimalis kokoh untuk laptop dan buku.'
-        ],
-        [
-            'id' => 16,
-            'title' => 'Jaket Hoodie Unisex Fleece Tebal',
-            'category' => 'Fashion & Apparel',
-            'condition' => 'Layak pakai',
-            'condition_spec' => 'Mulus',
-            'method' => 'COD',
-            'location' => 'Kecamatan Lowokwaru',
-            'campus' => 'Area Universitas Terbuka',
-            'tags' => ['#Jaket'],
-            'original_price' => 175000,
-            'price' => 80000,
-            'image' => 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&q=80&w=800',
-            'gallery' => [
-                'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1509967419530-da38b4704bc6?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&q=80&w=800',
-                'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=800',
-            ],
-            'description' => 'Hoodie fleece tebal hangat dan nyaman untuk kuliah harian.',
-            'short_desc' => 'Hoodie katun tebal hangat warna abu netral.'
-        ]
-    ];
-
-    return $products;
+    return strlen($text) > $length ? (substr($text, 0, $length) . $suffix) : $text;
 }
 
-function get_catalog_product_by_id(int|string $id): array
+/**
+ * Get all available products for buyer catalog / marketplace
+ * Fetches from database where status IN ('Tersedia', 'ONSELL')
+ * Sorted newest first (p.product_id DESC) so newly uploaded items appear at the front!
+ *
+ * @param array $filters Optional filter parameters (category, search, limit, etc.)
+ * @return array
+ */
+function get_catalog_products(array $filters = []): array
 {
-    $products = get_catalog_products();
-    foreach ($products as $p) {
-        if ((int)$p['id'] === (int)$id) {
-            return $p;
-        }
+    global $pdo;
+
+    $where = ["p.status IN ('Tersedia', 'ONSELL')"];
+    $bindings = [];
+
+    if (!empty($filters['category'])) {
+        $where[] = "c.category_name ILIKE :cat";
+        $bindings[':cat'] = '%' . trim((string)$filters['category']) . '%';
     }
-    return $products[0];
+
+    if (!empty($filters['search'])) {
+        $where[] = "(p.item_name ILIKE :kw OR p.description ILIKE :kw OR COALESCE(up.campus, '') ILIKE :kw)";
+        $bindings[':kw'] = '%' . trim((string)$filters['search']) . '%';
+    }
+
+    $whereSql = implode(' AND ', $where);
+    $limitSql = !empty($filters['limit']) ? (' LIMIT ' . (int)$filters['limit']) : '';
+
+    $query = "
+        SELECT 
+            p.product_id AS id,
+            p.item_name AS title,
+            p.description,
+            p.price,
+            p.original_price,
+            p.condition,
+            p.status,
+            p.delivery_methods,
+            p.user_id,
+            p.created_at,
+            COALESCE(c.category_name, 'Lainnya') AS category,
+            COALESCE(up.name, 'Penjual Kampus') AS seller_name,
+            COALESCE(up.phone, '081234567890') AS seller_phone,
+            COALESCE(up.campus, 'Area Kampus') AS campus,
+            CONCAT_WS(', ', NULLIF(TRIM(up.district), ''), NULLIF(TRIM(up.subdistrict), '')) AS location,
+            COALESCE(a.file_path, 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=300') AS image
+        FROM products p
+        LEFT JOIN categories c ON c.categories_id = p.category_id
+        LEFT JOIN LATERAL (
+            SELECT name, phone, campus, district, subdistrict
+            FROM user_profiles
+            WHERE user_id = p.user_id
+            ORDER BY profile_id DESC
+            LIMIT 1
+        ) up ON TRUE
+        LEFT JOIN LATERAL (
+            SELECT file_path
+            FROM attachments
+            WHERE product_id = p.product_id
+            ORDER BY attachment_type ASC, attachment_id ASC
+            LIMIT 1
+        ) a ON TRUE
+        WHERE {$whereSql}
+        ORDER BY p.product_id DESC
+        {$limitSql}
+    ";
+
+    try {
+        $rows = executeQuery($query, $bindings, 'fetchAll');
+    } catch (Throwable $e) {
+        error_log('get_catalog_products error: ' . $e->getMessage());
+        return [];
+    }
+
+    if (empty($rows)) {
+        return [];
+    }
+
+    $productIds = array_map(static fn($r) => (int)$r['id'], $rows);
+    $tagsByProduct = [];
+    $galleryByProduct = [];
+
+    if (!empty($productIds)) {
+        $inClause = implode(',', $productIds);
+        try {
+            $tagRows = executeQuery(
+                "SELECT pt.productsproduct_id, t.name_tag 
+                 FROM products_tags pt 
+                 JOIN tags t ON t.id_tag = pt.products_tagsid_tag 
+                 WHERE pt.productsproduct_id IN ({$inClause})",
+                [],
+                'fetchAll'
+            );
+            foreach ($tagRows as $tr) {
+                $pid = (int) $tr['productsproduct_id'];
+                $tagName = trim((string)$tr['name_tag']);
+                if ($tagName !== '') {
+                    $tagsByProduct[$pid][] = str_starts_with($tagName, '#') ? $tagName : ('#' . $tagName);
+                }
+            }
+        } catch (Throwable $e) {}
+
+        try {
+            $attRows = executeQuery(
+                "SELECT product_id, file_path, attachment_type 
+                 FROM attachments 
+                 WHERE product_id IN ({$inClause}) 
+                 ORDER BY attachment_type ASC, attachment_id ASC",
+                [],
+                'fetchAll'
+            );
+            foreach ($attRows as $ar) {
+                $pid = (int) $ar['product_id'];
+                $path = trim((string)($ar['file_path'] ?? ''));
+                if ($path !== '') {
+                    $galleryByProduct[$pid][] = $path;
+                }
+            }
+        } catch (Throwable $e) {}
+    }
+
+    $conditionMap = [
+        1 => 'Bekas',
+        2 => 'Cukup',
+        3 => 'Baik',
+        4 => 'Sangat Bagus'
+    ];
+
+    $formatted = [];
+    foreach ($rows as $row) {
+        $pid = (int) $row['id'];
+        $rawCond = (int) ($row['condition'] ?? 3);
+        $condText = $conditionMap[$rawCond] ?? 'Baik';
+
+        $loc = trim((string)($row['location'] ?? ''));
+        if ($loc === '') {
+            $loc = !empty($row['campus']) ? ('Area ' . $row['campus']) : 'Kecamatan Lowokwaru';
+        }
+
+        $gallery = $galleryByProduct[$pid] ?? [];
+        if (empty($gallery) && !empty($row['image'])) {
+            $gallery = [$row['image']];
+        }
+
+        $tags = $tagsByProduct[$pid] ?? ['#Preloved', '#' . preg_replace('/\s+/', '', (string)$row['category'])];
+
+        $desc = trim((string)($row['description'] ?? ''));
+        if ($desc === '') {
+            $desc = 'Kondisi barang ' . strtolower($condText) . ', siap transaksi COD area ' . ($row['campus'] ?: 'kampus') . '.';
+        }
+
+        $formatted[] = [
+            'id' => $pid,
+            'title' => $row['title'],
+            'category' => $row['category'],
+            'condition' => $condText,
+            'condition_spec' => $condText,
+            'method' => $row['delivery_methods'] ?: 'COD',
+            'location' => $loc,
+            'campus' => $row['campus'] ?: 'Area Kampus',
+            'tags' => $tags,
+            'original_price' => $row['original_price'] !== null ? (int)$row['original_price'] : (int)$row['price'],
+            'price' => (int) $row['price'],
+            'image' => $row['image'],
+            'gallery' => $gallery,
+            'description' => $desc,
+            'short_desc' => truncate_text($desc, 95, '..'),
+            'status' => $row['status'],
+            'user_id' => (int) $row['user_id'],
+            'seller_name' => $row['seller_name'],
+            'seller_phone' => $row['seller_phone']
+        ];
+    }
+
+    return $formatted;
+}
+
+/**
+ * Get single catalog product by ID directly from database
+ *
+ * @param int|string $id
+ * @return array|null Returns product data or null if not found
+ */
+function get_catalog_product_by_id(int|string $id): ?array
+{
+    $id = (int) $id;
+    if ($id <= 0) {
+        return null;
+    }
+
+    $query = "
+        SELECT 
+            p.product_id AS id,
+            p.item_name AS title,
+            p.description,
+            p.price,
+            p.original_price,
+            p.condition,
+            p.status,
+            p.delivery_methods,
+            p.user_id,
+            p.moderation_note,
+            p.created_at,
+            COALESCE(c.category_name, 'Lainnya') AS category,
+            COALESCE(up.name, 'Penjual Kampus') AS seller_name,
+            COALESCE(up.phone, '081234567890') AS seller_phone,
+            COALESCE(up.campus, 'Area Kampus') AS campus,
+            CONCAT_WS(', ', NULLIF(TRIM(up.district), ''), NULLIF(TRIM(up.subdistrict), '')) AS location,
+            COALESCE(a.file_path, 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=300') AS image
+        FROM products p
+        LEFT JOIN categories c ON c.categories_id = p.category_id
+        LEFT JOIN LATERAL (
+            SELECT name, phone, campus, district, subdistrict
+            FROM user_profiles
+            WHERE user_id = p.user_id
+            ORDER BY profile_id DESC
+            LIMIT 1
+        ) up ON TRUE
+        LEFT JOIN LATERAL (
+            SELECT file_path
+            FROM attachments
+            WHERE product_id = p.product_id
+            ORDER BY attachment_type ASC, attachment_id ASC
+            LIMIT 1
+        ) a ON TRUE
+        WHERE p.product_id = :id
+        LIMIT 1
+    ";
+
+    try {
+        $row = executeQuery($query, ['id' => $id], 'fetch');
+    } catch (Throwable $e) {
+        error_log('get_catalog_product_by_id error: ' . $e->getMessage());
+        return null;
+    }
+
+    if (!$row) {
+        return null;
+    }
+
+    // Fetch tags
+    $tags = [];
+    try {
+        $tagRows = executeQuery(
+            "SELECT t.name_tag 
+             FROM products_tags pt 
+             JOIN tags t ON t.id_tag = pt.products_tagsid_tag 
+             WHERE pt.productsproduct_id = :id",
+            ['id' => $id],
+            'fetchAll'
+        );
+        foreach ($tagRows as $tr) {
+            $tagName = trim((string)$tr['name_tag']);
+            if ($tagName !== '') {
+                $tags[] = str_starts_with($tagName, '#') ? $tagName : ('#' . $tagName);
+            }
+        }
+    } catch (Throwable $e) {}
+
+    // Fetch gallery
+    $gallery = [];
+    try {
+        $attRows = executeQuery(
+            "SELECT file_path 
+             FROM attachments 
+             WHERE product_id = :id 
+             ORDER BY attachment_type ASC, attachment_id ASC",
+            ['id' => $id],
+            'fetchAll'
+        );
+        foreach ($attRows as $ar) {
+            $path = trim((string)($ar['file_path'] ?? ''));
+            if ($path !== '') {
+                $gallery[] = $path;
+            }
+        }
+    } catch (Throwable $e) {}
+
+    if (empty($gallery) && !empty($row['image'])) {
+        $gallery = [$row['image']];
+    }
+
+    $conditionMap = [
+        1 => 'Bekas',
+        2 => 'Cukup',
+        3 => 'Baik',
+        4 => 'Sangat Bagus'
+    ];
+    $rawCond = (int) ($row['condition'] ?? 3);
+    $condText = $conditionMap[$rawCond] ?? 'Baik';
+
+    $loc = trim((string)($row['location'] ?? ''));
+    if ($loc === '') {
+        $loc = !empty($row['campus']) ? ('Area ' . $row['campus']) : 'Kecamatan Lowokwaru';
+    }
+
+    $desc = trim((string)($row['description'] ?? ''));
+    if ($desc === '') {
+        $desc = 'Kondisi barang ' . strtolower($condText) . ', siap transaksi COD area ' . ($row['campus'] ?: 'kampus') . '.';
+    }
+
+    return [
+        'id' => $id,
+        'title' => $row['title'],
+        'category' => $row['category'],
+        'condition' => $condText,
+        'condition_spec' => $condText,
+        'method' => $row['delivery_methods'] ?: 'COD',
+        'location' => $loc,
+        'campus' => $row['campus'] ?: 'Area Kampus',
+        'tags' => !empty($tags) ? $tags : ['#Preloved', '#' . preg_replace('/\s+/', '', (string)$row['category'])],
+        'original_price' => $row['original_price'] !== null ? (int)$row['original_price'] : (int)$row['price'],
+        'price' => (int) $row['price'],
+        'image' => $row['image'],
+        'gallery' => $gallery,
+        'description' => $desc,
+        'short_desc' => truncate_text($desc, 95, '..'),
+        'status' => $row['status'],
+        'user_id' => (int) $row['user_id'],
+        'seller_name' => $row['seller_name'],
+        'seller_phone' => $row['seller_phone'],
+        'moderation_note' => $row['moderation_note'] ?? null
+    ];
 }
