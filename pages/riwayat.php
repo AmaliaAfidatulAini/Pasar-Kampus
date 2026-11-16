@@ -237,7 +237,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
             box-sizing: border-box;
         }
 
-        /* Table Styles (Matching Screenshot 085213) */
+        /* Table Styles */
         .pk-table-outer {
             width: 100%;
             overflow-x: auto;
@@ -313,7 +313,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
             transform: translateY(-1px);
         }
 
-        /* Detail View Styles (Matching Screenshots 085422, 085525, 085609, 085652) */
+        /* Detail View Styles */
         .pk-detail-info-list {
             display: flex;
             flex-direction: column;
@@ -484,8 +484,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(15, 23, 42, 0.45); /* Background Dimmed */
-            backdrop-filter: blur(4px); /* Blur halus latar belakang */
+            background-color: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(4px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -515,88 +515,87 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
             box-sizing: border-box;
         }
 
-.pk-modal-overlay.active .pk-modal-container {
-    transform: translateY(0) scale(1);
-}
+        .pk-modal-overlay.active .pk-modal-container {
+            transform: translateY(0) scale(1);
+        }
 
-/* Tombol Silang (Close) */
-.pk-modal-close {
-    position: absolute;
-    top: 28px;
-    right: 28px;
-    background: none;
-    border: none;
-    color: #EF4444;
-    font-size: 1.5rem;
-    font-weight: 700;
-    cursor: pointer;
-    line-height: 1;
-    padding: 4px;
-    transition: transform 0.15s, opacity 0.15s;
-}
+        /* Tombol Silang (Close) */
+        .pk-modal-close {
+            position: absolute;
+            top: 28px;
+            right: 28px;
+            background: none;
+            border: none;
+            color: #EF4444;
+            font-size: 1.5rem;
+            font-weight: 700;
+            cursor: pointer;
+            line-height: 1;
+            padding: 4px;
+            transition: transform 0.15s, opacity 0.15s;
+        }
 
-.pk-modal-close:hover {
-    transform: scale(1.15);
-    opacity: 0.8;
-}
+        .pk-modal-close:hover {
+            transform: scale(1.15);
+            opacity: 0.8;
+        }
 
-.pk-modal-header {
-    margin-bottom: 28px;
-}
+        .pk-modal-header {
+            margin-bottom: 28px;
+        }
 
-.pk-modal-title {
-    font-size: 1.55rem;
-    font-weight: 800;
-    color: var(--pk-navy);
-    margin: 0;
-    letter-spacing: -0.4px;
-}
+        .pk-modal-title {
+            font-size: 1.55rem;
+            font-weight: 800;
+            color: var(--pk-navy);
+            margin: 0;
+            letter-spacing: -0.4px;
+        }
 
-/* Kustom tombol aksi di dalam pop-up */
-.pk-btn-wa-modal {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    background-color: #5CE67A;
-    color: #FFFFFF;
-    font-size: 0.92rem;
-    font-weight: 700;
-    padding: 10px 22px;
-    border-radius: 9999px;
-    text-decoration: none;
-    box-shadow: 0 4px 12px rgba(92, 230, 122, 0.3);
-    transition: background-color 0.2s, transform 0.15s;
-}
+        .pk-btn-wa-modal {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background-color: #5CE67A;
+            color: #FFFFFF;
+            font-size: 0.92rem;
+            font-weight: 700;
+            padding: 10px 22px;
+            border-radius: 9999px;
+            text-decoration: none;
+            box-shadow: 0 4px 12px rgba(92, 230, 122, 0.3);
+            transition: background-color 0.2s, transform 0.15s;
+        }
 
-.pk-btn-wa-modal:hover {
-    background-color: #4BD468;
-    transform: translateY(-1px);
-}
+        .pk-btn-wa-modal:hover {
+            background-color: #4BD468;
+            transform: translateY(-1px);
+        }
 
-.pk-btn-katalog-modal {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--pk-navy);
-    color: #FFFFFF;
-    font-size: 0.85rem;
-    font-weight: 700;
-    padding: 9px 20px;
-    border-radius: 9999px;
-    text-decoration: none;
-    box-shadow: 0 4px 12px rgba(29, 53, 109, 0.2);
-    transition: background-color 0.2s, transform 0.15s;
-}
+        .pk-btn-katalog-modal {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--pk-navy);
+            color: #FFFFFF;
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 9px 20px;
+            border-radius: 9999px;
+            text-decoration: none;
+            box-shadow: 0 4px 12px rgba(29, 53, 109, 0.2);
+            transition: background-color 0.2s, transform 0.15s;
+        }
 
-.pk-btn-katalog-modal:hover {
-    background-color: #162850;
-    transform: translateY(-1px);
-}
+        .pk-btn-katalog-modal:hover {
+            background-color: #162850;
+            transform: translateY(-1px);
+        }
 
-/* ================= FOOTER STYLES ================= */
+        /* ================= FOOTER STYLES ================= */
         .lp-footer {
-            background-color: var(--pk-navy); /* Background Biru Pekat (#1D356D) */
+            background-color: var(--pk-navy);
             color: #FFFFFF;
             padding: 48px 0 28px;
             margin-top: 48px;
@@ -636,7 +635,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
         }
 
         .lp-footer-col h4 {
-            color: #F59E0B; /* Warna Emas/Kuning Header Kolom */
+            color: #F59E0B;
             font-size: 0.85rem;
             font-weight: 800;
             text-transform: uppercase;
@@ -667,7 +666,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
         }
 
         .lp-footer-bottom {
-            border-top: 1px solid rgba(255, 255, 255, 0.15); /* Garis Pembatas Tipis */
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
             padding-top: 24px;
             display: flex;
             justify-content: space-between;
@@ -695,12 +694,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
     <!-- ================= 1. TOP NAVBAR ================= -->
     <header class="pk-navbar">
         <div class="pk-nav-inner">
-            <!-- Brand -->
             <a href="<?= route('/') ?>" class="pk-nav-logo">
                 PasarKampus
             </a>
 
-            <!-- Search Bar -->
             <div class="pk-nav-search">
                 <span class="pk-nav-search-icon">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -711,10 +708,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
                 <input type="text" id="riwayatSearch" placeholder="Cari barang...." onkeydown="if(event.key==='Enter') window.location.href='<?= route('/dashboard.php') ?>?q='+encodeURIComponent(this.value)">
             </div>
 
-            <!-- Right Links -->
             <div class="pk-nav-menu">
-                <a href="<?= route('/profil.php') ?>" class="pk-nav-link">Profil</a>
-                <a href="<?= route('/dashboard.php') ?>" class="pk-nav-link">Katalog</a>
+                <a href="<?= route('/profile.php') ?>" class="pk-nav-link">Profil</a>
+                <a href="<?= route('/dashboard-utama.php') ?>" class="pk-nav-link">Katalog</a>
                 <a href="<?= route('/#faq') ?>" class="pk-nav-link">butuh bantuan?</a>
             </div>
         </div>
@@ -723,9 +719,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
     <!-- ================= 2. MAIN CONTAINER ================= -->
     <main class="pk-main-container">
 
-        <!-- ================= VIEW 1: TABLE RIWAYAT UTAMA (Screenshot 085213) ================= -->
         <section id="viewTableRiwayat" class="pk-view-section active">
-            <!-- Header Row -->
             <div class="pk-page-header">
                 <h1 class="pk-page-title">Riwayat Pengajuan Pembelian Saya</h1>
                 <a href="javascript:void(0)" onclick="goBackFromTable()" class="pk-back-btn">
@@ -733,7 +727,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
                 </a>
             </div>
 
-            <!-- Card with Table -->
             <div class="pk-card-wrapper">
                 <div class="pk-table-outer">
                     <table class="pk-history-table">
@@ -755,18 +748,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
             </div>
         </section>
 
-        <!-- ================= MODAL POP-UP DETAIL PENGAJUAN ================= -->
+    <!-- ================= MODAL POP-UP DETAIL PENGAJUAN ================= -->
     <div id="detailModal" class="pk-modal-overlay" onclick="handleOverlayClick(event)">
         <div class="pk-modal-container">
-            <!-- Tombol Silang Close -->
             <button type="button" class="pk-modal-close" onclick="closeDetailModal()" aria-label="Tutup">&times;</button>
             
-            <!-- Header Pop-up -->
             <div class="pk-modal-header">
                 <h2 id="modalHeaderTitle" class="pk-modal-title">Detail Pengajuan #--</h2>
             </div>
             
-            <!-- Body Pop-up (Dinamis via JS) -->
             <div id="modalBodyContent">
                 <!-- Data injected dynamically based on status -->
             </div>
@@ -774,11 +764,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
     </div>
 
     </main>
+
     <!-- ================= 3. FOOTER ================= -->
     <footer class="lp-footer" style="margin-top: 48px;">
         <div class="lp-container">
             <div class="lp-footer-grid">
-                <!-- Col 1: Brand & Copyright -->
                 <div class="lp-footer-col">
                     <a href="<?= route('/') ?>" class="lp-logo" style="color: #FFFFFF;">
                         PasarKampus
@@ -788,18 +778,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
                     </p>
                 </div>
 
-                <!-- Col 2: PasarKampus -->
                 <div class="lp-footer-col">
                     <h4>PasarKampus</h4>
                     <ul class="lp-footer-links">
                         <li><a href="<?= route('/#tentang-kami') ?>">Tentang kami</a></li>
-                        <li><a href="<?= route('/dashboard.php') ?>">Katalog Barang</a></li>
+                        <li><a href="<?= route('/dashboard-utama.php') ?>">Katalog Barang</a></li>
                         <li><a href="<?= route('/register.php') ?>">Daftar Akun Mahasiswa</a></li>
                         <li><a href="<?= route('/dashboard-penjual.php') ?>">Dashboard Penjual</a></li>
                     </ul>
                 </div>
 
-                <!-- Col 3: Bantuan -->
                 <div class="lp-footer-col">
                     <h4>Bantuan</h4>
                     <ul class="lp-footer-links">
@@ -809,7 +797,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
                     </ul>
                 </div>
 
-                <!-- Col 4: Dukungan -->
                 <div class="lp-footer-col">
                     <h4>Dukungan</h4>
                     <ul class="lp-footer-links">
@@ -820,7 +807,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
                 </div>
             </div>
 
-            <!-- Bottom Copyright Bar -->
             <div class="lp-footer-bottom">
                 <div>
                     &copy; 2026 PasarKampus. Hak Cipta Dilindungi.
@@ -934,7 +920,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
         `).join('');
     }
 
-    // FUNGSI UTAMA: MENAMPILKAN POP-UP MODAL
     function showDetail(id) {
         const list = getRiwayatData();
         const item = list.find(r => r.id === parseInt(id));
@@ -943,7 +928,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
             return;
         }
 
-        // Set Judul Modal
         document.getElementById('modalHeaderTitle').innerText = `Detail Pengajuan #${item.id}`;
 
         const container = document.getElementById('modalBodyContent');
@@ -953,7 +937,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
 
         const statusLower = item.status.toLowerCase();
 
-        // Rendering konten sesuai status (Tampilan disesuaikan dengan desain screenshot pop-up)
         if (statusLower === 'selesai') {
             statusBadge = `<span class="pk-badge-selesai">SELESAI</span>`;
             extraInfo = `
@@ -1015,7 +998,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
                     <p style="margin: 0 0 24px 0;">Silakan cari barang sejenis di katalog.</p>
                 </div>
                 <div>
-                    <a href="<?= route('/dashboard.php') ?>" class="pk-btn-katalog-modal">
+                    <a href="<?= route('/dashboard-utama.php') ?>" class="pk-btn-katalog-modal">
                         Cari barang lain di katalog
                     </a>
                 </div>
@@ -1052,12 +1035,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
             ${bottomActions}
         `;
 
-        // Buka Pop-up & Kunci scroll halaman belakang
         document.getElementById('detailModal').classList.add('active');
         document.body.style.overflow = 'hidden';
     }
 
-    // FUNGSI PENUTUP MODAL
     function closeDetailModal() {
         document.getElementById('detailModal').classList.remove('active');
         document.body.style.overflow = '';
@@ -1069,7 +1050,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'canc
         }
     }
 
-    // Tutup modal jika pengguna menekan tombol ESC
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape') {
             closeDetailModal();

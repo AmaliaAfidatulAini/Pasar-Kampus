@@ -17,6 +17,7 @@ $allProducts = get_catalog_products();
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="<?= asset('css/style.css') ?>">
     
     <style>
         :root {
@@ -60,7 +61,7 @@ $allProducts = get_catalog_products();
             height: 64px;
             display: flex;
             align-items: center;
-            padding: 0 32px;
+            padding: 0 24px;
             color: #FFFFFF;
             position: sticky;
             top: 0;
@@ -70,7 +71,7 @@ $allProducts = get_catalog_products();
 
         .pk-nav-inner {
             width: 100%;
-            max-width: 1240px;
+            max-width: 1440px;
             margin: 0 auto;
             display: flex;
             align-items: center;
@@ -330,33 +331,51 @@ $allProducts = get_catalog_products();
         /* 2. MAIN CONTAINER */
         .pk-main-wrapper {
             flex: 1;
-            padding: 24px 20px 48px;
+            padding: 24px 24px 48px 24px;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            width: 100%;
         }
 
         .pk-content-container {
             width: 100%;
-            max-width: 1240px;
+            max-width: 1440px;
+            margin: 0 auto;
         }
 
-        /* 3. HERO BANNER */
+        /* 3. CATALOG LAYOUT */
+        .pk-catalog-layout {
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
+            width: 100%;
+        }
+
+        .pk-catalog-main {
+            flex: 1;
+            min-width: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 4. HERO BANNER */
         .pk-hero-banner {
             background-color: #FFFFFF;
             border: 1px solid var(--pk-border);
-            border-radius: 20px;
-            padding: 36px 40px;
+            border-radius: 16px;
+            padding: 28px 32px;
             display: grid;
-            grid-template-columns: 1.35fr 1fr;
+            grid-template-columns: 1.25fr 1fr;
             align-items: center;
-            gap: 36px;
+            gap: 28px;
             box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
-            margin-bottom: 28px;
+            margin-bottom: 24px;
+            width: 100%;
         }
 
         .pk-hero-left h1 {
-            font-size: 2.2rem;
+            font-size: 1.95rem;
             font-weight: 800;
             line-height: 1.25;
             color: #0F172A;
@@ -369,43 +388,17 @@ $allProducts = get_catalog_products();
         }
 
         .pk-hero-desc {
-            font-size: 0.88rem;
+            font-size: 0.86rem;
             color: var(--pk-muted);
-            line-height: 1.6;
-            margin-bottom: 24px;
-            max-width: 480px;
-        }
-
-        .pk-hero-btn-wrap {
+            line-height: 1.55;
             margin-bottom: 20px;
-        }
-
-        .pk-hero-btn-belanja {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background-color: var(--pk-amber);
-            color: #1E293B;
-            font-weight: 700;
-            font-size: 0.92rem;
-            padding: 11px 24px;
-            border-radius: 9999px;
-            text-decoration: none;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
-        }
-
-        .pk-hero-btn-belanja:hover {
-            background-color: var(--pk-amber-dark);
-            color: #FFFFFF;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 18px rgba(217, 119, 6, 0.45);
+            max-width: 440px;
         }
 
         .pk-hero-pills {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 8px;
         }
 
         .pk-pill-badge {
@@ -415,9 +408,9 @@ $allProducts = get_catalog_products();
             background: #EFF6FF;
             border: 1px solid #BFDBFE;
             color: var(--pk-primary);
-            font-size: 0.78rem;
+            font-size: 0.76rem;
             font-weight: 700;
-            padding: 6px 14px;
+            padding: 5px 12px;
             border-radius: 9999px;
         }
 
@@ -425,64 +418,38 @@ $allProducts = get_catalog_products();
         .pk-hero-right {
             display: flex;
             flex-direction: column;
-            align-items: flex-end;
+            align-items: center;
         }
 
         .pk-featured-tag {
             border: 1.5px solid var(--pk-amber);
             color: var(--pk-amber-dark);
-            font-size: 0.76rem;
+            font-size: 0.74rem;
             font-weight: 800;
-            padding: 4px 14px;
+            padding: 4px 12px;
             border-radius: 8px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             background: #FFFBEB;
             letter-spacing: 0.2px;
         }
 
-        .pk-featured-card {
-            background: #FFFFFF;
-            border: 1px solid var(--pk-border);
-            border-radius: 14px;
-            padding: 12px;
+        .pk-hero-right .product-card {
             width: 100%;
-            max-width: 280px;
-            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            max-width: 260px;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
         }
 
-        .pk-featured-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
-        }
-
-        /* 4. FILTER TOOLBAR */
+        /* 5. FILTER TOOLBAR */
         .pk-toolbar {
             display: flex;
             align-items: center;
             justify-content: space-between;
             margin: 0 0 20px;
+            min-height: 40px;
         }
 
         .pk-filter-btn {
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: var(--pk-text);
-            padding: 6px 12px 6px 0;
-            border-radius: 8px;
-            font-family: inherit;
-            transition: color 0.2s;
-        }
-
-        .pk-filter-btn:hover {
-            color: var(--pk-primary);
+            display: none;
         }
 
         .pk-toolbar-count {
@@ -491,7 +458,7 @@ $allProducts = get_catalog_products();
             color: #475569;
         }
 
-        /* 5. PRODUCT GRID (3 COLUMNS DESKTOP) */
+        /* 6. PRODUCT GRID */
         .pk-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -499,131 +466,164 @@ $allProducts = get_catalog_products();
             margin-bottom: 36px;
         }
 
-        .pk-card {
+        .pk-grid .product-card {
+            height: 100%;
+        }
+
+        .product-card {
             background: #FFFFFF;
             border: 1px solid var(--pk-border);
             border-radius: 14px;
-            padding: 12px;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-            position: relative;
-        }
-
-        .pk-card:hover {
-            transform: translateY(-3px);
-            border-color: #CBD5E1;
-            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
-        }
-
-        .pk-card-top-badges {
-            display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
+            transition: all 0.25s ease-in-out;
+            cursor: pointer;
         }
 
-        .pk-badge-condition {
-            background-color: var(--pk-text);
-            color: #FFFFFF;
-            font-size: 0.72rem;
-            font-weight: 700;
-            padding: 3px 10px;
-            border-radius: 6px;
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px -3px rgba(37, 99, 235, 0.08);
+            border-color: #BFDBFE;
         }
 
-        .pk-badge-category {
-            background-color: #EFF6FF;
-            border: 1px solid #BFDBFE;
-            color: var(--pk-primary);
-            font-size: 0.72rem;
-            font-weight: 600;
-            padding: 3px 10px;
-            border-radius: 6px;
-        }
-
-        .pk-card-img-wrap {
-            height: 180px;
-            border-radius: 8px;
+        .product-card .product-img-wrapper {
+            position: relative;
+            aspect-ratio: 1 / 1;
             overflow: hidden;
             background: #F1F5F9;
-            margin-bottom: 10px;
         }
 
-        .pk-card-img-wrap img {
+        .product-card .product-img-wrapper img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             display: block;
-            transition: transform 0.3s ease;
+            transition: transform 0.4s ease;
         }
 
-        .pk-card:hover .pk-card-img-wrap img {
-            transform: scale(1.03);
+        .product-card:hover .product-img-wrapper img {
+            transform: scale(1.05);
         }
 
-        .pk-card-location {
-            font-size: 0.74rem;
-            color: #64748B;
+        .product-card .badge-condition {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: var(--pk-text);
+            color: #FFFFFF;
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+            z-index: 2;
+        }
+
+        .product-card .badge-category {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(4px);
+            color: #FFFFFF;
+            font-size: 0.68rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 6px;
+            z-index: 2;
+        }
+
+        .product-card .product-body {
+            padding: 14px;
+            flex: 1;
             display: flex;
+            flex-direction: column;
+        }
+
+        .product-card .product-location {
+            display: inline-flex;
             align-items: center;
             gap: 4px;
-            margin-bottom: 6px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #1E40AF;
+            background: #EFF6FF;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            width: fit-content;
+            border: 1px solid #BFDBFE;
         }
 
-        .pk-card-title {
-            font-size: 0.95rem;
+        .product-card .product-title {
+            font-size: 0.92rem;
             font-weight: 700;
             color: var(--pk-text);
+            line-height: 1.35;
             margin-bottom: 6px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .pk-card-desc {
-            font-size: 0.76rem;
-            color: var(--pk-muted);
-            line-height: 1.45;
-            margin-bottom: 10px;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            height: 34px;
         }
 
-        .pk-card-tags {
+        .product-card .product-desc {
+            font-size: 0.75rem;
+            color: var(--pk-muted);
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .product-card .product-footer {
+            padding: 12px 14px;
+            border-top: 1px solid #F1F5F9;
             display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 12px;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
         }
 
-        .pk-tag-pill {
-            background: #FEF3C7;
-            color: #D97706;
-            font-size: 0.68rem;
-            font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 4px;
-        }
-
-        .pk-card-orig-price {
-            font-size: 0.74rem;
+        .product-card .product-price-box .orig-price {
+            font-size: 0.72rem;
             color: #94A3B8;
             text-decoration: line-through;
-            margin-bottom: 2px;
+            display: block;
         }
 
-        .pk-card-price {
+        .product-card .product-price-box .cur-price {
             font-size: 1.05rem;
             font-weight: 800;
-            color: var(--pk-primary);
+            color: var(--pk-navy);
         }
 
-        /* 6. PAGINATION */
+        .product-card .btn-product-detail {
+            background-color: var(--pk-navy);
+            color: #FFFFFF;
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 7px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .product-card .btn-product-detail:hover {
+            background-color: var(--pk-primary);
+            color: #FFFFFF;
+            transform: translateY(-1px);
+        }
+
+        /* 7. PAGINATION */
         .pk-pagination {
             display: flex;
             align-items: center;
@@ -662,51 +662,32 @@ $allProducts = get_catalog_products();
             height: 34px;
         }
 
-        /* 7. FILTER SIDEBAR (DRAWER POP-UP) */
+        /* 8. FILTER SIDEBAR */
         .pk-sidebar-backdrop {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(15, 23, 42, 0.45);
-            backdrop-filter: blur(2px);
-            z-index: 998;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.25s ease;
-        }
-
-        .pk-sidebar-backdrop.active {
-            opacity: 1;
-            pointer-events: auto;
+            display: none;
         }
 
         .pk-sidebar-drawer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            width: 320px;
-            max-width: 85vw;
+            width: 270px;
+            min-width: 270px;
+            max-width: 270px;
             background: #FFFFFF;
-            z-index: 999;
-            box-shadow: 8px 0 30px rgba(15, 23, 42, 0.15);
-            transform: translateX(-100%);
-            transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+            border: 1px solid var(--pk-border);
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
+            position: sticky;
+            top: 84px;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
+            flex-shrink: 0;
+            z-index: 10;
         }
 
-        .pk-sidebar-drawer.active {
-            transform: translateX(0);
-        }
-
-        /* SIDEBAR HEADER */
         .pk-sidebar-header {
             background-color: var(--pk-blue);
-            height: 60px;
-            padding: 0 20px;
+            height: 52px;
+            padding: 0 18px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -715,39 +696,39 @@ $allProducts = get_catalog_products();
         }
 
         .pk-sidebar-title {
-            font-size: 1.1rem;
+            font-size: 0.95rem;
             font-weight: 800;
-            color: #FBBF24; /* Yellow title */
+            color: #FBBF24;
             letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .pk-sidebar-close {
-            background: none;
-            border: none;
-            font-size: 1.4rem;
-            color: #FBBF24; /* Yellow close icon */
-            cursor: pointer;
-            padding: 4px 8px;
-            line-height: 1;
-            transition: opacity 0.15s;
+            display: none;
         }
 
-        .pk-sidebar-close:hover {
-            opacity: 0.8;
-        }
-
-        /* SIDEBAR BODY */
         .pk-sidebar-body {
             flex: 1;
             overflow-y: auto;
-            padding: 24px 22px;
+            padding: 20px 18px;
             display: flex;
             flex-direction: column;
-            gap: 22px;
+            gap: 20px;
+        }
+
+        .pk-sidebar-body::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .pk-sidebar-body::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 4px;
         }
 
         .pk-filter-group-title {
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             font-weight: 800;
             color: var(--pk-navy);
             letter-spacing: 0.3px;
@@ -767,7 +748,7 @@ $allProducts = get_catalog_products();
             font-weight: 500;
             color: #334155;
             cursor: pointer;
-            padding: 4px 6px;
+            padding: 5px 8px;
             border-radius: 6px;
             transition: all 0.15s;
             user-select: none;
@@ -782,6 +763,22 @@ $allProducts = get_catalog_products();
             color: var(--pk-primary);
             font-weight: 700;
             background: #EFF6FF;
+        }
+
+        /* Styling interaktif untuk label kondisi */
+        .cond-label {
+            cursor: pointer;
+            color: #94A3B8;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        .cond-label:hover {
+            color: var(--pk-amber-dark);
+        }
+        .cond-label.active {
+            color: var(--pk-amber-dark);
+            font-weight: 800;
         }
 
         .pk-see-more {
@@ -811,7 +808,7 @@ $allProducts = get_catalog_products();
             display: flex;
             align-items: center;
             gap: 10px;
-            font-size: 0.84rem;
+            font-size: 0.82rem;
             color: #334155;
             cursor: pointer;
             user-select: none;
@@ -829,12 +826,12 @@ $allProducts = get_catalog_products();
         .pk-price-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            gap: 10px;
         }
 
         .pk-price-box label {
             display: block;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             font-weight: 700;
             color: #334155;
             margin-bottom: 5px;
@@ -845,8 +842,8 @@ $allProducts = get_catalog_products();
             height: 36px;
             border: 1px solid #CBD5E1;
             border-radius: 6px;
-            padding: 0 10px;
-            font-size: 0.82rem;
+            padding: 0 8px;
+            font-size: 0.8rem;
             outline: none;
             box-sizing: border-box;
             font-family: inherit;
@@ -856,25 +853,36 @@ $allProducts = get_catalog_products();
             border-color: var(--pk-primary);
         }
 
+        .pk-sidebar-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 4px;
+        }
+
         .pk-reset-btn {
             background-color: var(--pk-navy);
             color: #FFFFFF;
             border: none;
             border-radius: 8px;
-            padding: 10px 22px;
-            font-size: 0.84rem;
+            padding: 9px 18px;
+            font-size: 0.82rem;
             font-weight: 700;
             cursor: pointer;
-            align-self: flex-start;
             font-family: inherit;
             transition: background-color 0.2s;
+            white-space: nowrap;
         }
 
         .pk-reset-btn:hover {
             background-color: var(--pk-navy-dark);
         }
 
-        /* 8. FOOTER */
+        .pk-apply-btn {
+            display: none;
+        }
+
+        /* 9. FOOTER */
         .pk-footer {
             background-color: var(--pk-footer);
             color: #CBD5E1;
@@ -883,7 +891,7 @@ $allProducts = get_catalog_products();
         }
 
         .pk-footer-inner {
-            max-width: 1240px;
+            max-width: 1440px;
             margin: 0 auto;
         }
 
@@ -937,38 +945,194 @@ $allProducts = get_catalog_products();
             gap: 12px;
         }
 
-        /* RESPONSIVE */
-        @media (max-width: 1024px) {
+        @media (min-width: 992px) and (max-width: 1180px) {
+            .pk-hero-banner {
+                grid-template-columns: 1fr 1fr;
+                padding: 24px 22px;
+                gap: 20px;
+            }
+
+            .pk-hero-left h1 {
+                font-size: 1.65rem;
+            }
+
+            .pk-hero-right .product-card {
+                max-width: 235px;
+            }
+
             .pk-grid {
                 grid-template-columns: repeat(2, 1fr);
+                gap: 18px;
             }
+        }
+
+        @media (max-width: 991px) {
+            .pk-main-wrapper {
+                padding: 16px 16px 36px;
+            }
+
+            .pk-catalog-layout {
+                display: block;
+            }
+
+            .pk-catalog-main {
+                width: 100%;
+            }
+
+            .pk-sidebar-backdrop {
+                display: block;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(15, 23, 42, 0.45);
+                backdrop-filter: blur(2px);
+                z-index: 998;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.25s ease;
+            }
+
+            .pk-sidebar-backdrop.active {
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            .pk-sidebar-drawer {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                width: 320px;
+                max-width: 85vw;
+                height: 100vh;
+                background: #FFFFFF;
+                z-index: 999;
+                box-shadow: 10px 0 30px rgba(15, 23, 42, 0.2);
+                transform: translateX(-100%);
+                transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+                border-radius: 0;
+                border: none;
+                overflow: hidden;
+            }
+
+            .pk-sidebar-drawer.active {
+                transform: translateX(0);
+            }
+
+            .pk-sidebar-header {
+                height: 56px;
+                padding: 0 18px;
+                border-radius: 0;
+            }
+
+            .pk-sidebar-header .pk-sidebar-close {
+                display: block !important;
+                background: none;
+                border: none;
+                font-size: 1.6rem;
+                color: #FBBF24;
+                cursor: pointer;
+                padding: 4px 8px;
+                line-height: 1;
+            }
+
+            .pk-apply-btn {
+                display: block !important;
+                background-color: var(--pk-primary);
+                color: #FFFFFF;
+                border: none;
+                border-radius: 8px;
+                padding: 9px 16px;
+                font-size: 0.82rem;
+                font-weight: 700;
+                cursor: pointer;
+                flex: 1;
+                text-align: center;
+            }
+
+            .pk-toolbar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                margin: 0 0 16px;
+                min-height: 42px;
+            }
+
+            .pk-filter-btn {
+                display: inline-flex !important;
+                align-items: center;
+                gap: 8px;
+                background: #FFFFFF;
+                border: 1.5px solid var(--pk-border);
+                border-radius: 10px;
+                padding: 8px 16px;
+                font-size: 0.85rem;
+                font-weight: 700;
+                color: var(--pk-navy);
+                cursor: pointer;
+            }
+
             .pk-hero-banner {
                 grid-template-columns: 1fr;
-                gap: 24px;
+                padding: 24px 20px;
+                gap: 22px;
+                border-radius: 16px;
+                margin-bottom: 20px;
             }
-            .pk-hero-right {
-                align-items: flex-start;
+
+            .pk-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 16px;
             }
+        }
+
+        @media (max-width: 768px) {
+            .pk-navbar {
+                height: auto;
+                padding: 10px 16px;
+            }
+
+            .pk-nav-inner {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .pk-nav-search {
+                order: 3;
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .pk-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 14px;
+            }
+
             .pk-footer-grid {
                 grid-template-columns: 1fr 1fr;
+                gap: 24px;
             }
         }
 
         @media (max-width: 640px) {
             .pk-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
             }
-            .pk-navbar {
-                padding: 0 16px;
-            }
-            .pk-hero-banner {
-                padding: 24px 20px;
-            }
-            .pk-hero-left h1 {
-                font-size: 1.7rem;
-            }
+
             .pk-footer-grid {
                 grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .pk-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
             }
         }
     </style>
@@ -1058,195 +1222,231 @@ $allProducts = get_catalog_products();
     <main class="pk-main-wrapper">
         <div class="pk-content-container">
 
-            <!-- Hero Banner -->
-            <section class="pk-hero-banner">
-                <div class="pk-hero-left">
-                    <h1>
-                        Cari Barang Bekas<br>
-                        <span class="pk-hero-highlight">Berkualitas</span> &amp; Murah!
-                    </h1>
-                    <p class="pk-hero-desc">
-                        Temukan buku kuliah, elektronik, perlengkapan kost, ATK, hingga pakaian preloved dari teman sekampus dan sekitar domisili Anda dengan aman &amp; mudah.
-                    </p>
-                    <div class="pk-hero-btn-wrap">
-                        <a href="<?= route('/barang') ?>#catalogGrid" class="pk-hero-btn-belanja">
-                            Mulai Belanja &rarr;
-                        </a>
+            <!-- Backdrop for Mobile Drawer -->
+            <div class="pk-sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+            <!-- ================= 3. TWO-FRAME SPLIT LAYOUT ================= -->
+            <div class="pk-catalog-layout">
+
+                <!-- SIDEBAR FILTER -->
+                <aside class="pk-sidebar-drawer" id="sidebarDrawer" aria-label="Filter Barang">
+                    <div class="pk-sidebar-header">
+                        <span class="pk-sidebar-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="4" y1="21" x2="4" y2="14"></line>
+                                <line x1="4" y1="10" x2="4" y2="3"></line>
+                                <line x1="12" y1="21" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12" y2="3"></line>
+                                <line x1="20" y1="21" x2="20" y2="16"></line>
+                                <line x1="20" y1="12" x2="20" y2="3"></line>
+                                <line x1="1" y1="14" x2="7" y2="14"></line>
+                                <line x1="9" y1="8" x2="15" y2="8"></line>
+                                <line x1="17" y1="16" x2="23" y2="16"></line>
+                            </svg>
+                            FILTER
+                        </span>
+                        <button type="button" class="pk-sidebar-close" onclick="closeSidebar()" title="Tutup Filter">&times;</button>
                     </div>
-                    <div class="pk-hero-pills">
-                        <div class="pk-pill-badge">🎓 100% Khusus Mahasiswa</div>
-                        <div class="pk-pill-badge">🤝 Aman COD Area Kampus</div>
-                        <div class="pk-pill-badge">🏷️ Harga terjangkau</div>
+
+                    <div class="pk-sidebar-body">
+                        <!-- 1. KATEGORI -->
+                        <div>
+                            <div class="pk-filter-group-title">KATEGORI</div>
+                            <ul class="pk-filter-list" id="sidebarCatList">
+                                <li class="pk-filter-item" onclick="selectCategory('Buku & Akademik', this)">Buku &amp; Akademik</li>
+                                <li class="pk-filter-item" onclick="selectCategory('Perlengkapan Kos', this)">Perlengkapan Kos</li>
+                                <li class="pk-filter-item" onclick="selectCategory('Fashion & Apparel', this)">Fashion &amp; Apparel</li>
+                                <li class="pk-filter-item" onclick="selectCategory('Elektronik', this)">Elektronik</li>
+                            </ul>
+                            <div class="pk-see-more" onclick="toggleExpandList('sidebarCatList', this)">Lihat semua &#x25BE;</div>
+                        </div>
+
+                        <!-- 2. TAGS -->
+                        <div>
+                            <div class="pk-filter-group-title">TAGS</div>
+                            <ul class="pk-filter-list" id="sidebarTagList">
+                                <li class="pk-filter-item" onclick="selectTag('#ModulKuliah', this)">#ModulKuliah</li>
+                                <li class="pk-filter-item" onclick="selectTag('#JasAlmamater', this)">#JasAlmamater</li>
+                                <li class="pk-filter-item" onclick="selectTag('#MejaBelajar', this)">#MejaBelajar</li>
+                                <li class="pk-filter-item" onclick="selectTag('#Jaket', this)">#Jaket</li>
+                            </ul>
+                            <div class="pk-see-more" onclick="toggleExpandList('sidebarTagList', this)">Lihat semua &#x25BE;</div>
+                        </div>
+
+                        <!-- 3. LOKASI -->
+                        <div>
+                            <div class="pk-filter-group-title">LOKASI</div>
+                            <div class="pk-checkbox-group" id="sidebarLocGroup">
+                                <label class="pk-checkbox-item">
+                                    <input type="checkbox" name="locFilter" value="Area Universitas Brawijaya" onchange="applyCatalogFilters()">
+                                    <span>Area Universitas Brawijaya</span>
+                                </label>
+                                <label class="pk-checkbox-item">
+                                    <input type="checkbox" name="locFilter" value="Area Universitas Negeri Malang" onchange="applyCatalogFilters()">
+                                    <span>Area Universitas Negeri Malang</span>
+                                </label>
+                                <label class="pk-checkbox-item">
+                                    <input type="checkbox" name="locFilter" value="Area Politeknik Negeri Malang" onchange="applyCatalogFilters()">
+                                    <span>Area Politeknik Negeri Malang</span>
+                                </label>
+                                <label class="pk-checkbox-item">
+                                    <input type="checkbox" name="locFilter" value="Area Universitas Terbuka" onchange="applyCatalogFilters()">
+                                    <span>Area Universitas Terbuka</span>
+                                </label>
+                            </div>
+                            <div class="pk-see-more" onclick="toggleExpandList('sidebarLocGroup', this)">Lihat semua &#x25BE;</div>
+                        </div>
+
+                        <!-- 4. RENTANG HARGA -->
+                        <div>
+                            <div class="pk-filter-group-title">RENTANG HARGA</div>
+                            <div class="pk-price-row">
+                                <div class="pk-price-box">
+                                    <label for="priceMinInput">Rp. Min</label>
+                                    <input type="number" id="priceMinInput" placeholder="" oninput="applyCatalogFilters()">
+                                </div>
+                                <div class="pk-price-box">
+                                    <label for="priceMaxInput">Rp. Max</label>
+                                    <input type="number" id="priceMaxInput" placeholder="" oninput="applyCatalogFilters()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5. KONDISI BARANG (Slider + Label Interaktif 2 Arah) -->
+                        <div>
+                            <div class="pk-filter-group-title">KONDISI BARANG</div>
+                            <div style="padding: 4px 0 8px;">
+                                <input type="range" id="conditionRangeInput" min="0" max="3" value="0" step="1" style="width: 100%; accent-color: var(--pk-navy); cursor: pointer;" oninput="onConditionChange()">
+                                <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 0.68rem;">
+                                    <span class="cond-label" id="condLabel0" onclick="setConditionRange(0)">Bekas</span>
+                                    <span class="cond-label" id="condLabel1" onclick="setConditionRange(1)">Cukup</span>
+                                    <span class="cond-label" id="condLabel2" onclick="setConditionRange(2)">Baik</span>
+                                    <span class="cond-label" id="condLabel3" onclick="setConditionRange(3)">Sangat bagus</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 6. ACTION BUTTONS -->
+                        <div class="pk-sidebar-actions">
+                            <button type="button" class="pk-reset-btn" onclick="resetSidebarFilters()">Reset all</button>
+                            <button type="button" class="pk-apply-btn" onclick="closeSidebar()">Lihat Hasil</button>
+                        </div>
                     </div>
+                </aside>
+
+                <!-- RIGHT FRAME: HERO BANNER + CATALOG MAIN CONTENT -->
+                <div class="pk-catalog-main">
+
+                    <!-- Hero Banner -->
+                    <section class="pk-hero-banner">
+                        <div class="pk-hero-left">
+                            <h1>
+                                Cari Barang Bekas<br>
+                                <span class="pk-hero-highlight">Berkualitas</span> &amp; Murah!
+                            </h1>
+                            <p class="pk-hero-desc">
+                                Temukan buku kuliah, elektronik, perlengkapan kost, ATK, hingga pakaian preloved dari teman sekampus dan sekitar domisili Anda dengan aman &amp; mudah.
+                            </p>
+                            <div class="pk-hero-pills">
+                                <div class="pk-pill-badge">🎓 100% Khusus Mahasiswa</div>
+                                <div class="pk-pill-badge">🤝 Aman COD Area Kampus</div>
+                                <div class="pk-pill-badge">🏷️ Harga terjangkau</div>
+                            </div>
+                        </div>
+
+                        <div class="pk-hero-right" style="display: flex; flex-direction: column; align-items: center;">
+                            <span class="pk-featured-tag">Baru Diunggah</span>
+                            <?php
+                            $featuredItem = $allProducts[0] ?? [
+                                'id' => 1,
+                                'title' => 'Keyboard Logiac - Silver',
+                                'short_desc' => 'Keyboard wireless dengan balutan warna silver elegan dan desain slim yang hemat tempat. ..',
+                                'category' => 'Elektronik',
+                                'location' => 'Kecamatan Lowokwaru',
+                                'condition' => 'Layak pakai',
+                                'original_price' => 150000,
+                                'price' => 90000,
+                                'image' => 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800',
+                            ];
+                            Component::include('card', [
+                                'id' => $featuredItem['id'],
+                                'title' => $featuredItem['title'],
+                                'description' => $featuredItem['short_desc'] ?? $featuredItem['description'] ?? '',
+                                'category' => $featuredItem['category'] ?? '',
+                                'location' => $featuredItem['location'] ?? '',
+                                'condition' => $featuredItem['condition'] ?? '',
+                                'o_price' => $featuredItem['original_price'] ?? '',
+                                'price' => $featuredItem['price'] ?? '',
+                                'foto' => $featuredItem['image'] ?? '',
+                            ]);
+                            ?>
+                        </div>
+                    </section>
+
+                    <!-- Toolbar -->
+                    <div class="pk-toolbar">
+                        <button type="button" class="pk-filter-btn" onclick="openSidebar()" title="Buka Filter">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="4" y1="21" x2="4" y2="14"></line>
+                                <line x1="4" y1="10" x2="4" y2="3"></line>
+                                <line x1="12" y1="21" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12" y2="3"></line>
+                                <line x1="20" y1="21" x2="20" y2="16"></line>
+                                <line x1="20" y1="12" x2="20" y2="3"></line>
+                                <line x1="1" y1="14" x2="7" y2="14"></line>
+                                <line x1="9" y1="8" x2="15" y2="8"></line>
+                                <line x1="17" y1="16" x2="23" y2="16"></line>
+                            </svg>
+                            <span>Filter</span>
+                        </button>
+                        <div class="pk-toolbar-count" id="itemCountDisplay">
+                            Menampilkan 1-20 dari 66 barang
+                        </div>
+                    </div>
+
+                    <!-- Product Grid -->
+                    <div class="pk-grid" id="productGrid">
+                        <?php foreach (array_slice($allProducts, 0, 12) as $item): ?>
+                            <?php
+                            Component::include('card', [
+                                'id' => $item['id'],
+                                'title' => $item['title'],
+                                'description' => $item['short_desc'] ?? $item['description'] ?? '',
+                                'category' => $item['category'] ?? '',
+                                'location' => $item['location'] ?? '',
+                                'condition' => $item['condition'] ?? '',
+                                'o_price' => $item['original_price'] ?? '',
+                                'price' => $item['price'] ?? '',
+                                'foto' => $item['image'] ?? '',
+                            ]);
+                            ?>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="gridEmpty" style="display: none; text-align: center; padding: 48px 20px; background: #FFF; border-radius: 14px; border: 1px dashed var(--pk-border); margin: 20px 0;">
+                        <div style="font-size: 2.5rem; margin-bottom: 8px;">📦</div>
+                        <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--pk-navy); margin: 0 0 6px 0;">Tidak ada barang yang cocok</h3>
+                        <p style="font-size: 0.84rem; color: #64748B; margin: 0 0 16px 0;">Coba atur ulang filter pencarian atau gunakan kata kunci lain.</p>
+                        <button type="button" onclick="resetSidebarFilters()" class="pk-reset-btn" style="align-self: center;">Reset Semua Filter</button>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="pk-pagination" id="paginationBar">
+                        <button type="button" class="pk-page-btn" onclick="changePage('prev')">&lt;</button>
+                        <button type="button" class="pk-page-btn active" onclick="setPage(1)">1</button>
+                        <button type="button" class="pk-page-btn" onclick="setPage(2)">2</button>
+                        <button type="button" class="pk-page-btn" onclick="setPage(3)">3</button>
+                        <button type="button" class="pk-page-btn" onclick="setPage(4)">4</button>
+                        <button type="button" class="pk-page-btn" onclick="setPage(5)">5</button>
+                        <button type="button" class="pk-page-btn" onclick="changePage('next')">&gt;</button>
+                    </div>
+
                 </div>
-
-                <div class="pk-hero-right">
-                    <span class="pk-featured-tag">Baru Diunggah</span>
-                    <div class="pk-featured-card" onclick="goToProductDetail(1)">
-                        <div class="pk-card-top-badges">
-                            <span class="pk-badge-condition">Layak pakai</span>
-                            <span class="pk-badge-category">Elektronik</span>
-                        </div>
-                        <div class="pk-card-img-wrap" style="height: 130px;">
-                            <img src="https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=800" alt="Keyboard Logiac - Silver">
-                        </div>
-                        <span class="pk-card-location">📍 Kecamatan Lowokwaru</span>
-                        <h3 class="pk-card-title">Keyboard Logiac - Silver</h3>
-                        <p class="pk-card-desc">Keyboard wireless dengan balutan warna silver elegan dan desain slim yang hemat tempat. ..</p>
-                        <div class="pk-card-orig-price">Rp. 150.000</div>
-                        <div class="pk-card-price">Rp. 90.000</div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Toolbar: Filter Button & Count -->
-            <div class="pk-toolbar">
-                <button type="button" class="pk-filter-btn" onclick="openSidebar()" title="Buka Filter">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="4" y1="21" x2="4" y2="14"></line>
-                        <line x1="4" y1="10" x2="4" y2="3"></line>
-                        <line x1="12" y1="21" x2="12" y2="12"></line>
-                        <line x1="12" y1="8" x2="12" y2="3"></line>
-                        <line x1="20" y1="21" x2="20" y2="16"></line>
-                        <line x1="20" y1="12" x2="20" y2="3"></line>
-                        <line x1="1" y1="14" x2="7" y2="14"></line>
-                        <line x1="9" y1="8" x2="15" y2="8"></line>
-                        <line x1="17" y1="16" x2="23" y2="16"></line>
-                    </svg>
-                    <span>Filter</span>
-                </button>
-                <div class="pk-toolbar-count" id="itemCountDisplay">
-                    Menampilkan 1-20 dari 66 barang
-                </div>
-            </div>
-
-            <!-- Product Grid (3 Columns) -->
-            <div class="pk-grid" id="productGrid">
-                <!-- Javascript will render or fallback to initial PHP render -->
-                <?php foreach (array_slice($allProducts, 0, 12) as $item): ?>
-                    <div class="pk-card" onclick="goToProductDetail(<?= $item['id'] ?>)">
-                        <div class="pk-card-top-badges">
-                            <span class="pk-badge-condition"><?= esc($item['condition']) ?></span>
-                            <span class="pk-badge-category"><?= esc($item['category']) ?></span>
-                        </div>
-                        <div class="pk-card-img-wrap">
-                            <img src="<?= esc($item['image']) ?>" alt="<?= esc($item['title']) ?>" loading="lazy">
-                        </div>
-                        <span class="pk-card-location">📍 <?= esc($item['location']) ?></span>
-                        <h3 class="pk-card-title"><?= esc($item['title']) ?></h3>
-                        <p class="pk-card-desc"><?= esc($item['short_desc']) ?></p>
-                        <div class="pk-card-tags">
-                            <?php foreach ($item['tags'] as $tag): ?>
-                                <span class="pk-tag-pill"><?= esc($tag) ?></span>
-                            <?php endforeach; ?>
-                        </div>
-                        <div class="pk-card-orig-price"><?= format_rupiah($item['original_price']) ?></div>
-                        <div class="pk-card-price"><?= format_rupiah($item['price']) ?></div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-
-            <!-- Empty State -->
-            <div id="gridEmpty" style="display: none; text-align: center; padding: 48px 20px; background: #FFF; border-radius: 14px; border: 1px dashed var(--pk-border); margin: 20px 0;">
-                <div style="font-size: 2.5rem; margin-bottom: 8px;">📦</div>
-                <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--pk-navy); margin: 0 0 6px 0;">Tidak ada barang yang cocok</h3>
-                <p style="font-size: 0.84rem; color: #64748B; margin: 0 0 16px 0;">Coba atur ulang filter pencarian atau gunakan kata kunci lain.</p>
-                <button type="button" onclick="resetSidebarFilters()" class="pk-reset-btn" style="align-self: center;">Reset Semua Filter</button>
-            </div>
-
-            <!-- Centered Pagination -->
-            <div class="pk-pagination" id="paginationBar">
-                <button type="button" class="pk-page-btn" onclick="changePage('prev')">&lt;</button>
-                <button type="button" class="pk-page-btn active" onclick="setPage(1)">1</button>
-                <button type="button" class="pk-page-btn" onclick="setPage(2)">2</button>
-                <button type="button" class="pk-page-btn" onclick="setPage(3)">3</button>
-                <button type="button" class="pk-page-btn" onclick="setPage(4)">4</button>
-                <button type="button" class="pk-page-btn" onclick="setPage(5)">5</button>
-                <button type="button" class="pk-page-btn" onclick="changePage('next')">&gt;</button>
             </div>
 
         </div>
     </main>
-
-    <!-- ================= 3. FILTER SIDEBAR (DRAWER) ================= -->
-    <div class="pk-sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
-    <aside class="pk-sidebar-drawer" id="sidebarDrawer" aria-label="Filter Barang">
-        <!-- Sidebar Header: Blue with Yellow FILTER and Close -->
-        <div class="pk-sidebar-header">
-            <span class="pk-sidebar-title">FILTER</span>
-            <button type="button" class="pk-sidebar-close" onclick="closeSidebar()" title="Tutup Filter">&times;</button>
-        </div>
-
-        <div class="pk-sidebar-body">
-            <!-- 1. KATEGORI -->
-            <div>
-                <div class="pk-filter-group-title">KATEGORI</div>
-                <ul class="pk-filter-list" id="sidebarCatList">
-                    <li class="pk-filter-item" onclick="selectCategory('Buku & Akademik', this)">Buku &amp; Akademik</li>
-                    <li class="pk-filter-item" onclick="selectCategory('Perlengkapan Kos', this)">Perlengkapan Kos</li>
-                    <li class="pk-filter-item" onclick="selectCategory('Fashion & Apparel', this)">Fashion &amp; Apparel</li>
-                    <li class="pk-filter-item" onclick="selectCategory('Elektronik', this)">Elektronik</li>
-                </ul>
-                <div class="pk-see-more" onclick="toggleExpandList('sidebarCatList', this)">Lihat semua &#x25BE;</div>
-            </div>
-
-            <!-- 2. TAGS -->
-            <div>
-                <div class="pk-filter-group-title">TAGS</div>
-                <ul class="pk-filter-list" id="sidebarTagList">
-                    <li class="pk-filter-item" onclick="selectTag('#ModulKuliah', this)">#ModulKuliah</li>
-                    <li class="pk-filter-item" onclick="selectTag('#JasAlmamater', this)">#JasAlmamater</li>
-                    <li class="pk-filter-item" onclick="selectTag('#MejaBelajar', this)">#MejaBelajar</li>
-                    <li class="pk-filter-item" onclick="selectTag('#Jaket', this)">#Jaket</li>
-                </ul>
-                <div class="pk-see-more" onclick="toggleExpandList('sidebarTagList', this)">Lihat semua &#x25BE;</div>
-            </div>
-
-            <!-- 3. LOKASI -->
-            <div>
-                <div class="pk-filter-group-title">LOKASI</div>
-                <div class="pk-checkbox-group" id="sidebarLocGroup">
-                    <label class="pk-checkbox-item">
-                        <input type="checkbox" name="locFilter" value="Area Universitas Brawijaya" onchange="applyCatalogFilters()">
-                        <span>Area Universitas Brawijaya</span>
-                    </label>
-                    <label class="pk-checkbox-item">
-                        <input type="checkbox" name="locFilter" value="Area Universitas Negeri Malang" onchange="applyCatalogFilters()">
-                        <span>Area Universitas Negeri Malang</span>
-                    </label>
-                    <label class="pk-checkbox-item">
-                        <input type="checkbox" name="locFilter" value="Area Politeknik Negeri Malang" onchange="applyCatalogFilters()">
-                        <span>Area Politeknik Negeri Malang</span>
-                    </label>
-                    <label class="pk-checkbox-item">
-                        <input type="checkbox" name="locFilter" value="Area Universitas Terbuka" onchange="applyCatalogFilters()">
-                        <span>Area Universitas Terbuka</span>
-                    </label>
-                </div>
-                <div class="pk-see-more" onclick="toggleExpandList('sidebarLocGroup', this)">Lihat semua &#x25BE;</div>
-            </div>
-
-            <!-- 4. RENTANG HARGA -->
-            <div>
-                <div class="pk-filter-group-title">RENTANG HARGA</div>
-                <div class="pk-price-row">
-                    <div class="pk-price-box">
-                        <label for="priceMinInput">Rp. Min</label>
-                        <input type="number" id="priceMinInput" placeholder="" oninput="applyCatalogFilters()">
-                    </div>
-                    <div class="pk-price-box">
-                        <label for="priceMaxInput">Rp. Max</label>
-                        <input type="number" id="priceMaxInput" placeholder="" oninput="applyCatalogFilters()">
-                    </div>
-                </div>
-            </div>
-
-            <!-- 5. RESET ALL BUTTON -->
-            <div>
-                <button type="button" class="pk-reset-btn" onclick="resetSidebarFilters()">Reset all</button>
-            </div>
-        </div>
-    </aside>
 
     <!-- ================= 4. FOOTER ================= -->
     <footer class="pk-footer">
@@ -1291,11 +1491,11 @@ $allProducts = get_catalog_products();
 
     <!-- ================= JAVASCRIPT LOGIC ================= -->
     <script>
-        // Master product catalog passed from PHP
         const rawProducts = <?= json_encode($allProducts, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
         
         let selectedCategory = '';
         let selectedTag = '';
+        let conditionActive = false; // Status apakah filter kondisi sedang aktif digunakan
         let currentPage = 1;
         const pageSize = 12;
 
@@ -1304,16 +1504,26 @@ $allProducts = get_catalog_products();
         }
 
         function openSidebar() {
-            document.getElementById('sidebarDrawer').classList.add('active');
-            document.getElementById('sidebarBackdrop').classList.add('active');
+            const drawer = document.getElementById('sidebarDrawer');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (drawer) drawer.classList.add('active');
+            if (backdrop) backdrop.classList.add('active');
             document.body.style.overflow = 'hidden';
         }
 
         function closeSidebar() {
-            document.getElementById('sidebarDrawer').classList.remove('active');
-            document.getElementById('sidebarBackdrop').classList.remove('active');
+            const drawer = document.getElementById('sidebarDrawer');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (drawer) drawer.classList.remove('active');
+            if (backdrop) backdrop.classList.remove('active');
             document.body.style.overflow = '';
         }
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 992) {
+                closeSidebar();
+            }
+        });
 
         function selectCategory(cat, element) {
             if (selectedCategory === cat) {
@@ -1339,10 +1549,36 @@ $allProducts = get_catalog_products();
             applyCatalogFilters();
         }
 
+        function updateConditionLabels(val) {
+            document.querySelectorAll('.cond-label').forEach((el, idx) => {
+                if (idx === parseInt(val)) {
+                    el.classList.add('active');
+                } else {
+                    el.classList.remove('active');
+                }
+            });
+        }
+
+        function onConditionChange() {
+            conditionActive = true;
+            const val = document.getElementById('conditionRangeInput')?.value || 0;
+            updateConditionLabels(val);
+            applyCatalogFilters();
+        }
+
+        function setConditionRange(val) {
+            const slider = document.getElementById('conditionRangeInput');
+            if (slider) {
+                slider.value = val;
+                conditionActive = true;
+                updateConditionLabels(val);
+                applyCatalogFilters();
+            }
+        }
+
         function toggleExpandList(listId, toggleBtn) {
             const list = document.getElementById(listId);
             if (!list) return;
-            // Visual toggle feedback
             if (toggleBtn.innerText.includes('▼')) {
                 toggleBtn.innerText = 'Tutup ▲';
             } else {
@@ -1353,10 +1589,15 @@ $allProducts = get_catalog_products();
         function resetSidebarFilters() {
             selectedCategory = '';
             selectedTag = '';
+            conditionActive = false;
             document.querySelectorAll('#sidebarCatList .pk-filter-item').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('#sidebarTagList .pk-filter-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.cond-label').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('input[name="locFilter"]').forEach(cb => cb.checked = false);
             
+            const condEl = document.getElementById('conditionRangeInput');
+            if (condEl) condEl.value = 0;
+
             const minEl = document.getElementById('priceMinInput');
             const maxEl = document.getElementById('priceMaxInput');
             if (minEl) minEl.value = '';
@@ -1376,6 +1617,8 @@ $allProducts = get_catalog_products();
 
             const checkedLocations = Array.from(document.querySelectorAll('input[name="locFilter"]:checked'))
                 .map(cb => cb.value.toLowerCase());
+            
+            const conditionVal = parseInt(document.getElementById('conditionRangeInput')?.value) || 0;
 
             const filtered = rawProducts.filter(item => {
                 // Category match
@@ -1398,6 +1641,23 @@ $allProducts = get_catalog_products();
                 // Price range match
                 if (item.price < minPrice || item.price > maxPrice) {
                     return false;
+                }
+                
+                // Condition match
+                if (conditionActive) {
+                    const itemCond = (item.condition || '').toLowerCase();
+                    if (conditionVal === 0 && !itemCond.includes('bekas')) {
+                        return false;
+                    }
+                    if (conditionVal === 1 && !itemCond.includes('cukup')) {
+                        return false;
+                    }
+                    if (conditionVal === 2 && !itemCond.includes('baik')) {
+                        return false;
+                    }
+                    if (conditionVal === 3 && !itemCond.includes('sangat bagus')) {
+                        return false;
+                    }
                 }
 
                 // Keyword search match
@@ -1444,22 +1704,28 @@ $allProducts = get_catalog_products();
             const pageItems = items.slice(startIdx, startIdx + pageSize);
 
             grid.innerHTML = pageItems.map(item => `
-                <div class="pk-card" onclick="goToProductDetail(${item.id})">
-                    <div class="pk-card-top-badges">
-                        <span class="pk-badge-condition">${escapeHtml(item.condition || 'Layak pakai')}</span>
-                        <span class="pk-badge-category">${escapeHtml(item.category || 'Elektronik')}</span>
+                <div class="product-card" onclick="if (!event.target.closest('a')) goToProductDetail(${item.id})" style="cursor: pointer;">
+                    <div>
+                        <div class="product-img-wrapper">
+                            <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title)}" loading="lazy">
+                            <span class="badge-condition">${escapeHtml(item.condition || 'Layak pakai')}</span>
+                            <span class="badge-category">${escapeHtml(item.category || 'Umum')}</span>
+                        </div>
+                        <div class="product-body">
+                            <div class="product-location">${escapeHtml((item.location && item.location.startsWith('📍')) ? item.location : ('📍 ' + (item.location || 'Kecamatan Lowokwaru')))}</div>
+                            <h3 class="product-title">${escapeHtml(item.title)}</h3>
+                            <p class="product-desc">${escapeHtml(item.short_desc || item.description || '')}</p>
+                        </div>
                     </div>
-                    <div class="pk-card-img-wrap">
-                        <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title)}" loading="lazy">
+                    <div class="product-footer">
+                        <div class="product-price-box">
+                            ${item.original_price ? `<span class="orig-price">Rp. ${Number(item.original_price).toLocaleString('id-ID')}</span>` : ''}
+                            <div class="cur-price">Rp. ${Number(item.price).toLocaleString('id-ID')}</div>
+                        </div>
+                        <a href="<?= route('/barang') ?>?id=${encodeURIComponent(item.id)}" class="btn-product-detail">
+                            Detail
+                        </a>
                     </div>
-                    <span class="pk-card-location">📍 ${escapeHtml(item.location || 'Kecamatan Lowokwaru')}</span>
-                    <h3 class="pk-card-title">${escapeHtml(item.title)}</h3>
-                    <p class="pk-card-desc">${escapeHtml(item.short_desc || item.description || '')}</p>
-                    <div class="pk-card-tags">
-                        ${(item.tags || []).map(t => `<span class="pk-tag-pill">${escapeHtml(t)}</span>`).join('')}
-                    </div>
-                    <div class="pk-card-orig-price">${formatRupiah(item.original_price)}</div>
-                    <div class="pk-card-price">${formatRupiah(item.price)}</div>
                 </div>
             `).join('');
         }

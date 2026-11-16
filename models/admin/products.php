@@ -32,11 +32,21 @@ function admin_handle_product_query(string $redirect): void
             $product = fetch(executeQuery(
                 "SELECT p.product_id AS id,
                     p.item_name AS nama,
-                    COALESCE(up.name, '') AS penjual,
+                    COALESCE(seller.name, '') AS penjual,
+                    COALESCE(p.description, '') AS description,
+                    p.price,
+                    p.original_price,
+                    COALESCE(p.delivery_methods, '') AS delivery_method,
                     p.status,
                     COALESCE(p.moderation_note, '') AS note
                  FROM products p
-                 LEFT JOIN user_profiles up ON up.user_id = p.user_id
+                 LEFT JOIN LATERAL (
+                     SELECT name
+                     FROM user_profiles
+                     WHERE user_id = p.user_id
+                     ORDER BY profile_id DESC
+                     LIMIT 1
+                 ) seller ON TRUE
                  WHERE p.product_id = ?",
                 [$id]
             ));

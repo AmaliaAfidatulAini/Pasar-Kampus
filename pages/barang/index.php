@@ -848,138 +848,178 @@ if (count($recommendations) < 4) {
             text-align: center;
         }
 
-        /* ================= MODAL BUAT ADUAN ================= */
+        /* ================= MODAL BUAT ADUAN (MATCHING SCREENSHOT) ================= */
         .pk-aduan-modal-box {
-            background-color: #ECEFF1;
-            border: 2px dashed #94A3B8;
-            border-radius: 8px;
-            padding: 24px 28px;
-            max-width: 580px;
+            background-color: #FFFFFF;
+            border-radius: 14px;
+            padding: 28px 32px;
+            max-width: 520px;
             width: 92%;
-            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.16);
             text-align: left;
             position: relative;
             font-family: inherit;
             box-sizing: border-box;
+            border: 1px solid rgba(226, 232, 240, 0.8);
         }
 
         .pk-aduan-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 20px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #CBD5E1;
+            margin-bottom: 22px;
         }
 
         .pk-aduan-title {
-            font-size: 1.25rem;
+            font-size: 1.2rem;
             font-weight: 700;
-            color: #1E293B;
+            color: #1D356D;
             margin: 0;
-            letter-spacing: -0.2px;
+            letter-spacing: -0.3px;
         }
 
         .pk-aduan-close {
             background: none;
             border: none;
-            font-size: 1.6rem;
-            color: #64748B;
+            font-size: 1.45rem;
+            color: #EF4444;
             cursor: pointer;
             padding: 0 4px;
             line-height: 1;
-            transition: color 0.15s;
+            font-weight: 300;
+            transition: transform 0.15s, opacity 0.15s;
         }
 
         .pk-aduan-close:hover {
-            color: #0F172A;
+            opacity: 0.8;
+            transform: scale(1.1);
         }
 
         .pk-aduan-row {
             display: flex;
             align-items: flex-start;
-            gap: 12px;
             margin-bottom: 16px;
+            gap: 0;
         }
 
         .pk-aduan-label-group {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            width: 95px;
+            width: 110px;
             flex-shrink: 0;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             font-weight: 600;
             color: #1E293B;
-            padding-top: 6px;
+            padding-top: 10px;
+            padding-right: 12px;
+            box-sizing: border-box;
+        }
+
+        .pk-aduan-colon {
+            color: #1D356D;
+            font-weight: 700;
         }
 
         .pk-aduan-field {
             flex: 1;
         }
 
+        /* Custom Radios matching the screenshot */
         .pk-aduan-radios {
             display: flex;
             align-items: center;
-            gap: 24px;
-            padding-top: 6px;
+            gap: 20px;
+            padding-top: 8px;
         }
 
         .pk-aduan-radio-label {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            font-size: 0.95rem;
-            color: #1E293B;
+            font-size: 0.9rem;
+            color: #1D356D;
             cursor: pointer;
             user-select: none;
-            font-weight: 500;
+            font-weight: 600;
         }
 
         .pk-aduan-radio-label input[type="radio"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border: 1.5px solid #CBD5E1;
+            border-radius: 50%;
+            outline: none;
             cursor: pointer;
-            width: 17px;
-            height: 17px;
-            accent-color: var(--pk-navy);
+            position: relative;
+            background: #FFFFFF;
+            transition: all 0.2s ease;
+            margin: 0;
+        }
+
+        .pk-aduan-radio-label input[type="radio"]:checked {
+            border-color: #F59E0B;
+            background: #FFFFFF;
+        }
+
+        .pk-aduan-radio-label input[type="radio"]:checked::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background-color: #F59E0B;
         }
 
         .pk-aduan-select {
             width: 100%;
-            padding: 9px 12px;
-            border: 1px solid #94A3B8;
-            border-radius: 6px;
+            padding: 9px 14px;
+            border: 1px solid #E2E8F0;
+            border-radius: 8px;
             background-color: #FFFFFF;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             font-family: inherit;
             color: #1E293B;
             outline: none;
             cursor: pointer;
-            transition: border-color 0.15s;
+            transition: border-color 0.15s, box-shadow 0.15s;
             box-sizing: border-box;
         }
 
         .pk-aduan-select:focus {
-            border-color: var(--pk-primary);
+            border-color: #2563EB;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
         }
 
         .pk-aduan-textarea {
             width: 100%;
-            padding: 9px 12px;
-            border: 1px solid #94A3B8;
-            border-radius: 6px;
+            padding: 10px 14px;
+            border: 1px solid #E2E8F0;
+            border-radius: 8px;
             background-color: #FFFFFF;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             font-family: inherit;
             color: #1E293B;
             outline: none;
             resize: vertical;
-            min-height: 85px;
+            min-height: 80px;
             box-sizing: border-box;
-            transition: border-color 0.15s;
+            transition: border-color 0.15s, box-shadow 0.15s;
         }
 
         .pk-aduan-textarea:focus {
-            border-color: var(--pk-primary);
+            border-color: #2563EB;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+        }
+
+        .pk-aduan-textarea::placeholder,
+        .pk-aduan-select:invalid {
+            color: #CBD5E1;
         }
 
         .pk-aduan-attachment-wrap {
@@ -987,15 +1027,15 @@ if (count($recommendations) < 4) {
             align-items: center;
             gap: 12px;
             flex-wrap: wrap;
-            padding-top: 2px;
+            padding-top: 4px;
         }
 
         .pk-btn-choose-file {
             background-color: #FFFFFF;
-            border: 1px solid #94A3B8;
-            border-radius: 4px;
-            padding: 6px 14px;
-            font-size: 0.88rem;
+            border: 1px solid #CBD5E1;
+            border-radius: 8px;
+            padding: 7px 14px;
+            font-size: 0.85rem;
             color: #1E293B;
             font-weight: 600;
             cursor: pointer;
@@ -1007,43 +1047,66 @@ if (count($recommendations) < 4) {
 
         .pk-btn-choose-file:hover {
             background-color: #F8FAFC;
-            border-color: #64748B;
+            border-color: #94A3B8;
         }
 
         .pk-file-list-preview {
-            font-size: 0.85rem;
-            color: #64748B;
+            font-size: 0.82rem;
+            color: #94A3B8;
             word-break: break-all;
-            font-style: italic;
         }
 
+        /* Buttons at bottom matching the screenshot: Batal (gray rect) & Kirim Aduan (navy pill) */
         .pk-aduan-footer {
             display: flex;
-            justify-content: flex-end;
-            margin-top: 8px;
-            padding-top: 8px;
+            justify-content: center;
+            align-items: center;
+            gap: 14px;
+            margin-top: 24px;
+            padding-top: 6px;
         }
 
-        .pk-btn-kirim-aduan {
-            background-color: var(--pk-navy);
-            border: 1px solid var(--pk-navy);
-            color: #FFFFFF;
-            font-size: 0.92rem;
-            font-weight: 700;
-            padding: 10px 24px;
-            border-radius: 6px;
+        .pk-btn-aduan-batal {
+            background-color: #F1F5F9;
+            border: none;
+            color: #64748B;
+            font-size: 0.88rem;
+            font-weight: 600;
+            padding: 9px 24px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: background-color 0.15s, color 0.15s;
             font-family: inherit;
         }
 
+        .pk-btn-aduan-batal:hover {
+            background-color: #E2E8F0;
+            color: #334155;
+        }
+
+        .pk-btn-kirim-aduan {
+            background-color: #1D356D;
+            border: none;
+            color: #FFFFFF;
+            font-size: 0.88rem;
+            font-weight: 700;
+            padding: 10px 28px;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.15s;
+            font-family: inherit;
+            box-shadow: 0 4px 12px rgba(29, 53, 109, 0.2);
+        }
+
         .pk-btn-kirim-aduan:hover {
-            background-color: var(--pk-navy-dark);
+            background-color: #15264F;
+            transform: translateY(-1px);
         }
 
         .pk-btn-kirim-aduan:disabled {
             opacity: 0.6;
             cursor: not-allowed;
+            transform: none;
         }
 
         /* RESPONSIVE */
@@ -1235,10 +1298,10 @@ if (count($recommendations) < 4) {
         </div>
     </div>
 
-    <!-- ================= MODAL BUAT ADUAN (WIREFRAME DESIGN) ================= -->
+    <!-- ================= MODAL BUAT ADUAN ================= -->
     <div class="pk-modal-backdrop" id="reportModal" onclick="handleReportModalBackdrop(event)">
         <div class="pk-aduan-modal-box" onclick="event.stopPropagation()">
-            <!-- Header: Buat Aduan ... X -->
+            <!-- Header: Judul & Tombol Close Merah -->
             <div class="pk-aduan-header">
                 <h2 class="pk-aduan-title">Buat Aduan</h2>
                 <button type="button" class="pk-aduan-close" onclick="closeReportModal()" aria-label="Tutup">&times;</button>
@@ -1254,7 +1317,7 @@ if (count($recommendations) < 4) {
                 <div class="pk-aduan-row">
                     <div class="pk-aduan-label-group">
                         <span>Jenis</span>
-                        <span>:</span>
+                        <span class="pk-aduan-colon">:</span>
                     </div>
                     <div class="pk-aduan-field">
                         <div class="pk-aduan-radios">
@@ -1274,7 +1337,7 @@ if (count($recommendations) < 4) {
                 <div class="pk-aduan-row">
                     <div class="pk-aduan-label-group">
                         <span>Kategori</span>
-                        <span>:</span>
+                        <span class="pk-aduan-colon">:</span>
                     </div>
                     <div class="pk-aduan-field">
                         <select name="kategori" id="aduanKategori" class="pk-aduan-select" required>
@@ -1292,7 +1355,7 @@ if (count($recommendations) < 4) {
                 <div class="pk-aduan-row">
                     <div class="pk-aduan-label-group">
                         <span>Deskripsi</span>
-                        <span>:</span>
+                        <span class="pk-aduan-colon">:</span>
                     </div>
                     <div class="pk-aduan-field">
                         <textarea name="deskripsi" id="aduanDeskripsi" class="pk-aduan-textarea" rows="3" placeholder="Tuliskan keterangan detail laporan Anda..." required></textarea>
@@ -1303,7 +1366,7 @@ if (count($recommendations) < 4) {
                 <div class="pk-aduan-row">
                     <div class="pk-aduan-label-group">
                         <span>Lampiran</span>
-                        <span>:</span>
+                        <span class="pk-aduan-colon">:</span>
                     </div>
                     <div class="pk-aduan-field">
                         <div class="pk-aduan-attachment-wrap">
@@ -1316,8 +1379,9 @@ if (count($recommendations) < 4) {
                     </div>
                 </div>
 
-                <!-- Row 5: Action Button [ Kirim Aduan ] -->
+                <!-- Row 5: Action Buttons [ Batal ] [ Kirim Aduan ] -->
                 <div class="pk-aduan-footer">
+                    <button type="button" class="pk-btn-aduan-batal" onclick="closeReportModal()">Batal</button>
                     <button type="submit" id="btnSubmitAduan" class="pk-btn-kirim-aduan">Kirim Aduan</button>
                 </div>
             </form>
