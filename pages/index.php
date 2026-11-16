@@ -1,6 +1,5 @@
 <?php 
 require_model('catalog');
-Component::include("section/header", ["title" => "Beranda"]);
 $barang = get_catalog_products(['limit' => 12]);
 ?>
 
