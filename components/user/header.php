@@ -32,7 +32,7 @@ $initial = strtoupper(substr($profileName, 0, 1));
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- CSS Stylesheet -->
-    <link rel="stylesheet" href="<?= asset("css/style.css") ?>">
+    <link rel="stylesheet" href="<?= asset("css/main.css") ?>">
     <link rel="stylesheet" href="<?= asset("css/flasher.css") ?>">
     <?= $styles ?>
 </head>
@@ -45,15 +45,15 @@ $initial = strtoupper(substr($profileName, 0, 1));
                 <a href="<?= route('/') ?>" class="lp-logo">
                     PasarKampus
                 </a>
-                <div class="lp-nav-search">
+                <form class="lp-nav-search" method="GET" action="<?= esc(route('/barang')) ?>">
                     <span class="lp-nav-search-icon">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="11" cy="11" r="8"></circle>
                             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                         </svg>
                     </span>
-                    <input type="text" id="lpHeaderSearch" class="lp-nav-search-input" placeholder="Search" onkeydown="handleHeaderSearch(event)">
-                </div>
+                    <input type="search" name="q" id="lpHeaderSearch" class="lp-nav-search-input" placeholder="Search">
+                </form>
             </div>
 
             <div class="lp-nav-right-area">

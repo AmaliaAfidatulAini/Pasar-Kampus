@@ -40,238 +40,7 @@ $avatarUrl = trim((string) ($profile['avatar_url'] ?? ''));
 ?>
 
 <?php Component::flush(); ?>
-<style>
-    .profile-page {
-        width: 100%;
-        max-width: 1180px;
-        margin: 0 auto;
-        padding: 32px 24px 64px;
-    }
-
-    .profile-back {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 24px;
-        color: #1D356D;
-        font-weight: 700;
-        text-decoration: none;
-
-        &:hover,
-        &:focus-visible {
-            color: #2355B8;
-        }
-    }
-
-
-    .profile-card {
-        margin-bottom: 24px;
-        padding: 32px;
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 16px;
-        box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
-    }
-
-    .profile-card header {
-        margin-bottom: 24px;
-        padding-bottom: 24px;
-        border-bottom: 1px solid #E2E8F0;
-
-        h2 {
-            font-size: 1.5rem;
-            margin: 0;
-            color: #0F172A;
-        }
-
-        p {
-            margin: 6px 0 0;
-            color: #64748B;
-        }
-    }
-
-    .profile-identity {
-        display: flex;
-        align-items: center;
-        gap: 24px;
-    }
-
-    .profile-avatar {
-        display: grid;
-        flex: 0 0 112px;
-        place-items: center;
-        width: 112px;
-        height: 112px;
-        padding: 0;
-        overflow: hidden;
-        color: #64748B;
-        background: #F8FAFC;
-        border: 1px solid #CBD5E1;
-        border-radius: 50%;
-        cursor: pointer;
-
-        &:hover,
-        &:focus-visible {
-            border-color: #2355B8;
-            outline: none;
-        }
-    
-        img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        span {
-            padding: 16px;
-            text-align: center;
-            font-size: 0.85rem;
-            font-weight: 700;
-        }
-    }
-
-
-
-    .profile-fields {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 20px;
-    }
-
-    .profile-fields > fieldset,
-    .profile-fields > .profile-field--full {
-        grid-column: 1 / -1;
-    }
-
-    .profile-field {
-        display: flex;
-        min-width: 0;
-        flex-direction: column;
-        gap: 7px;
-        margin: 0;
-        padding: 0;
-        border: 0;
-
-        label,
-        legend {
-            color: #0F172A;
-            font-size: 0.9rem;
-            font-weight: 700;
-        }
-        
-        input,
-        select {
-            width: 100%;
-            min-height: 44px;
-            padding: 10px 13px;
-            color: #1E293B;
-            font: inherit;
-            background: #FFFFFF;
-            border: 1px solid #CBD5E1;
-            border-radius: 8px;
-            box-sizing: border-box;
-        }
-    }
-
-
-
-    .profile-field input:focus,
-    .profile-field select:focus,
-    .profile-preferences input:focus-visible,
-    .profile-button:focus-visible {
-        border-color: #2355B8;
-        outline: 3px solid rgba(35, 85, 184, 0.15);
-        outline-offset: 1px;
-    }
-
-    .profile-field input[readonly],
-    .profile-field select:disabled {
-        color: #64748B;
-        background: #F8FAFC;
-        cursor: not-allowed;
-    }
-
-    .profile-preferences {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px 12px;
-        margin: 0;
-        padding: 0;
-        border: 0;
-    }
-
-    .profile-preferences label {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        min-height: 44px;
-        padding: 8px 12px;
-        color: #1E293B;
-        font-size: 0.9rem;
-        font-weight: 500;
-        border: 1px solid #CBD5E1;
-        border-radius: 8px;
-        cursor: pointer;
-    }
-
-    .profile-preferences input {
-        width: 16px;
-        height: 16px;
-        accent-color: #1D356D;
-    }
-
-    .profile-card footer {
-        display: flex;
-        justify-content: flex-end;
-        margin-top: 28px;
-    }
-
-    .profile-button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        min-height: 42px;
-        padding: 10px 22px;
-        color: #FFFFFF;
-        font: inherit;
-        font-weight: 700;
-        background: #1D356D;
-        border: 1px solid #1D356D;
-        border-radius: 8px;
-        cursor: pointer;
-    }
-
-    .profile-button:hover {
-        background: #162850;
-    }
-
-    .profile-button:disabled {
-        cursor: wait;
-        opacity: 0.65;
-    }
-
-
-    @media (max-width: 700px) {
-        .profile-page {
-            padding: 24px 16px 48px;
-        }
-
-        .profile-card {
-            padding: 24px 20px;
-        }
-
-        .profile-fields,
-        .profile-preferences {
-            grid-template-columns: 1fr;
-        }
-
-        .profile-identity {
-            align-items: flex-start;
-            flex-direction: column;
-        }
-    }
-</style>
+<link rel="stylesheet" href="<?= asset("css/profile.css") ?>">
 <?php $styles = Component::endFlush(); ?>
 
 <?php Component::include('user/header', [
@@ -304,7 +73,8 @@ $avatarUrl = trim((string) ($profile['avatar_url'] ?? ''));
         </div>
     </section>
 
-    <form class="profile-card" id="profile-form" method="post" action="<?= esc(route('/profile/update')) ?>" enctype="multipart/form-data">
+    <form class="profile-card" id="profile-form" method="post" action="<?= esc(route('/profile/post')) ?>" enctype="multipart/form-data">
+        <input type="hidden" name="target" value="profile">
         <header>
             <h2>Informasi Akun</h2>
             <p>Sesuaikan preferensi dan biodata akun Anda.</p>
@@ -364,7 +134,8 @@ $avatarUrl = trim((string) ($profile['avatar_url'] ?? ''));
         </footer>
     </form>
 
-    <form class="profile-card" id="password-form" method="post" action="<?= esc(route('/profile/update-password')) ?>">
+    <form class="profile-card" id="password-form" method="post" action="<?= esc(route('/profile/post')) ?>">
+        <input type="hidden" name="target" value="password">
         <header>
             <h2>Ubah Kata Sandi</h2>
             <p>Masukkan kata sandi lama sebelum membuat kata sandi baru.</p>

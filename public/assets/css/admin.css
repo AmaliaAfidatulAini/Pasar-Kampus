@@ -43,6 +43,10 @@
     padding: 0;
 }
 
+[hidden] {
+    display: none !important;
+}
+
 body.admin-body {
     background-color: var(--admin-bg);
     color: var(--admin-text-main);
@@ -1238,6 +1242,15 @@ body.admin-body {
     background-color: #78350F;
 }
 
+.btn-action:disabled,
+.btn-action:disabled:hover {
+    background-color: var(--admin-border);
+    color: var(--admin-text-subtle);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
 
 /* Table Pagination Footer */
 .admin-table-footer {
@@ -1348,6 +1361,17 @@ body.admin-body {
     color: #1E293B;
     line-height: 1.4;
     font-style: italic;
+    text-align: start;
+    width: 100%;
+    max-height: 7.5rem; /* ponytail: % needs a definite parent height; 7.5rem ≈ 40% of the info box */
+    min-height: 44px;
+    padding: 8px 10px;
+    background: #F8FAFC;
+    border: 1px solid #EDF2F7;
+    border-radius: 8px;
+    overflow-y: auto;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
 }
 
 .report-decision-group {

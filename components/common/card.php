@@ -35,7 +35,7 @@ $formattedOPrice = (is_numeric($o_price) && (float)$o_price > (float)$price) ? n
 			<span class="badge-category"><?= esc($category) ?></span>
 		</div>
 		<div class="product-body">
-			<div class="product-location"><?= esc((str_starts_with($location, '📍') ? '' : '📍 ') . ($location ?: 'Area Kampus')) ?></div>
+			<div class="product-location"><?= esc(($location ?: 'Area Kampus')) ?></div>
 			<h3 class="product-title"><?= esc($title) ?></h3>
 			<p class="product-desc"><?= esc($description) ?></p>
 		</div>

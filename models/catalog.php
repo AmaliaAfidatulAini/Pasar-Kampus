@@ -26,25 +26,66 @@ function truncate_text(string $text, int $length = 95, string $suffix = '..'): s
  * @param array $filters Optional filter parameters (category, search, limit, etc.)
  * @return array
  */
+function catalog_filter_sql(array $filters = []): array
+{
+    $where = ["p.status IN ('Tersedia', 'ONSELL')"];
+    $bindings = [];
+
+    $search = trim((string) ($filters['search'] ?? ''));
+    if ($search !== '') {
+        $where[] = "(p.item_name ILIKE :kw OR p.description ILIKE :kw OR COALESCE(up.campus, '') ILIKE :kw)";
+        $bindings[':kw'] = '%' . $search . '%';
+    }
+
+    $category = trim((string) ($filters['category'] ?? ''));
+    if ($category !== '') {
+        $where[] = 'c.category_name = :cat';
+        $bindings[':cat'] = $category;
+    }
+
+    $campus = trim((string) ($filters['campus'] ?? ''));
+    if ($campus !== '') {
+        $where[] = "COALESCE(up.campus, '') = :campus";
+        $bindings[':campus'] = $campus;
+    }
+
+    if (isset($filters['min_price']) && $filters['min_price'] !== '' && is_numeric($filters['min_price'])) {
+        $where[] = 'p.price >= :min_price';
+        $bindings[':min_price'] = (int) $filters['min_price'];
+    }
+
+    if (isset($filters['max_price']) && $filters['max_price'] !== '' && is_numeric($filters['max_price'])) {
+        $where[] = 'p.price <= :max_price';
+        $bindings[':max_price'] = (int) $filters['max_price'];
+    }
+
+    $condition = (int) ($filters['condition'] ?? 0);
+    if ($condition >= 1 && $condition <= 4) {
+        $where[] = 'p.condition = :condition';
+        $bindings[':condition'] = $condition;
+    }
+
+    return [implode(' AND ', $where), $bindings];
+}
+
 function get_catalog_products(array $filters = []): array
 {
     global $pdo;
 
-    $where = ["p.status IN ('Tersedia', 'ONSELL')"];
-    $bindings = [];
+    [$whereSql, $bindings] = catalog_filter_sql($filters);
 
-    if (!empty($filters['category'])) {
-        $where[] = "c.category_name ILIKE :cat";
-        $bindings[':cat'] = '%' . trim((string)$filters['category']) . '%';
+    $sort = (string) ($filters['sort'] ?? 'newest');
+    $orderSql = match ($sort) {
+        'price_asc' => 'p.price ASC, p.product_id DESC',
+        'price_desc' => 'p.price DESC, p.product_id DESC',
+        default => 'p.product_id DESC',
+    };
+
+    $limitSql = !empty($filters['limit']) ? (' LIMIT ' . (int) $filters['limit']) : '';
+    $offsetSql = '';
+    if ($limitSql !== '' && !empty($filters['offset'])) {
+        $offsetSql = ' OFFSET ' . max(0, (int) $filters['offset']);
     }
-
-    if (!empty($filters['search'])) {
-        $where[] = "(p.item_name ILIKE :kw OR p.description ILIKE :kw OR COALESCE(up.campus, '') ILIKE :kw)";
-        $bindings[':kw'] = '%' . trim((string)$filters['search']) . '%';
-    }
-
-    $whereSql = implode(' AND ', $where);
-    $limitSql = !empty($filters['limit']) ? (' LIMIT ' . (int)$filters['limit']) : '';
 
     $query = "
         SELECT 
@@ -81,8 +122,9 @@ function get_catalog_products(array $filters = []): array
             LIMIT 1
         ) a ON TRUE
         WHERE {$whereSql}
-        ORDER BY p.product_id DESC
+        ORDER BY {$orderSql}
         {$limitSql}
+        {$offsetSql}
     ";
 
     try {
@@ -193,6 +235,52 @@ function get_catalog_products(array $filters = []): array
     }
 
     return $formatted;
+}
+
+function count_catalog_products(array $filters = []): int
+{
+    [$whereSql, $bindings] = catalog_filter_sql($filters);
+
+    $query = "
+        SELECT COUNT(*) AS total
+        FROM products p
+        LEFT JOIN categories c ON c.categories_id = p.category_id
+        LEFT JOIN LATERAL (
+            SELECT campus
+            FROM user_profiles
+            WHERE user_id = p.user_id
+            ORDER BY profile_id DESC
+            LIMIT 1
+        ) up ON TRUE
+        WHERE {$whereSql}
+    ";
+
+    try {
+        $row = executeQuery($query, $bindings, 'fetch');
+    } catch (Throwable $e) {
+        error_log('count_catalog_products error: ' . $e->getMessage());
+        return 0;
+    }
+
+    return (int) ($row['total'] ?? 0);
+}
+
+function get_catalog_categories(): array
+{
+    return executeQuery(
+        'SELECT categories_id AS id, category_name AS name FROM categories ORDER BY category_name ASC',
+        [],
+        'fetchAll'
+    );
+}
+
+function get_catalog_campuses(): array
+{
+    return executeQuery(
+        "SELECT DISTINCT campus FROM user_profiles WHERE campus IS NOT NULL AND TRIM(campus) <> '' ORDER BY campus ASC",
+        [],
+        'fetchAll'
+    );
 }
 
 /**

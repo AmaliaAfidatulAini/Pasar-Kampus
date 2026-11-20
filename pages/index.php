@@ -3,7 +3,12 @@ require_model('catalog');
 $barang = get_catalog_products(['limit' => 12]);
 ?>
 
-<?php Component::include("user/header", ["title" => "Beranda"]); ?>
+<?php Component::flush() ?>
+<link rel="stylesheet" href="<?= asset("css/index.css") ?>">
+<link rel="stylesheet" href="<?= asset("css/card.css") ?>">
+<?php $styles = Component::endFlush() ?>
+
+<?php Component::include("user/header", ["title" => "Beranda", "styles" => $styles]); ?>
 
 <main>
     <!-- ================= 1. HERO SECTION - Pusat Jual-Beli Barang Bekas ================= -->

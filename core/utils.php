@@ -22,6 +22,14 @@ function redirect(string $route, int $response_code = 301): void
     exit;
 }
 
+function response_json(array $data, int $response_code = 200): void
+{
+    header('Content-Type: application/json; charset=UTF-8');
+    http_response_code($response_code);
+    echo json_encode($data, JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 function esc(string $string): string
 {
     return htmlspecialchars($string, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
