@@ -13,52 +13,54 @@ $email = esc($_POST['email'] ?? '');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PasarKampus - Register</title>
-    <!-- Google Fonts Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- CSS Stylesheet -->
-    <link rel="stylesheet" href="<?= asset("css/auth.css") ?>">
-    <link rel="stylesheet" href="<?= asset("css/flasher.css") ?>">
+    <link rel="stylesheet" href="<?= asset('css/lib/bootstrap.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/main.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/flasher.css') ?>">
 </head>
 
-<body data-auth-page="register">
+<body class="bg-primary d-flex flex-column align-items-center justify-content-center min-vh-100 p-3">
     <?php Component::include('common/flasher'); ?>
 
-    <main>
-        <header>
-            <h1>Daftar</h1>
-        </header>
+    <main class="card border-0 rounded-4 shadow-lg w-100" style="max-width: 440px">
+        <div class="card-body p-4 p-sm-5">
+            <header class="text-center mb-4">
+                <h1 class="h3 fw-bold text-primary mb-1">Daftar</h1>
+            </header>
 
-        <form id="regAuthForm" method="POST" action="<?= route('/register/post') ?>">
-            <fieldset>
-                <legend>Registration details</legend>
-                <div>
-                    <label for="regEmail">Email</label>
-                    <input type="email" id="regEmail" name="email" placeholder="email@example.com" value="<?= $email ?>" required>
-                </div>
+            <form id="regAuthForm" method="POST" action="<?= route('/register/post') ?>">
+                <fieldset class="border-0 p-0 m-0">
+                    <legend class="visually-hidden">Registration details</legend>
 
-                <div>
-                    <label for="password">Password</label>
-                    <div data-password-wrap>
-                        <input type="password" id="password" name="password" minlength="8" placeholder="Password" required>
-                        <button type="button" id="password-toggle">
-                            <img src="<?= asset("img/eye-closed.jpg") ?>" alt="Toggle Password">
-                        </button>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small" for="regEmail">Email</label>
+                        <input class="form-control" type="email" id="regEmail" name="email" placeholder="email@example.com" value="<?= $email ?>" required>
                     </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small" for="password">Password</label>
+                        <div class="position-relative" data-password-wrap>
+                            <input class="form-control pe-5" type="password" id="password" name="password" minlength="8" placeholder="Password" required>
+                            <button type="button" id="password-toggle" class="btn btn-link position-absolute top-50 end-0 translate-middle-y p-2 text-secondary" aria-label="Lihat password">
+                                <img src="<?= asset('img/eye-closed.jpg') ?>" class="pk-icon" alt="">
+                            </button>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <div class="mt-4">
+                    <button class="btn btn-primary w-100" type="submit">Daftar</button>
                 </div>
-            </fieldset>
 
-            <div data-submit>
-                <button type="submit">Daftar</button>
-            </div>
-
-            <footer>
-                Sudah punya akun? <a href="<?= route("login") ?>">Masuk</a>
-            </footer>
-        </form>
+                <footer class="text-center small text-secondary mt-3">
+                    Sudah punya akun? <a class="fw-bold" href="<?= route('login') ?>">Masuk</a>
+                </footer>
+            </form>
+        </div>
     </main>
 
-    <script src="<?= asset("js/auth.js") ?>"></script>
+    <script src="<?= asset('js/auth.js') ?>"></script>
 </body>
 </html>

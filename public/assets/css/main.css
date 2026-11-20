@@ -1,647 +1,759 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+/* =========================================================
+   PasarKampus — shared theme layer
+   Loaded after bootstrap.css. Retargets Bootstrap tokens and
+   adds the reusable pk-* classes used by every page.
+   ========================================================= */
 
+/* 1. Tokens */
 :root {
-    /* Color */
-    --primary: #2563eb;         
-    --primary-hover: #1d4ed8;   
-    --primary-light: #dbeafe;   
-    --primary-soft: #eff6ff;    
-    --primary-dark: #1e40af;    
-    --primary-border: #bfdbfe;  
-    --secondary: #0f172a;       
-    --text-main: #1e293b;
-    --text-muted: #64748b;
-    --text-light: #94a3b8;
-    --bg-main: #f8fafc;
-    --bg-card: #ffffff;
-    --border-color: #e2e8f0;
-    --border-focus: #2563eb;
-    --danger: #ef4444;
-    --danger-light: #fee2e2;
-    --warning: #f59e0b;
-    --warning-light: #fef3c7;
-    --info: #0284c7;
-    --info-light: #e0f2fe;
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(37 99 235 / 0.08), 0 2px 4px -2px rgb(37 99 235 / 0.05);
-    --shadow-lg: 0 10px 15px -3px rgb(37 99 235 / 0.08), 0 4px 6px -4px rgb(37 99 235 / 0.04);
-    --shadow-xl: 0 20px 25px -5px rgb(15 23 42 / 0.08), 0 8px 10px -6px rgb(15 23 42 / 0.04);
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 16px;
-    --radius-xl: 24px;
-    --radius-full: 9999px;
-    --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --transition: all 0.25s ease-in-out;
+	--pk-navy: #1D356D;
+	--pk-navy-dark: #14254D;
+	--pk-amber: #FBBF24;
+	--pk-amber-ink: #92400E;
+	--pk-lime: #B9FF66;
+	--pk-ink: #191A23;
+	--pk-surface: #F8FAFC;
+	--pk-border: #E2E8F0;
+	--pk-text: #1E293B;
+	--pk-muted: #64748B;
+	--pk-subtle: #94A3B8;
+	--pk-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / .05);
+	--pk-shadow-md: 0 4px 6px -1px rgb(37 99 235 / .08), 0 2px 4px -2px rgb(37 99 235 / .05);
+	--pk-shadow-lg: 0 10px 15px -3px rgb(37 99 235 / .08), 0 4px 6px -4px rgb(37 99 235 / .04);
+	/* legacy aliases — card.css still consumes these; keep names, keep values */
+	--primary: #2563EB;
+	--primary-hover: #1D4ED8;
+	--primary-light: #DBEAFE;
+	--primary-soft: #EFF6FF;
+	--primary-dark: #1E40AF;
+	--primary-border: #BFDBFE;
+	--secondary: #0F172A;
+	--text-main: #1E293B;
+	--text-muted: #64748B;
+	--text-light: #94A3B8;
+	--bg-main: #F8FAFC;
+	--bg-card: #FFFFFF;
+	--border-color: #E2E8F0;
+	--border-focus: #2563EB;
+	--danger: #EF4444;
+	--warning: #F59E0B;
+	--info: #0284C7;
+	--shadow-sm: var(--pk-shadow-sm);
+	--shadow-md: var(--pk-shadow-md);
+	--shadow-lg: var(--pk-shadow-lg);
+	--radius-sm: 8px;
+	--radius-md: 12px;
+	--radius-lg: 16px;
+	--radius-xl: 24px;
+	--radius-full: 9999px;
+	--font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+	--transition: all .25s ease-in-out;
 }
-/* CSS Reset & Base */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+
+/* 2. Bootstrap bridge — global tokens */
+:root {
+	--bs-body-font-family: var(--font-family);
+	--bs-body-font-size: 1rem;
+	--bs-body-line-height: 1.5;
+	--bs-body-color: var(--pk-text);
+	--bs-body-color-rgb: 30, 41, 59;
+	--bs-body-bg: #FFFFFF;
+	--bs-body-bg-rgb: 255, 255, 255;
+	--bs-secondary-color: var(--pk-muted);
+	--bs-tertiary-color: var(--pk-subtle);
+	--bs-tertiary-bg: var(--pk-surface);
+	--bs-tertiary-bg-rgb: 248, 250, 252;
+	--bs-border-color: var(--pk-border);
+	--bs-border-color-translucent: #E2E8F0;
+	--bs-border-radius: .75rem;
+	--bs-border-radius-sm: .5rem;
+	--bs-border-radius-lg: .875rem;
+	--bs-border-radius-xl: 1.5rem;
+	--bs-border-radius-xxl: 2rem;
+	--bs-link-color: var(--pk-navy);
+	--bs-link-hover-color: var(--pk-navy-dark);
+	--bs-primary-rgb: 29, 53, 109;
+	--bs-primary-text-emphasis: #1D356D;
+	--bs-primary-bg-subtle: #EEF2FF;
+	--bs-primary-border-subtle: #C7D2FE;
+	--bs-secondary-rgb: 100, 116, 139;
+	--bs-secondary-text-emphasis: #475569;
+	--bs-secondary-bg-subtle: #F1F5F9;
+	--bs-secondary-border-subtle: #E2E8F0;
+	--bs-success-rgb: 34, 197, 94;
+	--bs-success-bg-subtle: #DCFCE7;
+	--bs-success-text-emphasis: #166534;
+	--bs-danger-rgb: 239, 68, 68;
+	--bs-danger-bg-subtle: #FEE2E2;
+	--bs-danger-text-emphasis: #991B1B;
+	--bs-warning-rgb: 245, 158, 11;
+	--bs-warning-bg-subtle: #FEF3C7;
+	--bs-warning-text-emphasis: #92400E;
+	--bs-focus-ring-width: .2rem;
+	--bs-focus-ring-color: rgba(29, 53, 109, .15);
 }
-html {
-    scroll-behavior: smooth;
+
+/* 3. Bootstrap bridge — buttons */
+.btn {
+	--bs-btn-font-size: .9rem;
+	--bs-btn-font-weight: 700;
+	--bs-btn-padding-x: 1.375rem;
+	--bs-btn-padding-y: .625rem;
+	--bs-btn-border-radius: .75rem;
+	--bs-btn-focus-shadow-rgb: 29, 53, 109;
 }
-body {
-    font-family: var(--font-family);
-    background-color: var(--bg-main);
-    color: var(--text-main);
-    line-height: 1.5;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+.btn-lg {
+	--bs-btn-padding-y: .875rem;
+	--bs-btn-padding-x: 1.75rem;
+	--bs-btn-font-size: 1rem;
+	--bs-btn-border-radius: .875rem;
 }
-a {
-    color: inherit;
-    text-decoration: none;
-    transition: var(--transition);
+.btn-primary {
+	--bs-btn-color: #FFFFFF;
+	--bs-btn-bg: var(--pk-navy);
+	--bs-btn-border-color: var(--pk-navy);
+	--bs-btn-hover-color: #FFFFFF;
+	--bs-btn-hover-bg: var(--pk-navy-dark);
+	--bs-btn-hover-border-color: var(--pk-navy-dark);
+	--bs-btn-active-color: #FFFFFF;
+	--bs-btn-active-bg: var(--pk-navy-dark);
+	--bs-btn-active-border-color: var(--pk-navy-dark);
+	--bs-btn-disabled-color: #FFFFFF;
+	--bs-btn-disabled-bg: var(--pk-navy);
+	--bs-btn-disabled-border-color: var(--pk-navy);
 }
-button, input, select, textarea {
-    font-family: inherit;
+.btn-outline-primary {
+	--bs-btn-color: var(--pk-navy);
+	--bs-btn-border-color: #CBD5E1;
+	--bs-btn-hover-color: var(--pk-navy);
+	--bs-btn-hover-bg: var(--pk-surface);
+	--bs-btn-hover-border-color: var(--pk-navy);
+	--bs-btn-active-color: var(--pk-navy);
+	--bs-btn-active-bg: var(--pk-surface);
+	--bs-btn-active-border-color: var(--pk-navy);
 }
-button {
-    cursor: pointer;
-    border: none;
-    outline: none;
-    background: none;
-    transition: var(--transition);
+.btn-light {
+	--bs-btn-color: var(--pk-navy);
+	--bs-btn-bg: #FFFFFF;
+	--bs-btn-border-color: #FFFFFF;
+	--bs-btn-hover-color: var(--pk-navy);
+	--bs-btn-hover-bg: #E2E8F0;
+	--bs-btn-hover-border-color: #E2E8F0;
+	--bs-btn-active-color: var(--pk-navy);
+	--bs-btn-active-bg: #E2E8F0;
+	--bs-btn-active-border-color: #E2E8F0;
+	--bs-btn-focus-shadow-rgb: 255, 255, 255;
+}
+
+/* 4. Bootstrap bridge — forms */
+.form-control,
+.form-select {
+	--bs-border-color: var(--pk-border);
+	border-radius: .625rem;
+	font-size: .88rem;
+}
+.form-control:focus,
+.form-select:focus {
+	border-color: var(--pk-navy);
+	box-shadow: 0 0 0 .2rem rgba(29, 53, 109, .15);
+}
+
+/* 5. Bootstrap bridge — navbar */
+.navbar {
+	--bs-navbar-padding-y: .75rem;
+	--bs-navbar-color: rgba(255, 255, 255, .85);
+	--bs-navbar-hover-color: #FFFFFF;
+	--bs-navbar-brand-color: #FFFFFF;
+	--bs-navbar-brand-hover-color: #FFFFFF;
+	--bs-navbar-brand-font-size: 1.35rem;
+}
+
+/* 6. Bootstrap bridge — dropdown */
+.dropdown-menu {
+	--bs-dropdown-min-width: 14rem;
+	--bs-dropdown-padding-y: .5rem;
+	--bs-dropdown-border-color: var(--pk-border);
+	--bs-dropdown-border-radius: 12px;
+	--bs-dropdown-inner-border-radius: 11px;
+	--bs-dropdown-font-size: .88rem;
+	--bs-dropdown-link-active-bg: var(--pk-surface);
+	--bs-dropdown-link-active-color: var(--pk-navy);
+	--bs-dropdown-link-hover-bg: var(--pk-surface);
+	--bs-dropdown-link-hover-color: var(--pk-navy);
+	box-shadow: 0 12px 30px -6px rgba(15, 23, 42, .16), 0 4px 10px rgba(0, 0, 0, .05);
+}
+.dropdown-item {
+	font-weight: 600;
+	padding: .6875rem 1.125rem;
+}
+.pk-dropdown-label {
+	display: flex;
+	align-items: center;
+	gap: .375rem;
+	padding: .5rem 1.125rem .25rem;
+	font-size: .8125rem;
+	font-weight: 700;
+	color: var(--bs-body-color);
+}
+.pk-dropdown-label .pk-icon {
+	width: 1rem;
+	height: 1rem;
+	color: var(--bs-secondary-color);
+}
+
+/* 7. Bootstrap bridge — accordion */
+.accordion {
+	--bs-accordion-border-color: var(--pk-border);
+	--bs-accordion-border-radius: 14px;
+	--bs-accordion-inner-border-radius: 13px;
+	--bs-accordion-btn-color: var(--pk-navy);
+	--bs-accordion-active-color: var(--pk-navy);
+	--bs-accordion-active-bg: #FFFFFF;
+	--bs-accordion-bg: #FFFFFF;
+	--bs-accordion-btn-padding-x: 1.5rem;
+	--bs-accordion-btn-padding-y: 1.25rem;
+	--bs-accordion-body-padding-x: 1.5rem;
+	--bs-accordion-body-padding-y: 1.375rem;
+	--bs-accordion-btn-focus-box-shadow: 0 0 0 .2rem rgba(29, 53, 109, .12);
+	--bs-accordion-btn-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%231D356D' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+	--bs-accordion-btn-active-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%231D356D' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+}
+.accordion-item {
+	background: #FFFFFF;
+	border: 1px solid var(--pk-border);
+	border-radius: 14px;
+	margin-bottom: .875rem;
+	overflow: hidden;
+}
+.accordion-item:not(:first-of-type) {
+	border-top: 1px solid var(--pk-border);
+}
+.accordion-item:has(.accordion-button:not(.collapsed)) {
+	border-color: var(--pk-navy);
+}
+.accordion-button {
+	font-size: 1rem;
+	font-weight: 700;
+	box-shadow: none;
+}
+.accordion-button:not(.collapsed) {
+	box-shadow: none;
+}
+.accordion-body {
+	padding: 0 1.5rem 1.375rem;
+	font-size: .9rem;
+	color: #475569;
+	line-height: 1.65;
+}
+
+/* 8. Base */
+body.pk-body {
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh;
+	background: #FFFFFF;
 }
 img {
-    max-width: 100%;
-    height: auto;
-    display: block;
-}
-/* =========================================================
-   PBL Seller Dashboard (Colors: #1D356D, #FBBF24, #FFFFFF)
-   ========================================================= */
-:root {
-    --pbl-navy: #1D356D;
-    --pbl-navy-dark: #14254d;
-    --pbl-amber: #FBBF24;
-    --pbl-amber-light: #fef3c7;
-    --pbl-white: #FFFFFF;
-    --pbl-bg: #F8FAFC;
-    --pbl-border: #E2E8F0;
-    --pbl-text: #1E293B;
-    --pbl-muted: #64748B;
-}
-/* =========================================================
-   PBL LANDING PAGE (Wireframe & Palette: #1D356D, #FBBF24, #FFFFFF)
-   ========================================================= */
-
-.lp-body {
-    margin: 0;
-    padding: 0;
-    background-color: #FFFFFF;
-    color: #1E293B;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-}
-/* Base Container */
-.lp-container {
-    width: 100%;
-    max-width: 1160px;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 24px;
-    padding-right: 24px;
-    box-sizing: border-box;
-}
-/* Buttons */
-.lp-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-family: inherit;
-    font-size: 0.9rem;
-    font-weight: 700;
-    padding: 10px 22px;
-    border-radius: 12px;
-    cursor: pointer;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    border: 1.5px solid transparent;
-}
-.lp-btn-primary {
-    background-color: #1D356D;
-    color: #FFFFFF;
-    border-color: #1D356D;
-}
-.lp-btn-primary:hover {
-    background-color: #14254D;
-    border-color: #14254D;
-    transform: translateY(-1px);
-}
-.lp-btn-outline {
-    background-color: transparent;
-    color: #1D356D;
-    border-color: #CBD5E1;
-}
-.lp-btn-outline:hover {
-    border-color: #1D356D;
-    background-color: #F8FAFC;
-    color: #1D356D;
-}
-.lp-btn-lg {
-    padding: 14px 28px;
-    font-size: 1rem;
-    border-radius: 14px;
-}
-/* ================= NAVBAR ================= */
-.lp-navbar {
-    position: sticky;
-    top: 0;
-    z-index: 200;
-    background-color: rgba(255, 255, 255, 0.97);
-    backdrop-filter: blur(8px);
-    border-bottom: 1px solid #E2E8F0;
-    padding: 16px 0;
-}
-.lp-nav-wrap {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-}
-.lp-logo {
-    display: inline-flex;
-    align-items: center;
-    text-decoration: none;
-    color: #1D356D;
-    font-weight: 800;
-    font-size: 1.35rem;
-    letter-spacing: -0.5px;
-    transition: opacity 0.2s ease;
-}
-.lp-logo:hover {
-    opacity: 0.85;
-}
-/* ================= FOOTER ================= */
-.lp-footer {
-    background-color: #1D356D;
-    color: #FFFFFF;
-    padding: 64px 0 32px;
-}
-.lp-footer-grid {
-    display: grid;
-    grid-template-columns: 1.5fr 1fr 1fr 1fr;
-    gap: 40px;
-    padding-bottom: 48px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-}
-.lp-footer-col h4 {
-    font-size: 0.95rem;
-    font-weight: 800;
-    color: #FBBF24;
-    margin: 0 0 18px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-.lp-footer-col p {
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.75);
-    line-height: 1.6;
-    margin: 12px 0 0;
-}
-.lp-footer-links {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-.lp-footer-links a {
-    color: rgba(255, 255, 255, 0.8);
-    text-decoration: none;
-    font-size: 0.875rem;
-    font-weight: 500;
-    transition: color 0.2s, padding-left 0.2s;
-}
-.lp-footer-links a:hover {
-    color: #FBBF24;
-    padding-left: 4px;
-}
-.lp-footer-bottom {
-    padding-top: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.6);
-}
-/* =========================================================
-   WIREFRAME 1 & 2 HEADER STYLES (PasarKampus Theme)
-   ========================================================= */
-.lp-navbar {
-    position: sticky;
-    top: 0;
-    z-index: 500;
-    background-color: #1D356D;
-    border-bottom: 1px solid #162955;
-    padding: 12px 0;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-}
-.lp-nav-wrap {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
-}
-/* Logo + search stay together on the left; right area is pushed to the far right */
-.lp-nav-left {
-    display: flex;
-    align-items: center;
-    gap: 36px;
-    flex: 1;
-    min-width: 0;
-}
- .lp-logo {
-    display: inline-flex;
-    align-items: center;
-    text-decoration: none;
-    color: #FFFFFF;
-    font-weight: 800;
-    font-size: 1.35rem;
-    letter-spacing: -0.5px;
-    flex-shrink: 0;
-}
-/* Search Bar (Wireframes 1 & 2) */
-.lp-nav-search {
-    flex: 1;
-    max-width: 460px;
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-.lp-nav-search-icon {
-    position: absolute;
-    left: 14px;
-    color: #64748B;
-    pointer-events: none;
-    display: flex;
-    align-items: center;
-}
-.lp-nav-search-input {
-    width: 100%;
-    height: 42px;
-    padding: 0 16px 0 42px;
-    background: #F8FAFC;
-    border: 1.5px solid #CBD5E1;
-    border-radius: 10px;
-    font-size: 0.88rem;
-    font-family: inherit;
-    font-weight: 500;
-    color: #1E293B;
-    outline: none;
-    transition: all 0.2s ease;
-}
-.lp-nav-search-input::placeholder {
-    color: #475569;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-}
-.lp-nav-search-input:focus {
-    background: #FFFFFF;
-    border-color: #1D356D;
-    box-shadow: 0 0 0 3px rgba(29, 53, 109, 0.12);
-}
-/* Right Area States */
-.lp-nav-right-area {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-shrink: 0;
-}
-.lp-header-state {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-/* Wireframe 1: Masuk Button */
-.lp-btn-masuk {
-    background-color: #FFFFFF;
-    color: #1D356D;
-    font-weight: 700;
-    font-size: 0.9rem;
-    padding: 9px 24px;
-    border-radius: 10px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 2px 6px rgba(29, 53, 109, 0.2);
-}
-.lp-btn-masuk:hover {
-    background-color: #E2E8F0;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(29, 53, 109, 0.3);
-}
-/* Wireframe 2: "butuh bantuan?" Link */
- .lp-help-link {
-    color: #FFFFFF;
-    text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 600;
-    padding: 8px 12px;
-    border-radius: 8px;
-    transition: all 0.15s;
-    white-space: nowrap;
-}
- .lp-help-link:hover {
-    color: #FFFFFF;
-    background-color: rgba(255, 255, 255, 0.12);
-    text-decoration: underline;
-}
-/* Wireframe 2: Profile Avatar Circle */
-.lp-profile-wrapper {
-    position: relative;
-}
-.lp-profile-btn {
-    background: transparent;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    outline: none;
-}
-.lp-profile-circle {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    background-color: #94A3B8; /* Gray circular icon like wireframe */
-    border: 2px solid #E2E8F0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    color: #FFFFFF;
-    font-weight: 700;
-    font-size: 1rem;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-    transition: all 0.2s ease;
-}
-.lp-profile-btn:hover .lp-profile-circle,
-.lp-profile-btn:focus .lp-profile-circle {
-    border-color: #1D356D;
-    transform: scale(1.05);
-}
-.lp-avatar-initial {
-    text-transform: uppercase;
-}
-/* Wireframe 2: Profile Dropdown Menu */
-.lp-profile-dropdown {
-    position: absolute;
-    top: calc(100% + 14px);
-    right: 0;
-    width: 220px;
-    background: #FFFFFF;
-    border: 1px solid #E2E8F0;
-    border-radius: 12px;
-    box-shadow: 0 12px 30px -6px rgba(15, 23, 42, 0.16), 0 4px 10px rgba(0, 0, 0, 0.05);
-    padding: 8px 0;
-    z-index: 1000;
-    display: none;
-    animation: lpDropdownPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.lp-profile-dropdown.show {
-    display: block;
-}
-/* Tooltip Arrow pointing to profile circle */
-.lp-profile-dropdown::before {
-    content: '';
-    position: absolute;
-    top: -7px;
-    right: 14px;
-    width: 12px;
-    height: 12px;
-    background: #FFFFFF;
-    border-left: 1px solid #E2E8F0;
-    border-top: 1px solid #E2E8F0;
-    transform: rotate(45deg);
-}
-.lp-dropdown-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    padding: 11px 18px;
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: #1E293B;
-    text-decoration: none;
-    background: transparent;
-    border: none;
-    text-align: left;
-    cursor: pointer;
-    font-family: inherit;
-    box-sizing: border-box;
-    transition: all 0.15s ease;
-}
-.lp-dropdown-item:hover {
-    background-color: #F8FAFC;
-    color: #1D356D;
-    padding-left: 22px;
-}
-.lp-dropdown-icon {
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
-}
-.lp-dropdown-divider {
-    height: 1px;
-    background-color: #E2E8F0;
-    margin: 6px 0;
-}
-.lp-dropdown-logout {
-    color: #DC2626;
-}
-.lp-dropdown-logout:hover {
-    background-color: #FEF2F2;
-    color: #B91C1C;
-}
-/* =========================================================
-   AUTH MODAL & PROFILE MODAL STYLES (PasarKampus Theme)
-   ========================================================= */
-.lp-modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(4px);
-    z-index: 2000;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    box-sizing: border-box;
-}
-.lp-modal-backdrop.show {
-    display: flex;
-    animation: lpModalFade 0.25s ease;
-}
-.lp-auth-modal-card {
-    background: #FFFFFF;
-    border-radius: 20px;
-    width: 100%;
-    max-width: 440px;
-    padding: 36px 36px 32px;
-    box-sizing: border-box;
-    position: relative;
-    box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.25);
-    animation: lpCardPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.lp-modal-close {
-    position: absolute;
-    top: 18px;
-    right: 18px;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: #F1F5F9;
-    border: none;
-    font-size: 1.3rem;
-    color: #64748B;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-}
-.lp-modal-close:hover {
-    background: #E2E8F0;
-    color: #1E293B;
-}
-/* User Profile Modal Specifics */
-.lp-profile-modal-card {
-    max-width: 480px;
-}
-.lp-profile-modal-header {
-    text-align: center;
-    padding-bottom: 18px;
-    border-bottom: 1px solid #F1F5F9;
-    margin-bottom: 18px;
-}
-.lp-profile-avatar-large {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    margin: 0 auto 10px;
-    background: #CBD5E1;
-    border: 3px solid #1D356D;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #FFFFFF;
-    font-size: 1.5rem;
-    font-weight: 700;
-    box-shadow: 0 4px 12px rgba(29, 53, 109, 0.15);
-}
-.lp-profile-avatar-large img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-.lp-profile-name {
-    font-size: 1.25rem;
-    font-weight: 800;
-    color: #1D356D;
-    margin: 0 0 4px;
-}
-.lp-profile-campus {
-    display: inline-block;
-    background: #FEF3C7;
-    color: #92400E;
-    font-size: 0.75rem;
-    font-weight: 700;
-    padding: 2px 10px;
-    border-radius: 9999px;
-}
-.lp-profile-modal-body {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 24px;
-}
-.lp-profile-detail-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.82rem;
-    padding: 8px 12px;
-    background: #F8FAFC;
-    border-radius: 8px;
-    border: 1px solid #E2E8F0;
-}
-.lp-detail-label {
-    color: #64748B;
-    font-weight: 600;
-}
-.lp-detail-value {
-    color: #1D356D;
-    font-weight: 700;
-    text-align: right;
-}
-.lp-profile-modal-footer {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    padding-top: 14px;
-    border-top: 1px solid #F1F5F9;
-}
-.lp-error-page {
-    flex: 1;
-    display: grid;
-    place-items: center;
-    padding: clamp(48px, 8vw, 96px) 24px;
-    background: #FFFFFF;
-}
-.lp-error-content {
-    width: min(100%, 560px);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-}
-.lp-error-illustration {
-    width: min(240px, 65vw);
-    margin-bottom: 12px;
-}
-.lp-error-code {
-    margin: 0;
-    color: #1D356D;
-    font-size: clamp(3.5rem, 12vw, 6rem);
-    font-weight: 800;
-    letter-spacing: -0.04em;
-    line-height: 0.95;
-}
-.lp-error-content h1 {
-    margin: 18px 0 0;
-    color: #1D356D;
-    font-size: clamp(1.5rem, 4vw, 2.15rem);
-    font-weight: 800;
-    line-height: 1.2;
-}
-.lp-error-actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 12px;
-    margin-top: 28px;
+	max-width: 100%;
+	height: auto;
+}
+.pk-icon {
+	width: 1.25rem;
+	height: 1.25rem;
+}
+.pk-icon--md {
+	width: 1.5rem;
+	height: 1.5rem;
+}
+.pk-icon--lg {
+	width: 2rem;
+	height: 2rem;
 }
 
-.lp-error-description {
-    max-width: 52ch;
-    margin: 14px 0 0;
-    color: #475569;
-    font-size: 1rem;
-    line-height: 1.65;
+/* Bootstrap card retuned to the PasarKampus surface. */
+.card {
+	--bs-card-border-color: var(--pk-border);
+	--bs-card-border-radius: 14px;
+	--bs-card-inner-border-radius: 13px;
+	--bs-card-cap-bg: #FFFFFF;
+	--bs-card-cap-padding-y: .75rem;
+	--bs-card-cap-padding-x: 1.25rem;
+	--bs-card-title-color: var(--pk-text);
+}
+
+/* Extends Bootstrap's spacing scale (which stops at 5 = 3rem) for section rhythm. */
+.py-6 {
+	padding-top: 3.5rem !important;
+	padding-bottom: 3.5rem !important;
+}
+@media (min-width: 768px) {
+	.py-6 {
+		padding-top: 5.25rem !important;
+		padding-bottom: 5.25rem !important;
+	}
+}
+
+/* 9. Shared chrome */
+.pk-navbar {
+	background: var(--pk-navy);
+	--bs-navbar-padding-y: .75rem;
+	--bs-navbar-color: rgb(255 255 255 / .85);
+	--bs-navbar-hover-color: #FFFFFF;
+	--bs-navbar-active-color: #FFFFFF;
+	--bs-navbar-brand-color: #FFFFFF;
+	--bs-navbar-brand-hover-color: #FFFFFF;
+	--bs-navbar-toggler-border-color: rgb(255 255 255 / .35);
+	--bs-navbar-toggler-icon-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.9%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+@media (max-width: 575.98px) {
+	.pk-navbar {
+		--bs-navbar-padding-y: .625rem;
+		--bs-navbar-brand-font-size: 1.05rem;
+	}
+}
+.pk-brand-logo {
+	padding-block: .25rem;
+}
+.pk-brand-logo img {
+	display: block;
+	height: 2rem;
+	width: auto;
+	transform: scale(1.2);
+}
+.pk-navbar .navbar-nav .nav-link {
+	padding-block: .5rem;
+	padding-inline: .75rem;
+	font-weight: 600;
+	font-size: .92rem;
+	line-height: 1.5rem;
+	border-radius: 8px;
+	transition: background-color .15s ease, color .15s ease;
+}
+/* Bootstrap draws a border-triangle on .dropdown-toggle::after; keep it, and
+   inherit the nav link colour so it matches the label. */
+.pk-navbar .navbar-nav .dropdown-toggle::after {
+	vertical-align: .15em;
+}
+.pk-navbar .navbar-nav .nav-link:hover,
+.pk-navbar .navbar-nav .nav-link:focus-visible {
+	background-color: rgb(255 255 255 / .12);
+	color: #FFFFFF;
+}
+.pk-navbar .nav-link.active {
+	color: var(--pk-amber);
+}
+.pk-navbar .nav-link.active:hover {
+	color: #FFFFFF;
+}
+/* Bootstrap forces `.navbar-nav .dropdown-menu` to `position: static`, which only
+   reverts to `absolute` under `.navbar-expand-*`. `navbar-expand-lg` on the header
+   handles that; this only tightens the gap below the trigger. */
+.pk-navbar .navbar-nav .dropdown-menu {
+	margin-top: .5rem;
+}
+.pk-navbar .navbar-toggler {
+	border-color: rgb(255 255 255 / .35);
+	padding: .3rem .5rem;
+}
+.pk-navbar .navbar-toggler:focus {
+	box-shadow: 0 0 0 .15rem rgb(255 255 255 / .35);
+}
+.pk-border-dashed {
+	--bs-border-style: dashed;
+}
+.pk-breadcrumb {
+	background: var(--pk-surface);
+	border-bottom: 1px solid var(--pk-border);
+	padding-block: .625rem;
+}
+.pk-breadcrumb .breadcrumb {
+	--bs-breadcrumb-divider-color: var(--pk-subtle);
+	--bs-breadcrumb-item-padding-x: .5rem;
+	font-size: .82rem;
+}
+.pk-breadcrumb a {
+	text-decoration: none;
+}
+.pk-breadcrumb a:hover {
+	text-decoration: underline;
+}
+.pk-nav-search {
+	position: relative;
+	flex: 1 1 0%;
+	min-width: 0;
+	max-width: 460px;
+}
+@media (min-width: 992px) {
+	.pk-nav-search {
+		flex: 0 1 20rem;
+	}
+}
+.pk-nav-search .pk-icon {
+	position: absolute;
+	left: 0.5rem;
+	top: 50%;
+	transform: translateY(-50%);
+	color: rgb(255 255 255 / .7);
+	pointer-events: none;
+}
+.pk-nav-search .form-control {
+	height: 2.375rem;
+	padding-left: 2.25rem;
+	padding-right: 2rem;
+	padding-bottom: .5rem;
+	background: transparent;
+	border: 0;
+	border-bottom: 1px solid rgb(255 255 255 / .5);
+	border-radius: 8px 8px 0 0;
+	color: #FFFFFF;
+	font-size: .875rem;
+	transition: border-bottom-color .15s ease, box-shadow .15s ease;
+}
+/* Chromium renders a native clear glyph on input[type=search]; Bootstrap's reboot
+   only greyscales it, leaving a dark X on the navy bar. It cannot be recoloured or
+   thickened, so it is suppressed and replaced by `.pk-search-clear`. */
+.pk-nav-search .form-control::-webkit-search-cancel-button,
+.pk-nav-search .form-control::-webkit-search-decoration {
+	-webkit-appearance: none;
+	appearance: none;
+	display: none;
+}
+.pk-search-clear {
+	position: absolute;
+	right: .5rem;
+	top: 50%;
+	transform: translateY(-50%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.5rem;
+	height: 1.5rem;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: #FFFFFF;
+	line-height: 1;
+	cursor: pointer;
+	opacity: .8;
+	transition: opacity .15s ease;
+}
+.pk-search-clear:hover,
+.pk-search-clear:focus-visible {
+	opacity: 1;
+}
+.pk-search-clear .pk-icon {
+	width: 1rem;
+	height: 1rem;
+	color: #FFFFFF;
+	stroke-width: 3;
+}
+/* Light-surface variant of the navbar search: icon inside the field. */
+.pk-field-search {
+	position: relative;
+}
+.pk-field-search .pk-icon {
+	position: absolute;
+	left: .75rem;
+	top: 50%;
+	transform: translateY(-50%);
+	color: var(--pk-subtle);
+	pointer-events: none;
+}
+.pk-field-search .form-control {
+	padding-left: 2.25rem;
+}
+.pk-nav-search .form-control::placeholder {
+	color: rgb(255 255 255 / .65);
+	font-weight: 400;
+	letter-spacing: normal;
+}
+/* The inset shadow doubles the underline on focus without shifting layout. */
+.pk-nav-search .form-control:focus {
+	background: rgb(255 255 255 / .12);
+	color: #FFFFFF;
+	border-bottom-color: #FFFFFF;
+	box-shadow: inset 0 -1px 0 0 #FFFFFF;
+}
+.pk-avatar-btn {
+	background: none;
+	border: 0;
+	padding: 0;
+	border-radius: 50%;
+}
+.pk-avatar {
+	width: 2.625rem;
+	height: 2.625rem;
+	border-radius: 50%;
+	background: var(--pk-subtle);
+	border: 2px solid var(--pk-border);
+	display: grid;
+	place-items: center;
+	overflow: hidden;
+	color: #FFFFFF;
+	font-weight: 700;
+	padding: 0;
+}
+.pk-avatar img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+.pk-avatar--lg {
+	width: 7rem;
+	height: 7rem;
+}
+.pk-avatar-trigger {
+	position: relative;
+	display: inline-flex;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: none;
+	line-height: 1;
+}
+.pk-avatar-edit {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	display: grid;
+	place-items: center;
+	width: 1.75rem;
+	height: 1.75rem;
+	border-radius: 50%;
+	background: var(--pk-navy);
+	border: 2px solid #FFFFFF;
+	color: #FFFFFF;
+}
+.pk-avatar-edit .pk-icon {
+	width: .875rem;
+	height: .875rem;
+}
+.pk-avatar-stage {
+	position: relative;
+	width: 100%;
+	aspect-ratio: 1;
+	overflow: hidden;
+	background: var(--pk-surface);
+}
+#avatarModal .modal-body {
+	padding: 0;
+}
+/* Bootstrap's .btn/.d-flex display rules outrank the UA [hidden] rule. */
+#avatarModal [hidden] {
+	display: none !important;
+}
+.pk-avatar-crop {
+	width: 100%;
+	height: 100%;
+}
+/* Cropper sizes its canvas to the image ratio; force it to fill the square stage. */
+.pk-avatar-crop cropper-canvas {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+.pk-avatar-drop {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: .75rem;
+	padding: 1.5rem;
+	margin: 0;
+	text-align: center;
+	color: var(--pk-muted);
+	border: 2px dashed var(--pk-border);
+	border-radius: inherit;
+	background: transparent;
+	cursor: pointer;
+}
+.pk-avatar-drop .pk-icon {
+	width: 2rem;
+	height: 2rem;
+	color: var(--pk-subtle);
+}
+.pk-avatar-drop-idle,
+.pk-avatar-drop-hover {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: .75rem;
+	max-width: 15rem;
+	font-size: .8125rem;
+	line-height: 1.45;
+}
+.pk-avatar-drop-hover {
+	display: none;
+	font-weight: 700;
+}
+.pk-avatar-drop.is-dragover {
+	border-color: var(--pk-navy);
+	background: rgb(29 53 109 / .06);
+	color: var(--pk-navy);
+}
+.pk-avatar-drop.is-dragover .pk-icon {
+	color: var(--pk-navy);
+}
+.pk-avatar-drop.is-dragover .pk-avatar-drop-idle {
+	display: none;
+}
+.pk-avatar-drop.is-dragover .pk-avatar-drop-hover {
+	display: flex;
+}
+.pk-avatar-reset {
+	position: absolute;
+	top: .5rem;
+	right: .5rem;
+	z-index: 2;
+	display: grid;
+	place-items: center;
+	width: 2rem;
+	height: 2rem;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: var(--danger);
+	color: #FFFFFF;
+}
+.pk-avatar-reset .pk-icon {
+	width: 1rem;
+	height: 1rem;
+}
+.pk-footer {
+	background: var(--pk-navy);
+	color: #FFFFFF;
+	padding-block: 4rem 2rem;
+}
+.pk-footer-title {
+	font-size: .95rem;
+	font-weight: 800;
+	color: var(--pk-amber);
+	text-transform: uppercase;
+	letter-spacing: .5px;
+	margin-bottom: 1.125rem;
+}
+.pk-footer a {
+	color: rgb(255 255 255 / .8);
+	font-size: .875rem;
+	font-weight: 500;
+	text-decoration: none;
+	transition: color .2s, padding-left .2s;
+}
+.pk-footer a.pk-footer-brand {
+	color: #FFFFFF;
+	padding-left: 0;
+
+	img {
+		margin-right: 8px;
+		display: inline-block;
+	}
+}
+.pk-footer a.pk-footer-brand:hover {
+	color: #FFFFFF;
+	padding-left: 0;
+}
+.pk-footer a:hover {
+	color: var(--pk-amber);
+	padding-left: 4px;
+}
+
+/* 10. Hero shell — spacing and typography come from Bootstrap utilities */
+.pk-hero {
+	background: linear-gradient(180deg, #FFFFFF, #F8FAFC);
+	overflow: hidden;
+}
+.pk-step {
+	display: flex;
+	gap: 1rem;
+	background: #FFFFFF;
+	border: 1px solid var(--pk-border);
+	border-radius: 14px;
+	padding: 1.25rem 1.5rem;
+	transition: all .2s ease;
+}
+.pk-step:hover {
+	border-color: var(--pk-navy);
+	box-shadow: 0 6px 16px -4px rgb(29 53 109 / .1);
+	transform: translateY(-2px);
+}
+.pk-step-number {
+	width: 2.5rem;
+	height: 2.5rem;
+	flex: 0 0 auto;
+	border-radius: 10px;
+	background: var(--pk-navy);
+	color: #FFFFFF;
+	font-weight: 800;
+	display: grid;
+	place-items: center;
+}
+.pk-feature {
+	height: 100%;
+	background: #FFFFFF;
+	border: 1px solid var(--pk-border);
+	border-radius: 16px;
+	padding: 2rem 1.5rem;
+	transition: all .25s ease;
+}
+.pk-feature:hover {
+	border-color: var(--pk-navy);
+	transform: translateY(-4px);
+	box-shadow: 0 12px 28px -8px rgb(29 53 109 / .12);
+}
+/* Fixed 3rem square; radius, alignment and spacing come from utilities in markup. */
+.pk-feature-icon {
+	width: 3rem;
+	height: 3rem;
+}
+.pk-scroll-strip {
+	display: flex;
+	gap: 1.25rem;
+	overflow-x: auto;
+	scroll-snap-type: x mandatory;
+	scroll-behavior: smooth;
+	padding: .5rem .25rem 1.25rem;
+	scrollbar-width: none;
+}
+.pk-scroll-strip::-webkit-scrollbar {
+	display: none;
+}
+.pk-scroll-btn {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 2.75rem;
+	height: 2.75rem;
+	border-radius: 50%;
+	background: #FFFFFF;
+	border: 1.5px solid #CBD5E1;
+	color: var(--pk-navy);
+	display: grid;
+	place-items: center;
+	box-shadow: 0 4px 14px rgb(0 0 0 / .08);
+	z-index: 5;
+}
+.pk-scroll-btn:hover {
+	background: var(--pk-navy);
+	color: #FFFFFF;
+	border-color: var(--pk-navy);
+}
+.pk-scroll-btn--prev {
+	left: -1.375rem;
+}
+.pk-scroll-btn--next {
+	right: -1.375rem;
+}
+@media (max-width: 991.98px) {
+	.pk-scroll-btn {
+		display: none;
+	}
+}
+
+/* 11. Error pages — layout and type come from Bootstrap utilities.
+   Bootstrap ships no max-width utility, so the illustration cap stays here. */
+.pk-error-illustration {
+	max-width: 240px;
 }

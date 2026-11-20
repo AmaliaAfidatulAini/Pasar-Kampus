@@ -21,11 +21,29 @@ function get_session() {
 	return $_SESSION ?: null;
 }
 
+/**
+ * Login URL for an unauthenticated bounce. Carries the current request as
+ * `?redirect=` so login can return the visitor to where they were going.
+ */
+function login_redirect_url(string $target = '/login'): string
+{
+	if ($target !== '/login') {
+		return $target;
+	}
+
+	$current = current_request_path();
+	if ($current === '' || redirect_target($current) === '') {
+		return $target;
+	}
+
+	return '/login?redirect=' . rawurlencode($current);
+}
+
 function session_include(string $redirect = '/login', int $response_code = 302) {
 	$session = get_session();
 
 	if (!is_array($session)) {
-		redirect($redirect, $response_code);
+		redirect(login_redirect_url($redirect), $response_code);
 		return;
 	}
 
@@ -47,7 +65,7 @@ function role_include(array|string $list, string $redirect = '/403', int $respon
 	$session = session_include();
 
 	if (!in_array($session['role'] ?? null, (array) $list, true)) {
-		redirect($redirect, $response_code);
+		redirect(login_redirect_url($redirect), $response_code);
 	}
 }
 

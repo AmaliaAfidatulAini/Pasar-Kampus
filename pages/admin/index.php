@@ -115,7 +115,7 @@ Component::include('admin/header', [
     </div>
 </section>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.6.1/chart.umd.min.js"></script>
+<script src="<?= asset('js/lib/chart.umd.min.js') ?>"></script>
 <?php if ($campuses !== []): ?>
     <script>
         const campusChart = document.getElementById('adminCampusChart');

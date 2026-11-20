@@ -2,6 +2,16 @@
    FLASHER — components/flasher.php
    Self-contained: shared by landing pages and auth pages.
    ========================================================= */
+/* Bootstrap's reboot sets `p { margin-bottom: 1rem }` and `box-sizing: border-box`;
+   the UA defaults set `p { margin: 1em 0 }` and `content-box`. Both are reset here
+   so the toast renders identically wherever it is included. */
+.lp-flasher,
+.lp-flash,
+.lp-flash-message,
+.lp-flash-close {
+    box-sizing: border-box;
+}
+
 .lp-flasher {
     position: fixed;
     bottom: 24px;
@@ -53,6 +63,7 @@
 }
 
 .lp-flash-message {
+    margin: 0;
     min-width: 0;
     font-size: 0.82rem;
     font-weight: 600;

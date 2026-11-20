@@ -18,14 +18,3 @@ function flash(string $status, string $message): void
 		'message' => $message,
 	];
 }
-
-/**
- * Drain the queue: [['status' => 'success', 'message' => '...'], ...]
- */
-function flash_pull(): array
-{
-	$queued = $_SESSION['flash'] ?? [];
-	unset($_SESSION['flash']);
-
-	return is_array($queued) ? $queued : [];
-}

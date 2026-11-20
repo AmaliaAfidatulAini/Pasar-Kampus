@@ -10,89 +10,45 @@ $barang = get_catalog_products(['limit' => 12]);
 
 <?php Component::include("user/header", ["title" => "Beranda", "styles" => $styles]); ?>
 
-<main>
+<main class="flex-grow-1">
     <!-- ================= 1. HERO SECTION - Pusat Jual-Beli Barang Bekas ================= -->
-    <section class="lp-hero-section">
-        <div class="lp-container lp-hero-grid">
-            <!-- Hero Left Content -->
-            <div class="lp-hero-left">
-                <h1 class="lp-hero-title">
-                    Pusat <u>Jual-Beli</u> <br>
-                    Barang Bekas
-                </h1>
-                <p class="lp-hero-desc">
-                    Temukan barang preloved yang sesuai kebutuhanmu, mulai dari perlengkapan kuliah hingga kebutuhan sehari-hari.
-                </p>
-                <a href="<?= route('/barang') ?>" class="lp-btn lp-btn-primary lp-btn-lg">
-                    Mulai Belanja
-                </a>
-            </div>
+    <section class="pk-hero py-6 border-bottom">
+        <div class="container">
+            <div class="row align-items-center gx-4 gy-5">
+                <div class="col-lg-6">
+                    <h1 class="display-5 fw-bold text-primary">
+                        Pusat <u>Jual-Beli</u><br>
+                        Barang Bekas
+                    </h1>
+                    <p class="fs-5 text-body-secondary mt-3 mb-4">
+                        Temukan barang preloved yang sesuai kebutuhanmu, mulai dari perlengkapan kuliah hingga kebutuhan sehari-hari.
+                    </p>
+                    <a href="<?= route('/explore') ?>" class="btn btn-primary btn-lg d-inline-flex align-items-center gap-3">
+                        <i data-lucide="shopping-cart" class="pk-icon pk-icon--md" aria-hidden="true"></i>
+                        Mulai Belanja
+                    </a>
+                </div>
 
-            <!-- Hero Right Illustration: Orbital Modern (Keranjang Belanja 3D & Floating Badges) -->
-            <div class="lp-hero-visual-wrap">
-                <div class="lp-hero-orbit-stage">
-                    <!-- SVG Orbital Ellipses -->
-                    <svg class="lp-orbit-svg" viewBox="0 0 520 440" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <!-- Orbit Rings tilted -22 degrees -->
-                        <g transform="rotate(-22 260 220)">
-                            <ellipse cx="260" cy="220" rx="230" ry="110" stroke="#191A23" stroke-width="1.6" />
-                            <ellipse cx="260" cy="220" rx="192" ry="90" stroke="#191A23" stroke-width="1.6" />
-                            <ellipse cx="258" cy="222" rx="154" ry="72" stroke="#191A23" stroke-width="1.6" />
-                            <ellipse cx="254" cy="224" rx="116" ry="54" stroke="#191A23" stroke-width="1.5" />
-                        </g>
-                    </svg>
-
-                    <!-- Decorative Ornaments: Dots & Sparkles -->
-                    <div class="lp-orbit-decor lp-dot-dark" style="top: 15%; left: 8%;"></div>
-                    <div class="lp-orbit-decor lp-dot-lime" style="top: 22%; left: 33%;"></div>
-                    <div class="lp-orbit-decor lp-dot-lime-sm" style="bottom: 12%; right: 26%;"></div>
-
-                    <div class="lp-orbit-decor lp-star-large" style="bottom: 18%; left: 10%;">
-                        <svg viewBox="0 0 48 48" fill="#191A23" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M24 0 C24 13.25 13.25 24 0 24 C13.25 24 24 34.75 24 48 C24 34.75 34.75 24 48 24 C34.75 24 24 13.25 24 0 Z"/>
+                <div class="col-lg-6">
+                    <div class="pk-orbit">
+                        <svg class="pk-orbit-rings" viewBox="0 0 520 440" fill="none" aria-hidden="true">
+                            <g transform="rotate(-22 260 220)">
+                                <ellipse cx="260" cy="220" rx="230" ry="110" stroke="#191A23" stroke-width="1.6"/>
+                                <ellipse cx="260" cy="220" rx="192" ry="90" stroke="#191A23" stroke-width="1.6"/>
+                                <ellipse cx="258" cy="222" rx="154" ry="72" stroke="#191A23" stroke-width="1.6"/>
+                                <ellipse cx="254" cy="224" rx="116" ry="54" stroke="#191A23" stroke-width="1.5"/>
+                            </g>
                         </svg>
-                    </div>
-
-                    <div class="lp-orbit-decor lp-star-small" style="bottom: 8%; right: 38%;">
-                        <svg viewBox="0 0 24 24" fill="#191A23" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 0 C12 6.63 6.63 12 0 12 C6.63 12 12 17.37 12 24 C12 17.37 17.37 12 24 12 C17.37 12 12 6.63 12 0 Z"/>
-                        </svg>
-                    </div>
-
-                    <!-- Center 3D Shopping Cart Image -->
-                    <div class="lp-orbit-cart-holder" title="PasarKampus - Pusat Belanja Kebutuhan Mahasiswa">
-                        <img src="<?= asset("img/cart-transparent.png") ?>"
-                                alt="Keranjang Belanja PasarKampus" 
-                                class="lp-orbit-cart-img">
-                    </div>
-
-                    <!-- Floating Badges -->
-                    <div class="lp-badge-bubble lp-bubble-heart" title="Favorit Mahasiswa">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                        </svg>
-                    </div>
-
-                    <div class="lp-badge-bubble lp-bubble-share" title="Bagikan & Terhubung">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="18" cy="5" r="3" fill="currentColor" stroke="none"/>
-                            <circle cx="6" cy="12" r="3" fill="currentColor" stroke="none"/>
-                            <circle cx="18" cy="19" r="3" fill="currentColor" stroke="none"/>
-                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-                        </svg>
-                    </div>
-
-                    <div class="lp-badge-bubble lp-bubble-play" title="Video Review Produk">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M8 5v14l11-7z"/>
-                        </svg>
-                    </div>
-
-                    <div class="lp-badge-bubble lp-bubble-pin" title="Titik COD Kampus">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                        </svg>
+                        <span class="pk-orbit-dot pk-orbit-dot--1"></span>
+                        <span class="pk-orbit-dot pk-orbit-dot--lime pk-orbit-dot--2"></span>
+                        <span class="pk-orbit-dot pk-orbit-dot--lime-sm pk-orbit-dot--3"></span>
+                        <span class="pk-orbit-star pk-orbit-star--1"><svg viewBox="0 0 48 48" fill="#191A23"><path d="M24 0C24 13.25 13.25 24 0 24C13.25 24 24 34.75 24 48C24 34.75 34.75 24 48 24C34.75 24 24 13.25 24 0Z"/></svg></span>
+                        <span class="pk-orbit-star pk-orbit-star--sm pk-orbit-star--2"><svg viewBox="0 0 24 24" fill="#191A23"><path d="M12 0C12 6.63 6.63 12 0 12C6.63 12 12 17.37 12 24C12 17.37 17.37 12 24 12C17.37 12 12 6.63 12 0Z"/></svg></span>
+                        <img class="pk-orbit-cart" src="<?= asset('img/icon-inv.svg') ?>" alt="Keranjang belanja PasarKampus">
+                        <span class="pk-bubble pk-bubble--dark pk-bubble--heart"><i data-lucide="heart"></i></span>
+                        <span class="pk-bubble pk-bubble--lime pk-bubble--share"><i data-lucide="share-2"></i></span>
+                        <span class="pk-bubble pk-bubble--dark pk-bubble--play"><i data-lucide="play"></i></span>
+                        <span class="pk-bubble pk-bubble--lime pk-bubble--pin"><i data-lucide="map-pin"></i></span>
                     </div>
                 </div>
             </div>
@@ -100,23 +56,21 @@ $barang = get_catalog_products(['limit' => 12]);
     </section>
 
     <!-- ================= 2. BARANG TERBARU (Pilihan Barang) ================= -->
-    <section class="lp-section">
-        <div class="lp-container">
-            <div class="lp-section-header left-aligned">
-                <h2 class="lp-section-title" style="margin-top: 0;">Barang Terbaru</h2>
-                <p class="lp-section-desc">Daftar item terkini yang siap kamu bawa pulang hari ini.</p>
+    <section class="py-6 border-bottom">
+        <div class="container">
+            <div class="row mb-4">
+                <div class="col-lg-8">
+                    <h2 class="fs-2 fw-bold text-primary mb-2">Barang Terbaru</h2>
+                    <p class="text-body-secondary mb-0">Daftar item terkini yang siap kamu bawa pulang hari ini.</p>
+                </div>
             </div>
 
-            <!-- Horizontal Slider Wrapper -->
-            <div class="lp-preloved-wrapper">
-                <!-- Nav Prev Button -->
-                <button type="button" class="lp-carousel-nav-btn lp-carousel-prev" onclick="scrollBarangTerbaru(-1)" aria-label="Geser ke kiri">
+            <div class="position-relative">
+                <button type="button" class="pk-scroll-btn pk-scroll-btn--prev" data-pk-scroll="-1" data-pk-target="#pkBarangTerbaru" aria-label="Geser ke kiri">
                     &#10094;
                 </button>
 
-                <!-- Scrollable Row -->
-                <div id="barangTerbaruSlider" class="lp-preloved-scroll">
-                    <!-- Product 1: Keyboard Logiac -->
+                <div id="pkBarangTerbaru" class="pk-scroll-strip">
                     <?php foreach ($barang as $item): ?>
                         <?php 
                         Component::include("common/card", [
@@ -134,8 +88,7 @@ $barang = get_catalog_products(['limit' => 12]);
                     <?php endforeach; ?>
                 </div>
 
-                <!-- Nav Next Button -->
-                <button type="button" class="lp-carousel-nav-btn lp-carousel-next" onclick="scrollBarangTerbaru(1)" aria-label="Geser ke kanan">
+                <button type="button" class="pk-scroll-btn pk-scroll-btn--next" data-pk-scroll="1" data-pk-target="#pkBarangTerbaru" aria-label="Geser ke kanan">
                     &#10095;
                 </button>
             </div>
@@ -143,13 +96,12 @@ $barang = get_catalog_products(['limit' => 12]);
     </section>
 
     <!-- ================= 3. BERI BARANG KESEMPATAN KEDUA ================= -->
-    <section id="tentang-kami" class="lp-section lp-section-alt">
-        <div class="lp-container">
-            <div class="lp-kesempatan-grid">
-                <!-- Left: second-life package illustration -->
-                <div class="lp-kesempatan-visual">
-                    <div class="lp-hero-orbit-stage">
-                        <svg class="lp-orbit-svg" viewBox="0 0 520 440" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <section id="tentang-kami" class="py-6 border-bottom bg-body-tertiary">
+        <div class="container">
+            <div class="row align-items-center gx-4 gy-5">
+                <div class="col-lg-6">
+                    <div class="pk-orbit pk-orbit--box">
+                        <svg class="pk-orbit-rings" viewBox="0 0 520 440" fill="none" aria-hidden="true">
                             <g transform="rotate(18 260 220)">
                                 <ellipse cx="260" cy="220" rx="225" ry="126" stroke="#191A23" stroke-width="1.6"/>
                                 <ellipse cx="260" cy="220" rx="198" ry="108" stroke="#191A23" stroke-width="1.6"/>
@@ -157,63 +109,25 @@ $barang = get_catalog_products(['limit' => 12]);
                                 <ellipse cx="260" cy="220" rx="144" ry="72" stroke="#191A23" stroke-width="1.5"/>
                             </g>
                         </svg>
-
-                        <div class="lp-orbit-decor lp-dot-dark" style="top: 14%; left: 9%;"></div>
-                        <div class="lp-orbit-decor lp-dot-lime" style="top: 24%; left: 31%;"></div>
-                        <div class="lp-orbit-decor lp-dot-lime-sm" style="bottom: 12%; right: 29%;"></div>
-
-                        <div class="lp-orbit-decor lp-star-large" style="bottom: 18%; left: 10%;">
-                            <svg viewBox="0 0 48 48" fill="#191A23" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M24 0C24 13.25 13.25 24 0 24C13.25 24 24 34.75 24 48C24 34.75 34.75 24 48 24C34.75 24 24 13.25 24 0Z"/>
-                            </svg>
-                        </div>
-
-                        <div class="lp-orbit-decor lp-star-small" style="bottom: 8%; right: 38%;">
-                            <svg viewBox="0 0 24 24" fill="#191A23" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 0C12 6.63 6.63 12 0 12C6.63 12 12 17.37 12 24C12 17.37 17.37 12 24 12C17.37 12 12 6.63 12 0Z"/>
-                            </svg>
-                        </div>
-
-                        <div class="lp-orbit-cart-holder" title="Paket barang preloved siap berpindah ke pemilik baru">
-                            <img src="<?= asset("images/box.png") ?>"
-                                    alt="Kotak paket berisi barang preloved yang siap diberikan kepada pemilik baru"
-                                    class="lp-orbit-cart-img"
-                                    style="width: 250px; max-width: 58%;">
-                        </div>
-
-                        <div class="lp-badge-bubble lp-bubble-share" title="Barang digunakan kembali" style="top: 16%; right: 4%; left: auto; bottom: auto;">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                            </svg>
-                        </div>
-
-                        <div class="lp-badge-bubble lp-bubble-heart" title="Harga lebih terjangkau" style="top: 51%; right: auto; left: 2%; bottom: auto;">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M20.6 13.4 11 3.8H4v7l9.6 9.6a2 2 0 0 0 2.8 0l4.2-4.2a2 2 0 0 0 0-2.8Z"/>
-                                <circle cx="7.5" cy="7.5" r="1" fill="currentColor" stroke="none"/>
-                            </svg>
-                        </div>
-
-                        <div class="lp-badge-bubble lp-bubble-play" title="Barang untuk pemilik baru" style="top: 11%; right: auto; left: 18%; bottom: auto;">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <circle cx="12" cy="8" r="4"/>
-                                <path d="M5 21a7 7 0 0 1 14 0"/>
-                            </svg>
-                        </div>
-                        <div class="lp-badge-bubble lp-bubble-pin" title="Atur serah terima di sekitar kampus" style="top: 75%; right: 12%; left: auto; bottom: auto;">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                <path d="M12 2a7 7 0 0 0-7 7c0 5.1 7 13 7 13s7-7.9 7-13a7 7 0 0 0-7-7Zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z"/>
-                            </svg>
-                        </div>
+                        <span class="pk-orbit-dot pk-orbit-dot--1"></span>
+                        <span class="pk-orbit-dot pk-orbit-dot--lime pk-orbit-dot--2"></span>
+                        <span class="pk-orbit-dot pk-orbit-dot--lime-sm pk-orbit-dot--3"></span>
+                        <span class="pk-orbit-star pk-orbit-star--1"><svg viewBox="0 0 48 48" fill="#191A23"><path d="M24 0C24 13.25 13.25 24 0 24C13.25 24 24 34.75 24 48C24 34.75 34.75 24 48 24C34.75 24 24 13.25 24 0Z"/></svg></span>
+                        <span class="pk-orbit-star pk-orbit-star--sm pk-orbit-star--2"><svg viewBox="0 0 24 24" fill="#191A23"><path d="M12 0C12 6.63 6.63 12 0 12C6.63 12 12 17.37 12 24C12 17.37 17.37 12 24 12C17.37 12 12 6.63 12 0Z"/></svg></span>
+                        <img class="pk-orbit-cart pk-orbit-cart--box" src="<?= asset('img/box.png') ?>" alt="Kotak paket berisi barang preloved yang siap diberikan kepada pemilik baru">
+                        <span class="pk-bubble pk-bubble--dark pk-bubble--heart"><i data-lucide="heart"></i></span>
+                        <span class="pk-bubble pk-bubble--lime pk-bubble--tag"><i data-lucide="tag"></i></span>
+                        <span class="pk-bubble pk-bubble--lime pk-bubble--pin"><i data-lucide="map-pin"></i></span>
+                        <span class="pk-bubble pk-bubble--dark pk-bubble--user"><i data-lucide="user-round"></i></span>
                     </div>
                 </div>
-                <!-- Right: Text Content -->
-                <div class="lp-kesempatan-content">
-                    <h2 class="lp-section-title" style="text-align: left; margin-top: 0;">Beri Barang Kesempatan Kedua</h2>
-                    <p class="lp-section-desc" style="text-align: left;">
+
+                <div class="col-lg-6">
+                    <h2 class="fs-2 fw-bold text-primary mb-3">Beri Barang Kesempatan Kedua</h2>
+                    <p class="text-body-secondary mb-3">
                         Barang yang sudah tidak kamu gunakan mungkin masih dibutuhkan orang lain. Bagi mahasiswa, barang preloved menjadi alternatif untuk memenuhi kebutuhan dengan harga lebih terjangkau.
                     </p>
-                    <p class="lp-section-desc" style="text-align: left; margin-top: 16px;">
+                    <p class="text-body-secondary mb-0">
                         Namun, penawarannya masih tersebar di berbagai tempat. Mulai dari toko thrift, grup chat, hingga story media sosial. PasarKampus menyatukan penawaran tersebut dalam satu platform jual-beli, tempat kamu bisa mencari maupun menawarkan barang preloved dengan lebih mudah.
                     </p>
                 </div>
@@ -222,54 +136,49 @@ $barang = get_catalog_products(['limit' => 12]);
     </section>
 
     <!-- ================= 4. CARA MENGGUNAKAN PLATFORM INI ================= -->
-    <section class="lp-section">
-        <div class="lp-container">
-            <div class="lp-cara-grid">
-                <!-- Left: Title and description -->
-                <div class="lp-cara-left">
-                    <div class="lp-cara-icon-box">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1D356D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M9 11l3 3L22 4"/>
-                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-                        </svg>
-                    </div>
-                    <h2 class="lp-section-title" style="text-align: left; margin-top: 12px;">Cara Menggunakan Platform Ini</h2>
-                    <p class="lp-section-desc" style="text-align: left;">
+    <section class="py-6 border-bottom">
+        <div class="container">
+            <div class="row gx-4 gy-5">
+                <div class="col-lg-4">
+                    <span class="pk-feature-icon d-inline-flex align-items-center justify-content-center bg-primary-subtle rounded-1 text-primary mb-3">
+                        <i data-lucide="list-checks" class="pk-icon pk-icon--lg"></i>
+                    </span>
+                    <h2 class="fs-2 fw-bold text-primary">Cara Menggunakan Platform Ini</h2>
+                    <p class="text-body-secondary mb-0">
                         Ikuti beberapa langkah sederhana ini untuk memulai transaksi di PasarKampus.
                     </p>
                 </div>
 
-                <!-- Right: Steps -->
-                <div class="lp-cara-right">
-                    <div class="lp-step-card">
-                        <div class="lp-step-number">1</div>
-                        <div class="lp-step-content">
-                            <h4>Masuk/Buat Akun</h4>
-                            <p>Buat akun atau masuk jika sudah terdaftar.</p>
+                <div class="col-lg-8 d-grid gap-3">
+                    <div class="pk-step">
+                        <span class="pk-step-number">1</span>
+                        <div>
+                            <h3 class="h6 fw-bold mb-1">Masuk/Buat Akun</h3>
+                            <p class="small text-body-secondary mb-0">Buat akun atau masuk jika sudah terdaftar.</p>
                         </div>
                     </div>
 
-                    <div class="lp-step-card">
-                        <div class="lp-step-number">2</div>
-                        <div class="lp-step-content">
-                            <h4>Cari atau Posting Barang</h4>
-                            <p>Jelajahi katalog barang atau posting barang bekas yang ingin kamu jual.</p>
+                    <div class="pk-step">
+                        <span class="pk-step-number">2</span>
+                        <div>
+                            <h3 class="h6 fw-bold mb-1">Cari atau Posting Barang</h3>
+                            <p class="small text-body-secondary mb-0">Jelajahi katalog barang atau posting barang bekas yang ingin kamu jual.</p>
                         </div>
                     </div>
 
-                    <div class="lp-step-card">
-                        <div class="lp-step-number">3</div>
-                        <div class="lp-step-content">
-                            <h4>Ajukan Pembelian</h4>
-                            <p>Lakukan negosiasi dengan penjual/pembeli.</p>
+                    <div class="pk-step">
+                        <span class="pk-step-number">3</span>
+                        <div>
+                            <h3 class="h6 fw-bold mb-1">Ajukan Pembelian</h3>
+                            <p class="small text-body-secondary mb-0">Lakukan negosiasi dengan penjual/pembeli.</p>
                         </div>
                     </div>
 
-                    <div class="lp-step-card">
-                        <div class="lp-step-number">4</div>
-                        <div class="lp-step-content">
-                            <h4>Konfirmasi dan Serah Terima</h4>
-                            <p>Lanjutkan dengan mengatur jadwal serah terima barang.</p>
+                    <div class="pk-step">
+                        <span class="pk-step-number">4</span>
+                        <div>
+                            <h3 class="h6 fw-bold mb-1">Konfirmasi dan Serah Terima</h3>
+                            <p class="small text-body-secondary mb-0">Lanjutkan dengan mengatur jadwal serah terima barang.</p>
                         </div>
                     </div>
                 </div>
@@ -278,131 +187,125 @@ $barang = get_catalog_products(['limit' => 12]);
     </section>
 
     <!-- ================= 5. KENAPA PASAR KAMPUS ================= -->
-    <section class="lp-section lp-section-alt">
-        <div class="lp-container">
-            <div class="lp-section-header">
-                <h2 class="lp-section-title" style="margin-top: 0;">Kenapa Pasar Kampus?</h2>
-                <p class="lp-section-desc">
-                    PasarKampus menyatukan kebutuhan pembeli dan penjual dalam satu platform yang praktis, dengan penawaran yang lebih mudah dijelajahi dan peluang transaksi langsung di area terdekat.
-                </p>
+    <section class="py-6 border-bottom bg-body-tertiary">
+        <div class="container">
+            <div class="row justify-content-center text-center mb-5">
+                <div class="col-lg-8">
+                    <h2 class="fs-2 fw-bold text-primary mb-2">Kenapa Pasar Kampus?</h2>
+                    <p class="text-body-secondary mb-0">
+                        PasarKampus menyatukan kebutuhan pembeli dan penjual dalam satu platform yang praktis, dengan penawaran yang lebih mudah dijelajahi dan peluang transaksi langsung di area terdekat.
+                    </p>
+                </div>
             </div>
 
-            <div class="lp-kenapa-grid">
-                <!-- Card 1: Satu Akun untuk Semua -->
-                <div class="lp-kenapa-card">
-                    <div class="lp-kenapa-icon" style="color: #1D356D;">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                            <circle cx="12" cy="7" r="4"/>
-                        </svg>
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+                <div class="col">
+                    <div class="pk-feature">
+                        <span class="pk-feature-icon d-inline-flex align-items-center justify-content-center rounded-3 bg-primary-subtle text-primary mb-3">
+                            <i data-lucide="user-round" class="pk-icon pk-icon--lg"></i>
+                        </span>
+                        <h3 class="h5 fw-bold mb-2">Satu Akun untuk Semua</h3>
+                        <p class="small text-body-secondary mb-0">Tidak perlu akun khusus penjual. Gunakan satu akun untuk mencari barang yang kamu inginkan maupun menawarkan barang yang sudah tidak terpakai.</p>
                     </div>
-                    <h3>Satu Akun untuk Semua</h3>
-                    <p>Tidak perlu akun khusus penjual. Gunakan satu akun untuk mencari barang yang kamu inginkan maupun menawarkan barang yang sudah tidak terpakai.</p>
                 </div>
 
-                <!-- Card 2: Temukan Penjual di Sekitarmu -->
-                <div class="lp-kenapa-card">
-                    <div class="lp-kenapa-icon" style="color: #EF4444;">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                        </svg>
+                <div class="col">
+                    <div class="pk-feature">
+                        <span class="pk-feature-icon d-inline-flex align-items-center justify-content-center rounded-3 bg-danger-subtle text-danger mb-3">
+                            <i data-lucide="map-pin" class="pk-icon pk-icon--lg"></i>
+                        </span>
+                        <h3 class="h5 fw-bold mb-2">Temukan Penjual di Sekitarmu</h3>
+                        <p class="small text-body-secondary mb-0">Lihat informasi lokasi penjual pada penawaran untuk membantu menemukan barang di sekitar dan merencanakan serah terima secara langsung.</p>
                     </div>
-                    <h3>Temukan Penjual di Sekitarmu</h3>
-                    <p>Lihat informasi lokasi penjual pada penawaran untuk membantu menemukan barang di sekitar dan merencanakan serah terima secara langsung.</p>
                 </div>
 
-                <!-- Card 3: Semua Penawaran dalam Satu Katalog -->
-                <div class="lp-kenapa-card">
-                    <div class="lp-kenapa-icon" style="color: #22C55E;">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                            <line x1="8" y1="21" x2="16" y2="21"/>
-                            <line x1="12" y1="17" x2="12" y2="21"/>
-                        </svg>
+                <div class="col">
+                    <div class="pk-feature">
+                        <span class="pk-feature-icon d-inline-flex align-items-center justify-content-center rounded-3 bg-success-subtle text-success mb-3">
+                            <i data-lucide="layout-grid" class="pk-icon pk-icon--lg"></i>
+                        </span>
+                        <h3 class="h5 fw-bold mb-2">Semua Penawaran dalam Satu Katalog</h3>
+                        <p class="small text-body-secondary mb-0">Jelajahi penawaran yang tersusun dalam satu katalog. Informasi barang lebih mudah ditemukan tanpa bergantung pada pesan grup atau story media sosial.</p>
                     </div>
-                    <h3>Semua Penawaran dalam Satu Katalog</h3>
-                    <p>Jelajahi penawaran yang tersusun dalam satu katalog. Informasi barang lebih mudah ditemukan tanpa bergantung pada pesan grup atau story media sosial.</p>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- ================= 6. FAQ SECTION ================= -->
-    <section id="faq" class="lp-section">
-        <div class="lp-container">
-            <div class="lp-section-header">
-                <h2 class="lp-section-title" style="margin-top: 0;">FAQ</h2>
-                <p class="lp-section-desc">
-                    Pertanyaan yang sering diajukan mengenai layanan PasarKampus
-                </p>
+    <section id="faq" class="py-6 border-bottom">
+        <div class="container">
+            <div class="row justify-content-center text-center mb-5">
+                <div class="col-lg-8">
+                    <h2 class="fs-2 fw-bold text-primary mb-2">FAQ</h2>
+                    <p class="text-body-secondary mb-0">
+                        Pertanyaan yang sering diajukan mengenai layanan PasarKampus
+                    </p>
+                </div>
             </div>
 
-            <div class="lp-faq-container">
-                <!-- FAQ 1 -->
-                <div class="lp-faq-item active">
-                    <button class="lp-faq-trigger" onclick="toggleFaq(this)">
-                        <span>Mengapa harga barang di PasarKampus bisa lebih terjangkau?</span>
-                        <div class="lp-faq-icon-v2">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="6 9 12 15 18 9"/>
-                            </svg>
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="accordion" id="pkFaq">
+                        <div class="accordion-item">
+                            <h3 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#pkFaq1" aria-expanded="true" aria-controls="pkFaq1">
+                                    Mengapa harga barang di PasarKampus bisa lebih terjangkau?
+                                </button>
+                            </h3>
+                            <div id="pkFaq1" class="accordion-collapse collapse show" data-bs-parent="#pkFaq">
+                                <div class="accordion-body">
+                                    <p class="mb-0">
+                                        Karena barang yang dijual berasal langsung dari sesama mahasiswa atau pengguna tangan pertama yang ingin melepas barang preloved mereka tanpa perantara komersial atau biaya sewa toko, sehingga harga jauh lebih ekonomis dan bersahabat bagi kantong mahasiswa.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
-                    </button>
-                    <div class="lp-faq-body">
-                        <p>
-                            Karena barang yang dijual berasal langsung dari sesama mahasiswa atau pengguna tangan pertama yang ingin melepas barang preloved mereka tanpa perantara komersial atau biaya sewa toko, sehingga harga jauh lebih ekonomis dan bersahabat bagi kantong mahasiswa.
-                        </p>
-                    </div>
-                </div>
 
-                <!-- FAQ 2 -->
-                <div class="lp-faq-item">
-                    <button class="lp-faq-trigger" onclick="toggleFaq(this)">
-                        <span>Bagaimana PasarKampus menjamin keamanan transaksi dari penipuan?</span>
-                        <div class="lp-faq-icon-v2">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="6 9 12 15 18 9"/>
-                            </svg>
+                        <div class="accordion-item">
+                            <h3 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#pkFaq2" aria-expanded="false" aria-controls="pkFaq2">
+                                    Bagaimana PasarKampus menjamin keamanan transaksi dari penipuan?
+                                </button>
+                            </h3>
+                            <div id="pkFaq2" class="accordion-collapse collapse" data-bs-parent="#pkFaq">
+                                <div class="accordion-body">
+                                    <p class="mb-0">
+                                        PasarKampus menerapkan sistem verifikasi identitas kampus untuk setiap pengguna terdaftar. Metode transaksi diutamakan melalui Meetup / COD di area publik kampus, sehingga pembeli dapat memeriksa keaslian dan kondisi fisik barang terlebih dahulu sebelum membayarkan uang kepada penjual.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
-                    </button>
-                    <div class="lp-faq-body">
-                        <p>
-                            PasarKampus menerapkan sistem verifikasi identitas kampus untuk setiap pengguna terdaftar. Metode transaksi diutamakan melalui Meetup / COD di area publik kampus, sehingga pembeli dapat memeriksa keaslian dan kondisi fisik barang terlebih dahulu sebelum membayarkan uang kepada penjual.
-                        </p>
-                    </div>
-                </div>
 
-                <!-- FAQ 3 -->
-                <div class="lp-faq-item">
-                    <button class="lp-faq-trigger" onclick="toggleFaq(this)">
-                        <span>Apakah aplikasi ini terbatas untuk mahasiswa dari satu kampus saja?</span>
-                        <div class="lp-faq-icon-v2">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="6 9 12 15 18 9"/>
-                            </svg>
+                        <div class="accordion-item">
+                            <h3 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#pkFaq3" aria-expanded="false" aria-controls="pkFaq3">
+                                    Apakah aplikasi ini terbatas untuk mahasiswa dari satu kampus saja?
+                                </button>
+                            </h3>
+                            <div id="pkFaq3" class="accordion-collapse collapse" data-bs-parent="#pkFaq">
+                                <div class="accordion-body">
+                                    <p class="mb-0">
+                                        Tidak. PasarKampus dapat digunakan oleh mahasiswa dari berbagai universitas dan politeknik. Anda dapat memfilter katalog barang berdasarkan kampus tertentu maupun wilayah kecamatan domisili kos Anda untuk menemukan rekan transaksi yang paling dekat.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
-                    </button>
-                    <div class="lp-faq-body">
-                        <p>
-                            Tidak. PasarKampus dapat digunakan oleh mahasiswa dari berbagai universitas dan politeknik. Anda dapat memfilter katalog barang berdasarkan kampus tertentu maupun wilayah kecamatan domisili kos Anda untuk menemukan rekan transaksi yang paling dekat.
-                        </p>
-                    </div>
-                </div>
 
-                <!-- FAQ 4 -->
-                <div class="lp-faq-item">
-                    <button class="lp-faq-trigger" onclick="toggleFaq(this)">
-                        <span>Barang apa saja yang bisa diperjualbelikan di platform ini?</span>
-                        <div class="lp-faq-icon-v2">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="6 9 12 15 18 9"/>
-                            </svg>
+                        <div class="accordion-item">
+                            <h3 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#pkFaq4" aria-expanded="false" aria-controls="pkFaq4">
+                                    Barang apa saja yang bisa diperjualbelikan di platform ini?
+                                </button>
+                            </h3>
+                            <div id="pkFaq4" class="accordion-collapse collapse" data-bs-parent="#pkFaq">
+                                <div class="accordion-body">
+                                    <p class="mb-0">
+                                        Segala kebutuhan perkuliahan dan perlengkapan harian mahasiswa, termasuk: buku diktat & referensi mata kuliah, modul praktikum, kalkulator & alat tulis, perangkat elektronik (laptop, tablet, monitor), perabot perlengkapan kost (meja lipat, rak buku, dispenser), serta pakaian perkuliahan yang bersih dan layak pakai.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
-                    </button>
-                    <div class="lp-faq-body">
-                        <p>
-                            Segala kebutuhan perkuliahan dan perlengkapan harian mahasiswa, termasuk: buku diktat & referensi mata kuliah, modul praktikum, kalkulator & alat tulis, perangkat elektronik (laptop, tablet, monitor), perabot perlengkapan kost (meja lipat, rak buku, dispenser), serta pakaian perkuliahan yang bersih dan layak pakai.
-                        </p>
                     </div>
                 </div>
             </div>
@@ -410,30 +313,4 @@ $barang = get_catalog_products(['limit' => 12]);
     </section>
 </main>
 
-<?php Component::flush() ?>
-<script>
-    function toggleFaq(button) {
-        const item = button.closest('.lp-faq-item');
-        const isActive = item.classList.contains('active');
-        
-        document.querySelectorAll('.lp-faq-item').forEach(el => {
-            el.classList.remove('active');
-        });
-        
-        if (!isActive) {
-            item.classList.add('active');
-        }
-    }
-
-    function scrollBarangTerbaru(direction) {
-        const container = document.getElementById('barangTerbaruSlider');
-        if (container) {
-            const card = container.querySelector('.product-card');
-            const scrollStep = card ? card.offsetWidth + 20 : 280;
-            container.scrollBy({ left: direction * scrollStep, behavior: 'smooth' });
-        }
-    }
-</script>
-<?php $script = Component::endFlush() ?>
-
-<?php Component::include("user/footer", compact("script")); ?>
+<?php Component::include("user/footer"); ?>

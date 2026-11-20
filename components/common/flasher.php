@@ -1,5 +1,6 @@
 <?php
-$flashes = flash_pull();
+$flashes = $_SESSION['flash'] ?? [];
+unset($_SESSION['flash']);
 
 $variants = [
 	'success' => [

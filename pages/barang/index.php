@@ -1,77 +1,54 @@
 <?php
-declare(strict_types=1);
 
-require_model('catalog');
+$session = session_include('/login');
+$userId = (int) ($session['user_id'] ?? 0);
 
-$session = get_session();
+require_model('catalog', 'barang');
 
+// GET-driven filtering over the seller's own listings: same shape as the catalog page.
 $getString = static function (string $key): string {
     $value = $_GET[$key] ?? '';
     return is_string($value) ? trim($value) : '';
 };
 
-$q = $getString('q') !== '' ? $getString('q') : $getString('search');
-$category = $getString('category');
-$campus = $getString('campus');
-$minPriceInput = $getString('min_price');
-$maxPriceInput = $getString('max_price');
-$conditionInput = $getString('condition');
-$sort = $getString('sort');
+$q = $getString('q');
+$categoryInput = $_GET['category'] ?? [];
+$categoryInput = is_array($categoryInput) ? $categoryInput : [$categoryInput];
+$statusInput = $getString('status');
 $page = max(1, (int) ($_GET['page'] ?? 1));
 
-$condition = ctype_digit($conditionInput) ? (int) $conditionInput : 0;
-if ($condition < 1 || $condition > 4) {
-    $condition = 0;
+$categories = get_catalog_categories();
+$categoryOptions = array_map(static fn (array $category): string => (string) $category['name'], $categories);
+$statusOptions = ['Dijual', 'Pemesanan', 'Pengambilan', 'Terjual'];
+
+$categoryFilter = array_values(array_unique(array_filter(
+    array_map(static fn ($value): string => is_string($value) ? trim($value) : '', $categoryInput),
+    static fn (string $value): bool => in_array($value, $categoryOptions, true)
+)));
+
+if (!in_array($statusInput, $statusOptions, true)) {
+    $statusInput = '';
 }
 
-$allowedSorts = ['newest', 'price_asc', 'price_desc'];
-if (!in_array($sort, $allowedSorts, true)) {
-    $sort = 'newest';
-}
+// TODO: apply $statusInput to the query once the card status prop is derived.
 
-$minPrice = ($minPriceInput !== '' && is_numeric($minPriceInput)) ? max(0, (int) $minPriceInput) : null;
-$maxPrice = ($maxPriceInput !== '' && is_numeric($maxPriceInput)) ? max(0, (int) $maxPriceInput) : null;
-
-$perPage = 12;
+$perPage = 10;
 $filters = [
-    'search' => $q,
-    'category' => $category,
-    'campus' => $campus,
-    'condition' => $condition,
-    'sort' => $sort,
+    'q' => $q,
+    'category' => $categoryFilter,
 ];
-
-if ($minPrice !== null) {
-    $filters['min_price'] = $minPrice;
-}
-if ($maxPrice !== null) {
-    $filters['max_price'] = $maxPrice;
-}
-
-$total = count_catalog_products($filters);
+$total = count_owner_products($userId, $filters);
 $totalPages = max(1, (int) ceil($total / $perPage));
 
 $queryBase = [];
 if ($q !== '') {
     $queryBase['q'] = $q;
 }
-if ($category !== '') {
-    $queryBase['category'] = $category;
+if ($categoryFilter !== []) {
+    $queryBase['category'] = $categoryFilter;
 }
-if ($campus !== '') {
-    $queryBase['campus'] = $campus;
-}
-if ($minPrice !== null) {
-    $queryBase['min_price'] = $minPrice;
-}
-if ($maxPrice !== null) {
-    $queryBase['max_price'] = $maxPrice;
-}
-if ($condition > 0) {
-    $queryBase['condition'] = $condition;
-}
-if ($sort !== 'newest') {
-    $queryBase['sort'] = $sort;
+if ($statusInput !== '') {
+    $queryBase['status'] = $statusInput;
 }
 
 if ($page > $totalPages) {
@@ -82,27 +59,14 @@ if ($page > $totalPages) {
     redirect('/barang' . ($redirectParams !== [] ? '?' . http_build_query($redirectParams) : ''), 302);
 }
 
-$products = get_catalog_products($filters + [
+$items = get_owner_products($userId, $filters + [
     'limit' => $perPage,
     'offset' => ($page - 1) * $perPage,
 ]);
 
-$categories = get_catalog_categories();
-$campuses = get_catalog_campuses();
-
-$conditionLabels = [
-    1 => 'Bekas',
-    2 => 'Cukup',
-    3 => 'Baik',
-    4 => 'Sangat Bagus',
-];
-
-$catalogUrl = static function (array $overrides = []) use ($queryBase): string {
+$barangUrl = static function (array $overrides = []) use ($queryBase): string {
     $params = array_merge($queryBase, $overrides);
-    $params = array_filter(
-        $params,
-        static fn ($value): bool => $value !== null && $value !== ''
-    );
+    $params = array_filter($params, static fn ($value): bool => $value !== null && $value !== '');
     $query = http_build_query($params);
 
     return route('/barang' . ($query !== '' ? '?' . $query : ''));
@@ -111,7 +75,6 @@ $catalogUrl = static function (array $overrides = []) use ($queryBase): string {
 $startItem = $total > 0 ? (($page - 1) * $perPage) + 1 : 0;
 $endItem = min($page * $perPage, $total);
 
-$pageNumbers = [];
 if ($totalPages <= 7) {
     $pageNumbers = range(1, $totalPages);
 } else {
@@ -130,9 +93,7 @@ if ($totalPages <= 7) {
     $pageNumbers[] = $totalPages;
 }
 
-$heading = $q !== ''
-    ? 'Hasil pencarian “' . $q . '”'
-    : 'Katalog Barang Preloved';
+$stats = get_owner_product_stats($userId);
 ?>
 
 <?php Component::flush() ?>
@@ -140,242 +101,187 @@ $heading = $q !== ''
 <?php $styles = Component::endFlush() ?>
 
 <?php Component::include('user/header', [
-    'title' => $q !== '' ? 'Cari: ' . $q : 'Katalog',
+    'title' => 'Barang Saya',
     'styles' => $styles,
 ]); ?>
 
-<main class="pk-main-wrapper">
-    <div class="pk-content-container">
-        <div class="pk-sidebar-backdrop" id="catalogSidebarBackdrop"></div>
+<main class="container py-4 py-lg-5" id="barangPage">
 
-        <div class="pk-catalog-layout">
-            <aside class="pk-sidebar-drawer" id="catalogSidebar" aria-label="Filter barang">
-                <div class="pk-sidebar-header">
-                    <span class="pk-sidebar-title">Filter Barang</span>
-                    <button type="button" class="pk-sidebar-close" id="catalogSidebarClose" aria-label="Tutup filter">&times;</button>
+    <?php Component::flush() ?>
+    <a class="btn btn-primary d-inline-flex align-items-center gap-2 px-3" href="<?= esc(route('/barang/tambah')) ?>">
+        <i data-lucide="plus" class="pk-icon" aria-hidden="true"></i>
+        <span>Tambah</span>
+    </a>
+    <?php $extra = Component::endFlush() ?>
+
+    <?php Component::include("common/banner", [
+        "title" => 'Barang Saya',
+        "subtitle" => "Kelola barang yang kamu jual di PasarKampus",
+        "extra" => $extra
+    ]) ?>
+
+    <div class="row row-cols-2 row-cols-lg-4 g-3 mb-4" id="barangStats">
+        <div class="col">
+            <div class="card h-100 rounded-2" data-kpi="barang">
+                <div class="card-body d-flex flex-column justify-content-between gap-1">
+                    <span class="text-uppercase small fw-bold text-body-secondary">Barang Saya</span>
+                    <strong class="fs-3 fw-bold lh-1 text-body-emphasis"><?= esc((string) $stats['barang']) ?></strong>
                 </div>
-
-                <form class="pk-sidebar-body pk-filter-form" id="catalogFilterForm" method="GET" action="<?= esc(route('/barang')) ?>">
-                    <div class="pk-form-group">
-                        <label class="pk-form-label" for="catalogQuery">Kata kunci</label>
-                        <input
-                            type="search"
-                            class="pk-form-input"
-                            id="catalogQuery"
-                            name="q"
-                            value="<?= esc($q) ?>"
-                            placeholder="Cari barang, deskripsi, kampus..."
-                        >
-                    </div>
-
-                    <div class="pk-form-group">
-                        <label class="pk-form-label" for="catalogCategory">Kategori</label>
-                        <select class="pk-form-select" id="catalogCategory" name="category">
-                            <option value="">Semua kategori</option>
-                            <?php foreach ($categories as $option): ?>
-                                <option value="<?= esc((string) $option['name']) ?>" <?= $category === (string) $option['name'] ? 'selected' : '' ?>>
-                                    <?= esc((string) $option['name']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="pk-form-group">
-                        <label class="pk-form-label" for="catalogCampus">Kampus</label>
-                        <select class="pk-form-select" id="catalogCampus" name="campus">
-                            <option value="">Semua kampus</option>
-                            <?php foreach ($campuses as $option): ?>
-                                <option value="<?= esc((string) $option['campus']) ?>" <?= $campus === (string) $option['campus'] ? 'selected' : '' ?>>
-                                    <?= esc((string) $option['campus']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="pk-form-group">
-                        <span class="pk-form-label">Rentang harga</span>
-                        <div class="pk-price-row">
-                            <div class="pk-price-box">
-                                <label for="catalogMinPrice">Minimal</label>
-                                <input
-                                    type="number"
-                                    id="catalogMinPrice"
-                                    name="min_price"
-                                    min="0"
-                                    step="1000"
-                                    inputmode="numeric"
-                                    value="<?= esc($minPriceInput) ?>"
-                                    placeholder="Rp"
-                                >
-                            </div>
-                            <div class="pk-price-box">
-                                <label for="catalogMaxPrice">Maksimal</label>
-                                <input
-                                    type="number"
-                                    id="catalogMaxPrice"
-                                    name="max_price"
-                                    min="0"
-                                    step="1000"
-                                    inputmode="numeric"
-                                    value="<?= esc($maxPriceInput) ?>"
-                                    placeholder="Rp"
-                                >
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="pk-form-group">
-                        <label class="pk-form-label" for="catalogCondition">Kondisi</label>
-                        <select class="pk-form-select" id="catalogCondition" name="condition">
-                            <option value="">Semua kondisi</option>
-                            <?php foreach ($conditionLabels as $value => $label): ?>
-                                <option value="<?= (int) $value ?>" <?= $condition === $value ? 'selected' : '' ?>>
-                                    <?= esc($label) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="pk-form-group">
-                        <label class="pk-form-label" for="catalogSort">Urutkan</label>
-                        <select class="pk-form-select" id="catalogSort" name="sort">
-                            <option value="newest" <?= $sort === 'newest' ? 'selected' : '' ?>>Terbaru</option>
-                            <option value="price_asc" <?= $sort === 'price_asc' ? 'selected' : '' ?>>Harga terendah</option>
-                            <option value="price_desc" <?= $sort === 'price_desc' ? 'selected' : '' ?>>Harga tertinggi</option>
-                        </select>
-                    </div>
-
-                    <div class="pk-sidebar-actions">
-                        <a class="pk-reset-btn" href="<?= esc(route('/barang')) ?>">Reset</a>
-                        <button type="submit" class="pk-submit-btn">Terapkan</button>
-                    </div>
-                </form>
-            </aside>
-
-            <div class="pk-catalog-main">
-                <div class="pk-results-heading">
-                    <div>
-                        <h1><?= esc($heading) ?></h1>
-                        <p>Barang preloved dari mahasiswa di sekitar kampus.</p>
-                    </div>
-                    <button type="button" class="pk-filter-btn" id="catalogFilterToggle">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <line x1="4" y1="21" x2="4" y2="14"></line>
-                            <line x1="4" y1="10" x2="4" y2="3"></line>
-                            <line x1="12" y1="21" x2="12" y2="12"></line>
-                            <line x1="12" y1="8" x2="12" y2="3"></line>
-                            <line x1="20" y1="21" x2="20" y2="16"></line>
-                            <line x1="20" y1="12" x2="20" y2="3"></line>
-                            <line x1="1" y1="14" x2="7" y2="14"></line>
-                            <line x1="9" y1="8" x2="15" y2="8"></line>
-                            <line x1="17" y1="16" x2="23" y2="16"></line>
-                        </svg>
-                        Filter
-                    </button>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card h-100 rounded-2" data-kpi="dijual">
+                <div class="card-body d-flex flex-column justify-content-between gap-1">
+                    <span class="text-uppercase small fw-bold text-body-secondary">Sedang Dijual</span>
+                    <strong class="fs-3 fw-bold lh-1 text-body-emphasis"><?= esc((string) $stats['dijual']) ?></strong>
                 </div>
-
-                <?php if ($queryBase !== []): ?>
-                    <div class="pk-active-filters">
-                        <?php if ($q !== ''): ?>
-                            <a class="pk-filter-chip" href="<?= esc($catalogUrl(['q' => null])) ?>" title="Hapus kata kunci">
-                                Kata kunci: <?= esc($q) ?> <span aria-hidden="true">&times;</span>
-                            </a>
-                        <?php endif; ?>
-                        <?php if ($category !== ''): ?>
-                            <a class="pk-filter-chip" href="<?= esc($catalogUrl(['category' => null])) ?>" title="Hapus kategori">
-                                <?= esc($category) ?> <span aria-hidden="true">&times;</span>
-                            </a>
-                        <?php endif; ?>
-                        <?php if ($campus !== ''): ?>
-                            <a class="pk-filter-chip" href="<?= esc($catalogUrl(['campus' => null])) ?>" title="Hapus kampus">
-                                <?= esc($campus) ?> <span aria-hidden="true">&times;</span>
-                            </a>
-                        <?php endif; ?>
-                        <?php if ($minPrice !== null || $maxPrice !== null): ?>
-                            <a class="pk-filter-chip" href="<?= esc($catalogUrl(['min_price' => null, 'max_price' => null])) ?>" title="Hapus rentang harga">
-                                Harga:
-                                <?= $minPrice !== null ? 'Rp ' . number_format($minPrice, 0, ',', '.') : 'Rp 0' ?>
-                                &ndash;
-                                <?= $maxPrice !== null ? 'Rp ' . number_format($maxPrice, 0, ',', '.') : 'tanpa batas' ?>
-                                <span aria-hidden="true">&times;</span>
-                            </a>
-                        <?php endif; ?>
-                        <?php if ($condition > 0): ?>
-                            <a class="pk-filter-chip" href="<?= esc($catalogUrl(['condition' => null])) ?>" title="Hapus kondisi">
-                                <?= esc($conditionLabels[$condition]) ?> <span aria-hidden="true">&times;</span>
-                            </a>
-                        <?php endif; ?>
-                        <?php if ($sort !== 'newest'): ?>
-                            <a class="pk-filter-chip" href="<?= esc($catalogUrl(['sort' => null])) ?>" title="Hapus urutan">
-                                <?= $sort === 'price_asc' ? 'Harga terendah' : 'Harga tertinggi' ?> <span aria-hidden="true">&times;</span>
-                            </a>
-                        <?php endif; ?>
-                    </div>
-                <?php endif; ?>
-
-                <div class="pk-toolbar">
-                    <div class="pk-toolbar-count">
-                        <?php if ($total > 0): ?>
-                            Menampilkan <?= (int) $startItem ?>&ndash;<?= (int) $endItem ?> dari <?= (int) $total ?> barang
-                        <?php else: ?>
-                            Tidak ada barang yang cocok
-                        <?php endif; ?>
-                    </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card h-100 rounded-2" data-kpi="pesanan">
+                <div class="card-body d-flex flex-column justify-content-between gap-1">
+                    <span class="text-uppercase small fw-bold text-body-secondary">Pesanan</span>
+                    <strong class="fs-3 fw-bold lh-1 text-body-emphasis"><?= esc((string) $stats['pesanan']) ?></strong>
                 </div>
-
-                <?php if ($products !== []): ?>
-                    <div class="pk-grid">
-                        <?php foreach ($products as $item): ?>
-                            <?php Component::include('common/card', [
-                                'id' => $item['id'],
-                                'title' => $item['title'],
-                                'description' => $item['short_desc'] ?? $item['description'] ?? '',
-                                'category' => $item['category'] ?? '',
-                                'location' => $item['location'] ?? '',
-                                'condition' => $item['condition'] ?? '',
-                                'o_price' => $item['original_price'] ?? '',
-                                'price' => $item['price'] ?? '',
-                                'foto' => $item['image'] ?? '',
-                            ]); ?>
-                        <?php endforeach; ?>
-                    </div>
-                <?php else: ?>
-                    <div class="pk-empty-state">
-                        <div class="pk-empty-icon" aria-hidden="true">📦</div>
-                        <h2>Tidak ada barang yang cocok</h2>
-                        <p>Coba ubah kata kunci atau longgarkan filter yang aktif.</p>
-                        <a class="pk-reset-btn" href="<?= esc(route('/barang')) ?>">Reset Semua Filter</a>
-                    </div>
-                <?php endif; ?>
-
-                <?php if ($totalPages > 1): ?>
-                    <nav class="pk-pagination" aria-label="Navigasi halaman katalog">
-                        <?php if ($page > 1): ?>
-                            <a class="pk-page-btn" href="<?= esc($catalogUrl(['page' => $page - 1])) ?>" aria-label="Halaman sebelumnya">&lt;</a>
-                        <?php endif; ?>
-
-                        <?php foreach ($pageNumbers as $pageNumber): ?>
-                            <?php if ($pageNumber === null): ?>
-                                <span class="pk-page-gap" aria-hidden="true">&hellip;</span>
-                            <?php elseif ($pageNumber === $page): ?>
-                                <span class="pk-page-btn active" aria-current="page"><?= (int) $pageNumber ?></span>
-                            <?php else: ?>
-                                <a class="pk-page-btn" href="<?= esc($catalogUrl(['page' => $pageNumber])) ?>"><?= (int) $pageNumber ?></a>
-                            <?php endif; ?>
-                        <?php endforeach; ?>
-
-                        <?php if ($page < $totalPages): ?>
-                            <a class="pk-page-btn" href="<?= esc($catalogUrl(['page' => $page + 1])) ?>" aria-label="Halaman berikutnya">&gt;</a>
-                        <?php endif; ?>
-                    </nav>
-                <?php endif; ?>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card h-100 rounded-2" data-kpi="terjual">
+                <div class="card-body d-flex flex-column justify-content-between gap-1">
+                    <span class="text-uppercase small fw-bold text-body-secondary">Terjual</span>
+                    <strong class="fs-3 fw-bold lh-1 text-body-emphasis"><?= esc((string) $stats['terjual']) ?></strong>
+                </div>
             </div>
         </div>
     </div>
+
+    <div class="pk-catalog-layout" id="catalogLayout">
+        <aside class="pk-catalog-sidebar">
+            <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="catalogSidebar" aria-labelledby="barangSidebarLabel">
+                <div class="offcanvas-header">
+                    <h2 class="offcanvas-title h5 mb-0" id="barangSidebarLabel">Filter Barang</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#catalogSidebar" aria-label="Tutup filter"></button>
+                </div>
+                <div class="offcanvas-body">
+                    <form id="catalogFilterForm" method="GET" action="<?= esc(route('/barang')) ?>" class="d-flex flex-column gap-4">
+                        <div>
+                            <label class="form-label small fw-semibold" for="barangStatus">Status</label>
+                            <select class="form-select" id="barangStatus" name="status">
+                                <option value="">Semua</option>
+                                <?php foreach ($statusOptions as $option): ?>
+                                    <option value="<?= esc($option) ?>" <?= $statusInput === $option ? 'selected' : '' ?>><?= esc($option) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    
+                        <div>
+                            <label class="form-label small fw-semibold" for="barangQuery">Cari barang</label>
+                            <div class="pk-field-search">
+                                <i data-lucide="search" class="pk-icon" aria-hidden="true"></i>
+                                <input class="form-control" type="search" id="barangQuery" name="q" value="<?= esc($q) ?>" placeholder="Nama barang...">
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="h6 text-uppercase fw-bold mb-2">Kategori</h3>
+                            <div class="d-grid gap-2">
+                                <?php foreach ($categoryOptions as $option): ?>
+                                    <label class="form-check d-flex align-items-center gap-2 mb-0 ps-0">
+                                        <input class="form-check-input m-0" type="checkbox" name="category[]" value="<?= esc($option) ?>" id="barangCategory-<?= esc(strtolower(str_replace(' ', '-', $option))) ?>" <?= in_array($option, $categoryFilter, true) ? 'checked' : '' ?>>
+                                        <span class="form-check-label small"><?= esc($option) ?></span>
+                                    </label>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <a class="btn btn-outline-secondary flex-fill" href="<?= esc(route('/barang')) ?>">Reset</a>
+                            <button type="submit" class="btn btn-primary flex-fill">Terapkan</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </aside>
+
+        <div class="pk-catalog-main">
+            <?php if ($queryBase !== []): ?>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <?php if ($q !== ''): ?>
+                        <a class="btn btn-sm btn-outline-primary rounded-pill" href="<?= esc($barangUrl(['q' => null])) ?>" title="Hapus kata kunci">
+                            Kata kunci: <?= esc($q) ?> <span aria-hidden="true">&times;</span>
+                        </a>
+                    <?php endif; ?>
+                    <?php foreach ($categoryFilter as $activeCategory): ?>
+                        <a class="btn btn-sm btn-outline-primary rounded-pill" href="<?= esc($barangUrl(['category' => array_values(array_diff($categoryFilter, [$activeCategory]))])) ?>" title="Hapus kategori">
+                            <?= esc($activeCategory) ?> <span aria-hidden="true">&times;</span>
+                        </a>
+                    <?php endforeach; ?>
+                    <?php if ($statusInput !== ''): ?>
+                        <a class="btn btn-sm btn-outline-primary rounded-pill" href="<?= esc($barangUrl(['status' => null])) ?>" title="Hapus status">
+                            <?= esc($statusInput) ?> <span aria-hidden="true">&times;</span>
+                        </a>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+
+            <div class="row align-items-center g-2 mb-3">
+                <div class="col">
+                    <p class="text-body-secondary small mb-0">
+                        <?php if ($total > 0): ?>
+                            Menampilkan <?= (int) $startItem ?>&ndash;<?= (int) $endItem ?> dari <?= (int) $total ?> barang
+                        <?php endif; ?>
+                    </p>
+                </div>
+                <div class="col-auto">
+                    <button type="button" class="btn d-inline-flex align-items-center gap-2 px-3 text-xs" id="catalogFilterToggle" aria-controls="catalogSidebar" aria-expanded="true">
+                        <i data-lucide="sliders-horizontal" class="pk-icon" aria-hidden="true"></i>
+                        <span>Filter</span>
+                    </button>
+                </div>
+            </div>
+
+            <?php if ($items !== []): ?>
+                <div class="d-grid gap-3" id="barangCardList">
+                    <?php foreach ($items as $item): ?>
+                        <?php Component::include('common/card-long', $item) ?>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <div class="text-center py-5 px-3 border rounded-3 pk-border-dashed mb-4">
+                    <h2 class="h5 fw-bold text-primary mb-2">Tidak ada barang yang cocok</h2>
+                    <p class="text-body-secondary mb-3">Coba ganti kata kunci atau sesuaikan filter pencarian.</p>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($totalPages > 1): ?>
+                <nav aria-label="Navigasi halaman barang" class="mt-4">
+                    <ul class="pagination justify-content-end mb-0">
+                        <li class="page-item<?= $page > 1 ? '' : ' disabled' ?>">
+                            <a class="page-link" href="<?= esc($barangUrl(['page' => $page - 1])) ?>" aria-label="Halaman sebelumnya">&lt;</a>
+                        </li>
+                        <?php foreach ($pageNumbers as $pageNumber): ?>
+                            <?php if ($pageNumber === null): ?>
+                                <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                            <?php elseif ($pageNumber === $page): ?>
+                                <li class="page-item active" aria-current="page"><span class="page-link"><?= (int) $pageNumber ?></span></li>
+                            <?php else: ?>
+                                <li class="page-item"><a class="page-link" href="<?= esc($barangUrl(['page' => $pageNumber])) ?>"><?= (int) $pageNumber ?></a></li>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                        <li class="page-item<?= $page < $totalPages ? '' : ' disabled' ?>">
+                            <a class="page-link" href="<?= esc($barangUrl(['page' => $page + 1])) ?>" aria-label="Halaman berikutnya">&gt;</a>
+                        </li>
+                    </ul>
+                </nav>
+            <?php endif; ?>
+        </div>
+    </div>
+
 </main>
 
 <?php Component::flush() ?>
 <script src="<?= asset('js/katalog.js') ?>" defer></script>
+<script src="<?= asset('js/barang.js') ?>" defer></script>
 <?php $script = Component::endFlush() ?>
 
-<?php Component::include('user/footer', ['script' => $script]); ?>
+<?php Component::include('user/footer', compact('script')); ?>

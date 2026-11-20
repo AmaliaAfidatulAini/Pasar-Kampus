@@ -9,6 +9,32 @@ if (isset($session['user_id'])) {
     redirect(($session['role'] ?? '') === 'admin' ? '/admin' : '/', 302);
 }
 
+/** Valid `redirect` target posted by the login form, or '' when absent/unsafe. */
+function login_target(): string
+{
+    return redirect_target($_POST['redirect'] ?? '');
+}
+
+/** Where a successful login lands. Admins always go to /admin. */
+function login_success_url(array $user): string
+{
+    if (($user['role'] ?? '') === 'admin') {
+        return '/admin';
+    }
+
+    $target = login_target();
+
+    return $target !== '' ? $target : '/';
+}
+
+/** /login, carrying the pending redirect through a failed attempt. */
+function login_failure_url(): string
+{
+    $target = login_target();
+
+    return '/login' . ($target !== '' ? '?redirect=' . rawurlencode($target) : '');
+}
+
 function process(): void
 {
     $validation = Validator::make([
@@ -40,7 +66,7 @@ function process(): void
     unset($user['password']);
     create_session($user);
     flash('success', 'Berhasil masuk!');
-    redirect(($user['role'] ?? '') === 'admin' ? '/admin' : '/', 303);
+    redirect(login_success_url($user), 303);
 }
 
 function handle(): void
@@ -50,7 +76,7 @@ function handle(): void
     }
 
     process();
-    redirect('/login', 303);
+    redirect(login_failure_url(), 303);
 }
 
 handle();

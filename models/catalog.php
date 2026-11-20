@@ -37,10 +37,20 @@ function catalog_filter_sql(array $filters = []): array
         $bindings[':kw'] = '%' . $search . '%';
     }
 
-    $category = trim((string) ($filters['category'] ?? ''));
-    if ($category !== '') {
-        $where[] = 'c.category_name = :cat';
-        $bindings[':cat'] = $category;
+    $categories = $filters['category'] ?? [];
+    $categories = is_array($categories) ? $categories : [$categories];
+    $categories = array_values(array_unique(array_filter(
+        array_map(static fn ($value): string => trim((string) $value), $categories),
+        static fn (string $value): bool => $value !== ''
+    )));
+    if ($categories !== []) {
+        $placeholders = [];
+        foreach ($categories as $index => $name) {
+            $placeholder = ':cat' . $index;
+            $placeholders[] = $placeholder;
+            $bindings[$placeholder] = $name;
+        }
+        $where[] = 'c.category_name IN (' . implode(', ', $placeholders) . ')';
     }
 
     $campus = trim((string) ($filters['campus'] ?? ''));
@@ -196,7 +206,10 @@ function get_catalog_products(array $filters = []): array
 
         $loc = trim((string)($row['location'] ?? ''));
         if ($loc === '') {
-            $loc = !empty($row['campus']) ? ('Area ' . $row['campus']) : 'Kecamatan Lowokwaru';
+            $campus = trim((string)($row['campus'] ?? ''));
+            $loc = $campus === ''
+                ? 'Kecamatan Lowokwaru'
+                : (str_starts_with($campus, 'Area ') ? $campus : 'Area ' . $campus);
         }
 
         $gallery = $galleryByProduct[$pid] ?? [];
@@ -399,7 +412,10 @@ function get_catalog_product_by_id(int|string $id): ?array
 
     $loc = trim((string)($row['location'] ?? ''));
     if ($loc === '') {
-        $loc = !empty($row['campus']) ? ('Area ' . $row['campus']) : 'Kecamatan Lowokwaru';
+        $campus = trim((string)($row['campus'] ?? ''));
+        $loc = $campus === ''
+            ? 'Kecamatan Lowokwaru'
+            : (str_starts_with($campus, 'Area ') ? $campus : 'Area ' . $campus);
     }
 
     $desc = trim((string)($row['description'] ?? ''));
