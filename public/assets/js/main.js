@@ -61,6 +61,13 @@ document.addEventListener('click', (event) => {
 		});
 		return;
 	}
+	/* Cards carry data-card-href instead of an inline onclick so user pages can
+	   run under a strict script-src CSP. */
+	const card = event.target.closest('[data-card-href]');
+	if (card && !event.target.closest('a, button, input, label')) {
+		window.location.href = card.dataset.cardHref;
+		return;
+	}
 });
 
 document.addEventListener('click', (event) => {

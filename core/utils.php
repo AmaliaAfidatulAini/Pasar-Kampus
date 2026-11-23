@@ -86,6 +86,24 @@ function esc(string $string): string
     return htmlspecialchars($string, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+function format_rupiah(int|float $number): string
+{
+    return 'Rp. ' . number_format($number, 0, ',', '.');
+}
+
+function format_tanggal(string $datetime): string
+{
+    $time = strtotime($datetime);
+    if ($time === false) {
+        return $datetime;
+    }
+
+    $bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+    return (int) date('j', $time) . ' ' . $bulan[(int) date('n', $time) - 1] . ' ' . date('Y', $time);
+}
+
 function parse_errors(object $result): array
 {
     static $messages = [
@@ -116,4 +134,32 @@ function parse_errors(object $result): array
     }
 
     return $errors;
+}
+
+/**
+ * Reduces Quill-produced HTML to an attribute-free subset (p, br, strong, b,
+ * em, i, u, s, list, heading, blockquote). Dropping every attribute removes
+ * inline handlers, javascript: URLs, and style. Text of unknown tags survives.
+ */
+function sanitize_rich_text(string $html): string
+{
+    $allowed = '<p><br><strong><b><em><i><u><s><ul><ol><li><h1><h2><h3><h4><blockquote>';
+    $tags = 'p|br|strong|b|em|i|u|s|ul|ol|li|h1|h2|h3|h4|blockquote';
+
+    // Drop dangerous element bodies; strip_tags alone would keep their text.
+    $html = preg_replace(
+        '~<(script|style|iframe|object|embed|svg|math)\b[^>]*>.*?</\1>~is',
+        '',
+        $html
+    );
+    $html = strip_tags($html, $allowed);
+
+    // Rewrite allowed tags without attributes: drops on* handlers and URLs.
+    $html = preg_replace_callback(
+        '~<\s*(/?)\s*(' . $tags . ')\b[^>]*>~i',
+        static fn (array $m): string => '<' . ($m[1] === '/' ? '/' : '') . strtolower($m[2]) . '>',
+        $html
+    );
+
+    return trim($html);
 }

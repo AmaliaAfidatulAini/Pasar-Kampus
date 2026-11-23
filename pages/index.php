@@ -1,6 +1,19 @@
-<?php 
-require_model('catalog');
-$barang = get_catalog_products(['limit' => 12]);
+<?php
+$session = get_session();
+$userId = (int) ($session['user_id'] ?? 0);
+
+$preferredRow = executeQuery('SELECT user_preferred_category_ids(?) AS ids', [$userId], 'fetch');
+$preferredIds = is_array($preferredRow) ? (string) $preferredRow['ids'] : '[]';
+
+$barang = fetchAll(executeQuery(
+    "SELECT * FROM search_catalog(
+        p_exclude_user_id => ?,
+        p_prefer_category_ids => CAST(? AS jsonb),
+        p_seed => ?,
+        p_limit => 12
+    )",
+    [$userId, $preferredIds, (string) random_int(100000, 999999)]
+));
 ?>
 
 <?php Component::flush() ?>
@@ -83,6 +96,7 @@ $barang = get_catalog_products(['limit' => 12]);
                             "o_price" => $item['original_price'],
                             "price" => $item['price'],
                             "foto" => $item['image'],
+                            "sold" => ($item['lifecycle'] ?? '') === 'Done',
                         ]);
                         ?>
                     <?php endforeach; ?>

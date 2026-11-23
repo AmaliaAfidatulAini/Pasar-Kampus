@@ -8,6 +8,7 @@ $kategori = $kategori ?? "";
 $status = $status ?? "";
 $detailUrl = $detailUrl ?? "";
 $editUrl = $editUrl ?? "";
+$purchase_id = $purchase_id ?? "";
 // END COMPONENTS PROPS //
 
 $statusVariants = [
@@ -41,7 +42,14 @@ $editHref = $editUrl !== '' ? $editUrl : route('/barang/edit') . '?id=' . urlenc
 					<p class="text-body-secondary small mb-0">Harga: Rp. <?= esc($formattedPrice) ?></p>
 				</div>
 				<div class="col-12 col-sm-6 d-flex align-items-end justify-content-end column-gap-2 mt-3 mt-sm-0">
-					<a class="btn btn-sm btn-outline-primary" href="<?= esc($detailHref) ?>">Detail</a>
+					<?php if ((int) $purchase_id > 0): ?>
+						<a class="btn btn-sm btn-outline-primary d-inline-flex align-items-center" href="<?= esc(route('/riwayat/detail?id=' . (int) $purchase_id)) ?>" title="Lihat pesanan" aria-label="Lihat pesanan">
+							<i data-lucide="tag" class="pk-icon" aria-hidden="true"></i>
+						</a>
+					<?php endif; ?>
+					<a class="btn btn-sm btn-outline-primary" href="<?= esc($detailHref) ?>">
+						<i data-lucide="eye" class="pk-icon" aria-hidden="true"></i>
+					</a>
 					<a class="btn btn-sm btn-primary d-inline-flex align-items-center" href="<?= esc($editHref) ?>" title="Edit barang" aria-label="Edit barang">
 						<i data-lucide="pencil" class="pk-icon" aria-hidden="true"></i>
 					</a>

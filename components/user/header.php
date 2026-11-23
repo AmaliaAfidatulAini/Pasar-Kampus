@@ -5,39 +5,54 @@ $description = $description ?? "";
 $styles = $styles ?? "";
 // END OF COMPONENTS PROPS //
 
+if (!headers_sent()) {
+    header('Content-Security-Policy: ' . implode('; ', [
+        "default-src 'self'",
+        "script-src 'self'",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "font-src 'self' https://fonts.gstatic.com",
+        "img-src 'self' data: blob: https:",
+        "connect-src 'self'",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+        "frame-ancestors 'none'",
+    ]));
+}
+
 $title = trim($title) !== '' ? trim($title) : 'Beranda';
 $description = trim($description) !== '' ? trim($description) : 'Temukan barang prelove dengan mudah, harga terjangkau, dan transaksi langsung yang aman.';
 $canonicalUrl = rtrim(BASEURL, '/') . current_request_path();
 $shareImage = asset('img/cart-transparent.png');
 
 $session = get_session();
-$profileName = ($session['role'] ?? '') === 'admin' ? 'Administrator' : 'No Name';
+$isLoggedIn = isset($session['user_id']);
+$isAdmin = $isLoggedIn && ($session['role'] ?? '') === 'admin';
 $searchQuery = is_string($_GET['q'] ?? null) ? trim($_GET['q']) : '';
+
+$profileName = $isAdmin ? 'Administrator' : 'No Name';
+$profileEmail = (string) ($session['email'] ?? '');
 $avatarUrl = '';
 
-if ($session && isset($session['user_id'])) {
-    $profile = executeQuery(
-        'SELECT p.name, a.file_path AS avatar_path
-         FROM user_profiles p
-         LEFT JOIN attachments a ON a.attachment_id = p.attachment_id
-         WHERE p.user_id = ?
-         ORDER BY p.profile_id DESC
-         LIMIT 1',
+if ($isLoggedIn) {
+    $headerUser = executeQuery(
+        'SELECT name, email, avatar_path FROM v_user_header WHERE user_id = ?',
         [$session['user_id']],
         'fetch'
-    ) ?: [];
+    );
 
-    $profileName = trim((string) ($profile['name'] ?? '')) ?: $profileName;
+    if (is_array($headerUser)) {
+        $profileName = trim((string) ($headerUser['name'] ?? '')) ?: $profileName;
+        $profileEmail = trim((string) ($headerUser['email'] ?? '')) ?: $profileEmail;
 
-    // Login stores no avatar, so the header resolves it from the profile row.
-    // Older rows may hold a path relative to public/uploads; upload() turns it into a URL.
-    $avatarPath = trim((string) ($profile['avatar_path'] ?? ''));
-    if ($avatarPath !== '') {
-        $avatarUrl = preg_match('~^(https?:)?//|^/~', $avatarPath) === 1 ? $avatarPath : upload($avatarPath);
+        // Relative avatar rows live under public/uploads; upload() builds the URL.
+        $avatarPath = trim((string) ($headerUser['avatar_path'] ?? ''));
+        if ($avatarPath !== '') {
+            $avatarUrl = preg_match('~^(https?:)?//|^/~', $avatarPath) === 1 ? $avatarPath : upload($avatarPath);
+        }
     }
 }
 
-$avatarUrl = $avatarUrl !== '' ? $avatarUrl : trim((string) ($session['avatar_url'] ?? ''));
 $avatarUrl = $avatarUrl !== '' ? $avatarUrl : asset('img/profile-placeholder.webp');
 
 $currentRoute = is_string($_GET['url'] ?? null) ? trim(rawurldecode($_GET['url']), '/') : '';
@@ -57,28 +72,26 @@ foreach (explode('/', $currentRoute) as $segment) {
 $routePath = '/' . $currentRoute;
 $isActive = static function (string $path) use ($routePath): bool {
     if ($path === '/') {
-        return $routePath === '/' || $routePath === '/explore';
+        return $routePath === '/';
     }
     return $routePath === $path || str_starts_with($routePath, $path . '/');
 };
 
-$isAdmin = ($session['role'] ?? '') === 'admin';
-
 $navLinks = [
-    ['label' => 'Home', 'href' => route('/'), 'active' => $isActive('/')],
+    ['label' => 'Beranda', 'href' => route('/'), 'active' => $isActive('/')],
+    ['label' => 'Katalog', 'href' => route('/explore'), 'active' => $isActive('/explore')],
 ];
-if (!$isAdmin) {
-    $navLinks[] = ['label' => 'About', 'href' => route('/#faq'), 'active' => false];
-}
-if ($session) {
-    $navLinks[] = ['label' => 'Riwayat', 'href' => route('/riwayat'), 'active' => $isActive('/riwayat') || $isActive('/tawaran')];
-}
+$showCart = $isLoggedIn && !$isAdmin;
 
-$isBarangPage = $isActive('/barang');
-
-$accountLink = $isAdmin
-    ? ['label' => 'Dashboard', 'href' => route('/admin'), 'active' => $isActive('/admin')]
-    : null;
+$accountItems = $isAdmin
+    ? [
+        ['label' => 'Dashboard', 'href' => route('/admin'), 'icon' => 'layout-dashboard', 'active' => $isActive('/admin')],
+    ]
+    : [
+        ['label' => 'Barang Saya', 'href' => route('/barang'), 'icon' => 'package', 'active' => $isActive('/barang')],
+        ['label' => 'Tawaran Saya', 'href' => route('/tawaran/pembelian'), 'icon' => 'handshake', 'active' => $isActive('/tawaran/pembelian')],
+        ['label' => 'Profil', 'href' => route('/user'), 'icon' => 'user-round', 'active' => $isActive('/user')],
+    ];
 ?>
 
 <!DOCTYPE html>
@@ -137,61 +150,22 @@ $accountLink = $isAdmin
             <div class="collapse navbar-collapse" id="pkNavbar">
                 <ul class="navbar-nav align-items-lg-center gap-2 ms-auto">
                     <?php foreach ($navLinks as $link): ?>
-                        <?php if ($link['label'] === 'Riwayat'): ?>
-                            <li class="nav-item dropdown">
-                                <button type="button" class="nav-link dropdown-toggle<?= $link['active'] ? ' active' : '' ?>" data-bs-toggle="dropdown" aria-expanded="false">Riwayat</button>
-                                <ul class="dropdown-menu dropdown-menu-end">
-                                    <li>
-                                        <span class="pk-dropdown-label">
-                                            <i data-lucide="receipt-text" class="pk-icon" aria-hidden="true"></i>
-                                            <span>Transaksi</span>
-                                        </span>
-                                    </li>
-                                    <li><a class="dropdown-item" href="<?= esc(route('/riwayat/pembelian')) ?>">Pembelian</a></li>
-                                    <li><a class="dropdown-item" href="<?= esc(route('/riwayat/penjualan')) ?>">Penjualan</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <span class="pk-dropdown-label">
-                                            <i data-lucide="handshake" class="pk-icon" aria-hidden="true"></i>
-                                            <span>Tawaran</span>
-                                        </span>
-                                    </li>
-                                    <li><a class="dropdown-item" href="<?= esc(route('/tawaran/pembelian')) ?>">Pembelian</a></li>
-                                    <li><a class="dropdown-item" href="<?= esc(route('/tawaran/penjualan')) ?>">Penjualan</a></li>
-                                </ul>
-                            </li>
-                        <?php else: ?>
-                            <li class="nav-item">
-                                <a class="nav-link<?= $link['active'] ? ' active' : '' ?>" href="<?= esc($link['href']) ?>"<?= $link['active'] ? ' aria-current="page"' : '' ?>><?= esc($link['label']) ?></a>
-                            </li>
-                        <?php endif; ?>
-                    <?php endforeach; ?>
-                    <?php if ($accountLink !== null): ?>
                         <li class="nav-item">
-                            <a class="nav-link<?= $accountLink['active'] ? ' active' : '' ?>" href="<?= esc($accountLink['href']) ?>"><?= esc($accountLink['label']) ?></a>
+                            <a class="nav-link<?= $link['active'] ? ' active' : '' ?>" href="<?= esc($link['href']) ?>"<?= $link['active'] ? ' aria-current="page"' : '' ?>><?= esc($link['label']) ?></a>
                         </li>
-                    <?php endif; ?>
-                    <?php if ($session): ?>
-                        <li class="nav-item dropdown d-lg-none">
-                            <button type="button" class="nav-link dropdown-toggle w-100 text-start" data-bs-toggle="dropdown" aria-expanded="false">
-                                Akun
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item d-flex align-items-center gap-2<?= $isBarangPage ? ' active' : '' ?>" href="<?= esc(route('/barang')) ?>">
-                                    <i data-lucide="package" class="pk-icon" aria-hidden="true"></i><span>Barang Saya</span></a>
-                                </li>
-                                <li><a class="dropdown-item d-flex align-items-center gap-2" href="<?= esc(route('/user')) ?>">
-                                    <i data-lucide="user-round" class="pk-icon" aria-hidden="true"></i><span>Profil</span></a>
-                                </li>
-                                <li><a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="<?= esc(route('/logout')) ?>" data-pk-confirm="Apakah Anda yakin ingin keluar dari akun PasarKampus?" data-pk-confirm-title="Keluar dari akun?"><i data-lucide="log-out" class="pk-icon" aria-hidden="true"></i><span>Keluar</span></a></li>
-                            </ul>
+                    <?php endforeach; ?>
+                    <?php if ($showCart): ?>
+                        <li class="nav-item">
+                            <a class="nav-link d-inline-flex align-items-center<?= $isActive('/riwayat') ? ' active' : '' ?>" href="<?= esc(route('/riwayat/pembelian')) ?>" aria-label="Riwayat pembelian"<?= $isActive('/riwayat') ? ' aria-current="page"' : '' ?>>
+                                <i data-lucide="shopping-cart" class="pk-icon" aria-hidden="true"></i>
+                            </a>
                         </li>
                     <?php endif; ?>
                 </ul>
             </div>
 
-            <div class="<?= $session ? 'd-none d-lg-flex' : 'd-flex' ?> align-items-center gap-3 flex-shrink-0">
-                <?php if ($session): ?>
+            <div class="pk-account d-flex align-items-center gap-3 flex-shrink-0">
+                <?php if ($isLoggedIn): ?>
                     <div class="dropdown">
                         <button type="button" class="pk-avatar-btn" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Menu profil">
                             <span class="pk-avatar">
@@ -201,16 +175,14 @@ $accountLink = $isAdmin
                         <div class="dropdown-menu dropdown-menu-end">
                             <div class="px-3 pt-1 pb-2 border-bottom">
                                 <div class="fw-bold text-truncate"><?= esc($profileName) ?></div>
-                                <div class="small text-body-secondary text-truncate"><?= esc((string) ($session['email'] ?? '')) ?></div>
+                                <div class="small text-body-secondary text-truncate"><?= esc($profileEmail) ?></div>
                             </div>
-                            <a href="<?= esc(route('/barang')) ?>" class="dropdown-item d-flex align-items-center gap-2">
-                                <i data-lucide="package" class="pk-icon" aria-hidden="true"></i>
-                                <span>Barang Saya</span>
-                            </a>
-                            <a href="<?= esc(route('/user')) ?>" class="dropdown-item d-flex align-items-center gap-2">
-                                <i data-lucide="user-round" class="pk-icon" aria-hidden="true"></i>
-                                <span>Profil</span>
-                            </a>
+                            <?php foreach ($accountItems as $item): ?>
+                                <a href="<?= esc($item['href']) ?>" class="dropdown-item d-flex align-items-center gap-2<?= $item['active'] ? ' active' : '' ?>">
+                                    <i data-lucide="<?= esc($item['icon']) ?>" class="pk-icon" aria-hidden="true"></i>
+                                    <span><?= esc($item['label']) ?></span>
+                                </a>
+                            <?php endforeach; ?>
                             <hr class="my-2">
                             <a href="<?= esc(route('/logout')) ?>" class="dropdown-item d-flex align-items-center gap-2 text-danger" data-pk-confirm="Apakah Anda yakin ingin keluar?" data-pk-confirm-title="Logout">
                                 <i data-lucide="log-out" class="pk-icon" aria-hidden="true"></i>
@@ -230,7 +202,7 @@ $accountLink = $isAdmin
             <div class="container">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item">
-                        <a class="text-primary" href="<?= esc(route('/')) ?>">home</a>
+                        <a class="text-primary" href="<?= esc(route('/')) ?>">Beranda</a>
                     </li>
                     <?php foreach ($breadcrumbs as $index => $crumb): ?>
                         <?php if ($index === array_key_last($breadcrumbs)): ?>

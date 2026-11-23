@@ -186,20 +186,6 @@
 	font-weight: 600;
 	padding: .6875rem 1.125rem;
 }
-.pk-dropdown-label {
-	display: flex;
-	align-items: center;
-	gap: .375rem;
-	padding: .5rem 1.125rem .25rem;
-	font-size: .8125rem;
-	font-weight: 700;
-	color: var(--bs-body-color);
-}
-.pk-dropdown-label .pk-icon {
-	width: 1rem;
-	height: 1rem;
-	color: var(--bs-secondary-color);
-}
 
 /* 7. Bootstrap bridge — accordion */
 .accordion {
@@ -329,11 +315,6 @@ img {
 	border-radius: 8px;
 	transition: background-color .15s ease, color .15s ease;
 }
-/* Bootstrap draws a border-triangle on .dropdown-toggle::after; keep it, and
-   inherit the nav link colour so it matches the label. */
-.pk-navbar .navbar-nav .dropdown-toggle::after {
-	vertical-align: .15em;
-}
 .pk-navbar .navbar-nav .nav-link:hover,
 .pk-navbar .navbar-nav .nav-link:focus-visible {
 	background-color: rgb(255 255 255 / .12);
@@ -345,18 +326,21 @@ img {
 .pk-navbar .nav-link.active:hover {
 	color: #FFFFFF;
 }
-/* Bootstrap forces `.navbar-nav .dropdown-menu` to `position: static`, which only
-   reverts to `absolute` under `.navbar-expand-*`. `navbar-expand-lg` on the header
-   handles that; this only tightens the gap below the trigger. */
-.pk-navbar .navbar-nav .dropdown-menu {
-	margin-top: .5rem;
-}
 .pk-navbar .navbar-toggler {
 	border-color: rgb(255 255 255 / .35);
 	padding: .3rem .5rem;
 }
 .pk-navbar .navbar-toggler:focus {
 	box-shadow: 0 0 0 .15rem rgb(255 255 255 / .35);
+}
+/* Mobile: the account menu stays on the first row; the expanded nav wraps below it. */
+@media (max-width: 991.98px) {
+	.pk-navbar .pk-account {
+		order: 4;
+	}
+	.pk-navbar .navbar-collapse {
+		order: 5;
+	}
 }
 .pk-border-dashed {
 	--bs-border-style: dashed;
@@ -757,3 +741,91 @@ img {
 .pk-error-illustration {
 	max-width: 240px;
 }
+
+/* 12. Offer surfaces — inbox cards, compare table, modal summary, readouts.
+   Shared by /tawaran/penjualan, /tawaran/pembelian, and /barang/detail. */
+.pk-icon--xs { width: .75rem; height: .75rem; }
+.pk-icon--sm { width: 1rem; height: 1rem; }
+.min-w-0 { min-width: 0; }
+
+.pk-btn-accept {
+	--bs-btn-color: var(--pk-amber-ink);
+	--bs-btn-bg: var(--pk-amber);
+	--bs-btn-border-color: var(--pk-amber);
+	--bs-btn-hover-color: var(--pk-amber-ink);
+	--bs-btn-hover-bg: #F0B01C;
+	--bs-btn-hover-border-color: #F0B01C;
+	--bs-btn-active-color: var(--pk-amber-ink);
+	--bs-btn-active-bg: #E0A415;
+	--bs-btn-active-border-color: #E0A415;
+}
+
+/* White on #FBBF24 is 1.67:1; amber-700 keeps the label at 5.02:1. */
+.pk-btn-nego {
+	--bs-btn-color: #FFFFFF;
+	--bs-btn-bg: #B45309;
+	--bs-btn-border-color: #B45309;
+	--bs-btn-hover-color: #FFFFFF;
+	--bs-btn-hover-bg: #92400E;
+	--bs-btn-hover-border-color: #92400E;
+	--bs-btn-active-color: #FFFFFF;
+	--bs-btn-active-bg: #7C2D12;
+	--bs-btn-active-border-color: #7C2D12;
+	--bs-btn-focus-shadow-rgb: 180, 83, 9;
+}
+
+.pk-modal__summary {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	padding: .5rem .75rem;
+	margin-bottom: 14px;
+	border-radius: 10px;
+	background: var(--pk-surface);
+	border: 1px solid var(--pk-border);
+	font-size: 1rem;
+	font-weight: 600;
+}
+.pk-modal__summary-price { color: var(--pk-navy); font-weight: 800; }
+.pk-modal__summary-price--offer { color: var(--pk-amber-ink); }
+.pk-amount .input-group-text,
+.pk-amount .form-control { font-size: 1rem; }
+.pk-readout {
+	margin-top: 6px;
+	font-size: .8rem;
+	font-weight: 600;
+	line-height: 1.4;
+	color: var(--pk-navy);
+	min-height: 1.2em;
+	text-align: end;
+}
+.pk-offer-error { font-size: .78rem; }
+
+.pk-compare { border: 1px solid var(--pk-border); border-radius: 12px; overflow: hidden; }
+.pk-compare__row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: .625rem .875rem;
+	font-size: .9rem;
+	color: var(--pk-muted);
+}
+.pk-compare__row + .pk-compare__row { border-top: 1px solid var(--pk-border); }
+.pk-compare__row strong { color: var(--pk-text); font-weight: 700; }
+.pk-compare__row--offer strong { color: var(--pk-amber-ink); }
+.pk-compare__row--total { background: var(--pk-surface); }
+.pk-compare__row--total strong { color: var(--pk-navy); font-weight: 800; }
+
+.pk-gap-note {
+	display: flex;
+	align-items: baseline;
+	gap: .5rem;
+	margin-top: 1rem;
+	padding: .75rem .875rem;
+	border-radius: 12px;
+	background: var(--pk-surface);
+}
+.pk-gap-note__value { font-size: 1.5rem; font-weight: 800; line-height: 1; color: var(--pk-navy); }
+.pk-gap-note__label { font-size: .875rem; color: var(--pk-muted); }

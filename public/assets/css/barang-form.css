@@ -1,0 +1,38 @@
+/* Add/edit product form. Layout, spacing, the card shell, section separators
+   and the radio cards all come from Bootstrap utilities; only the Quill
+   editor sizing, font inheritance and the drag-over state need rules of
+   their own. */
+.pk-editor { min-height: 180px; }
+.ql-container.ql-snow { font-family: inherit; font-size: 1rem; }
+
+/* Image slots also take a photo dragged from the desktop. The resting look
+   stays the Bootstrap placeholder; only a drag over the slot shows the hint. */
+.pk-drop-slot::after {
+	content: "Lepaskan foto di sini";
+	position: absolute;
+	inset: 0;
+	display: none;
+	align-items: center;
+	justify-content: center;
+	padding: .75rem;
+	border: 2px dashed var(--pk-navy);
+	border-radius: inherit;
+	background: var(--pk-surface);
+	color: var(--pk-navy);
+	font-size: .8125rem;
+	font-weight: 700;
+	line-height: 1.3;
+	text-align: center;
+	pointer-events: none;
+}
+.pk-drop-slot.is-dragover::after {
+	display: flex;
+}
+
+/* The five thumb slots are about 48px wide at the lg breakpoint, so the
+   full-size hint would be clipped by the slot's overflow-hidden. */
+.row-cols-5 .pk-drop-slot::after {
+	padding: .125rem;
+	font-size: .5625rem;
+	line-height: 1.25;
+}

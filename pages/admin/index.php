@@ -1,56 +1,18 @@
 <?php
 role_include('admin');
 
-$stats = executeQuery(
-    "SELECT 
-        (SELECT COUNT(*) FROM products) AS products, 
-        (SELECT COUNT(*) FROM categories) AS categories,
-        (SELECT COUNT(*) FROM reports WHERE review_status = 'Menunggu') AS reports, 
-        (SELECT COUNT(*) FROM users WHERE account_status = 'Aktif') AS users
-",
-    [],
-    'fetch'
-);
-
+$stats = executeQuery('SELECT * FROM v_admin_stats', [], 'fetch');
 $stats = array_map('intval', $stats);
-$campuses = executeQuery(
-    "SELECT 
-        COALESCE(p.campus, 'Belum diisi') AS campus, 
-        COUNT(*) AS total 
-    FROM users u 
-    LEFT JOIN user_profiles p ON
-        p.user_id = u.user_id
-    WHERE 
-        u.deleted_at IS FALSE AND u.role = 'user' 
-    GROUP BY p.campus 
-    ORDER BY total DESC
-",
-    [],
-    'fetchAll'
-);
+
+$campuses = executeQuery('SELECT campus, total FROM v_admin_campus_distribution', [], 'fetchAll');
 $campusColors = ['#1D356D', '#2563EB', '#0F766E', '#D97706', '#7C3AED', '#B91C1C', '#475569'];
 $campusChartColors = array_map(static fn(int $index): string => $campusColors[$index % count($campusColors)], array_keys($campuses));
 $campusTotal = array_sum(array_map(static fn(array $campus): int => (int) $campus['total'], $campuses));
 
 $activity = executeQuery(
-    "SELECT * FROM (
-        SELECT 
-            'Barang ditambahkan' AS label, 
-            p.item_name AS detail, 
-            p.created_at AS happened_at 
-        FROM products p 
-        UNION ALL 
-        SELECT 
-            'Pengajuan transaksi', p.item_name, r.created_at 
-        FROM requests r 
-        JOIN products p ON 
-            p.product_id = r.product_id 
-        UNION ALL 
-        SELECT 
-            'Laporan masuk', rp.report_type, rp.created_at 
-        FROM reports rp 
-    ) events ORDER BY happened_at DESC NULLS LAST LIMIT 8
-",
+    'SELECT label, detail, happened_at FROM v_admin_activity
+     ORDER BY happened_at DESC NULLS LAST
+     LIMIT 8',
     [],
     'fetchAll'
 );

@@ -104,17 +104,35 @@ function create(): string
         'namaBarang' => trim((string) ($_POST['namaBarang'] ?? '')),
         'kategori' => trim((string) ($_POST['kategori'] ?? '')),
         'harga' => trim((string) ($_POST['harga'] ?? '')),
+        'hargaAsli' => trim((string) ($_POST['hargaAsli'] ?? '')),
         'kondisi' => trim((string) ($_POST['kondisi'] ?? '')),
         'deskripsi' => trim((string) ($_POST['deskripsi'] ?? '')),
     ];
 
-    $validation = Validator::make([
+    // Stored as sanitized HTML; the length limits apply to its text, not markup.
+    $description = sanitize_rich_text($data['deskripsi']);
+    $descriptionText = trim(strip_tags($description));
+    if (mb_strlen($descriptionText) < 5) {
+        throw new InvalidArgumentException('Deskripsi barang minimal 5 karakter.');
+    }
+    if (mb_strlen($descriptionText) > 5000) {
+        throw new InvalidArgumentException('Deskripsi barang maksimal 5000 karakter.');
+    }
+    $data['deskripsi'] = $description;
+
+    $rules = [
         'namaBarang' => 'bail|required|string|min:3|max:255',
         'kategori' => 'bail|required|string',
         'harga' => 'bail|required',
         'kondisi' => 'bail|required|string',
-        'deskripsi' => 'bail|required|string|min:5|max:255',
-    ], $data);
+        'deskripsi' => 'bail|required|string',
+    ];
+    // Original price is optional: blank falls back to the selling price below.
+    if ($data['hargaAsli'] !== '') {
+        $rules['hargaAsli'] = 'bail|numeric|min:1';
+    }
+
+    $validation = Validator::make($rules, $data);
 
     if ($validation->isFailed()) {
         throw new InvalidArgumentException(implode(' ', parse_errors($validation)));
@@ -141,6 +159,11 @@ function create(): string
         throw new InvalidArgumentException('Harga barang harus lebih dari Rp. 0.');
     }
 
+    $originalPrice = $data['hargaAsli'] === '' ? $price : (int) $data['hargaAsli'];
+    if ($originalPrice < $price) {
+        throw new InvalidArgumentException('Harga asli tidak boleh lebih rendah dari harga jual.');
+    }
+
     $cover = [];
     $thumbs = [];
     $stored = [];
@@ -163,7 +186,7 @@ function create(): string
             "INSERT INTO products (user_id, category_id, item_name, description, price, original_price, condition, status, delivery_methods, created_at, updated_at)
              VALUES (?, ?, ?, ?, ?, ?, ?, 'Tersedia', 'COD Kampus', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
              RETURNING product_id",
-            [$userId, $categoryId, $data['namaBarang'], $data['deskripsi'], $price, $price, $conditions[$data['kondisi']]]
+            [$userId, $categoryId, $data['namaBarang'], $data['deskripsi'], $price, $originalPrice, $conditions[$data['kondisi']]]
         ));
         $productId = (int) $product['product_id'];
 

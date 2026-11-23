@@ -9,30 +9,40 @@ $condition = $condition ?? "";
 $o_price = $o_price ?? "";
 $price = $price ?? "";
 $foto = $foto ?? "";
+$sold = $sold ?? false;
 // END OF COMPONENTS PROPS //
 
-if (is_numeric($condition)) {
-    $condMap = [
-        1 => 'Bekas',
-        2 => 'Cukup',
-        3 => 'Baik',
-        4 => 'Sangat Bagus'
-    ];
-    $condition = $condMap[(int) $condition] ?? 'Baik';
-} elseif (empty($condition)) {
-    $condition = 'Baik';
-}
+// Descriptions arrive as sanitized HTML or as already-stripped text; the card
+// renders plain text either way. Entities are decoded here because esc() below
+// re-encodes them for the attribute/text context.
+$description = trim(html_entity_decode(strip_tags((string) $description), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
 
-$formattedPrice = is_numeric($price) ? number_format((float)$price, 0, ',', '.') : (string)$price;
-$formattedOPrice = (is_numeric($o_price) && (float)$o_price > (float)$price) ? number_format((float)$o_price, 0, ',', '.') : '';
+$condMap = [
+    1 => 'Bekas',
+    2 => 'Cukup',
+    3 => 'Baik',
+    4 => 'Sangat Bagus'
+];
+
+// Callers pass the label from `v_product_display.condition_label`; numeric input
+// is still accepted. Anything unrecognised falls back to level 3 (Baik).
+$conditionLevel = is_numeric($condition)
+    ? (int) $condition
+    : (array_search($condition, $condMap, true) ?: 3);
+$conditionLevel = ($conditionLevel >= 1 && $conditionLevel <= 4) ? $conditionLevel : 3;
+$condition = $condMap[$conditionLevel];
+
+$priceValue = is_numeric($price) ? (float) $price : 0.0;
+$formattedPrice = format_rupiah($priceValue);
+$formattedOPrice = (is_numeric($o_price) && (float) $o_price > $priceValue) ? format_rupiah((float) $o_price) : '';
 $detailUrl = route('/barang/detail?id=' . urlencode((string) $id));
 ?>
 
-<div class="card product-card h-100" onclick="if (!event.target.closest('a')) window.location.href='<?= $detailUrl ?>'">
+<div class="card product-card h-100<?= $sold ? ' product-card--sold' : '' ?>" data-card-href="<?= esc($detailUrl) ?>">
 	<div class="ratio ratio-1x1 product-card__media">
 		<img src="<?= esc($foto ?: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=300') ?>" alt="<?= esc($title) ?>" class="card-img-top w-100 h-100 object-fit-cover product-card__img" loading="lazy">
 	</div>
-	<span class="badge product-card__badge product-card__badge--condition position-absolute top-0 start-0 m-2"><?= esc($condition) ?></span>
+	<span class="badge product-card__badge product-card__badge--cond-<?= $conditionLevel ?> position-absolute top-0 start-0 m-2"><?= esc($condition) ?></span>
 	<span class="badge product-card__badge product-card__badge--category position-absolute top-0 end-0 m-2"><?= esc($category) ?></span>
 	<div class="card-body">
 		<span class="badge product-card__location mb-2"><?= esc(($location ?: 'Area Kampus')) ?></span>
@@ -42,12 +52,16 @@ $detailUrl = route('/barang/detail?id=' . urlencode((string) $id));
 	<div class="card-footer product-card__footer d-flex align-items-center justify-content-between gap-2">
 		<div>
 			<?php if ($formattedOPrice !== ''): ?>
-				<span class="d-block text-decoration-line-through product-card__orig">Rp. <?= esc($formattedOPrice) ?></span>
+				<span class="d-block text-decoration-line-through product-card__orig"><?= esc($formattedOPrice) ?></span>
 			<?php endif; ?>
-			<span class="fw-bold product-card__price">Rp. <?= esc($formattedPrice) ?></span>
+			<span class="fw-bold product-card__price"><?= esc($formattedPrice) ?></span>
 		</div>
-		<a href="<?= $detailUrl ?>" class="btn btn-primary product-card__action">
-			Detail
-		</a>
+		<?php if ($sold): ?>
+			<button type="button" class="btn btn-primary product-card__action" disabled>Detail</button>
+		<?php else: ?>
+			<a href="<?= $detailUrl ?>" class="btn btn-primary product-card__action">
+				Detail
+			</a>
+		<?php endif; ?>
 	</div>
 </div>

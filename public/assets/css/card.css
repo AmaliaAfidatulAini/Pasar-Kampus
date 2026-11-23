@@ -33,16 +33,27 @@
 .product-card:hover .product-card__img {
 	transform: scale(1.05);
 }
+.product-card--sold .product-card__img {
+	filter: grayscale(1);
+}
 
 .product-card__badge {
-	--bs-badge-padding-y: 3px;
-	--bs-badge-padding-x: 8px;
 	--bs-badge-font-size: .68rem;
 	--bs-badge-border-radius: 6px;
 	z-index: 2;
+	color: #fff;
 }
-.product-card__badge--condition {
-	background-color: var(--pk-text);
+.product-card__badge--cond-1 {
+	background-color: var(--pk-muted);
+}
+.product-card__badge--cond-2 {
+	background-color: var(--pk-navy);
+}
+.product-card__badge--cond-3 {
+	background-color: #15803D;
+}
+.product-card__badge--cond-4 {
+	background-color: #B45309;
 }
 .product-card__badge--category {
 	background-color: rgb(15 23 42 / .75);

@@ -15,7 +15,7 @@ function edit_product(): ?array
         "SELECT p.product_id AS id,
             p.item_name AS nama,
             COALESCE(seller.name, '') AS penjual,
-            COALESCE(p.description, '') AS description,
+            COALESCE(btrim(regexp_replace(regexp_replace(p.description, '<[^>]+>', ' ', 'g'), '\s+', ' ', 'g')), '') AS description,
             p.price,
             p.original_price,
             COALESCE(p.delivery_methods, '') AS delivery_method,
@@ -35,6 +35,9 @@ function edit_product(): ?array
     if (!$product) {
         return null;
     }
+    // The modal writes this with textContent, so decode the entities that
+    // Quill left in the stored markup.
+    $product['description'] = html_entity_decode((string) $product['description'], ENT_QUOTES | ENT_HTML5, 'UTF-8');
     $product['requests'] = executeQuery(
         "SELECT COALESCE(buyer.name, '') AS pembeli,
             COALESCE(buyer.campus, '') AS kampus,

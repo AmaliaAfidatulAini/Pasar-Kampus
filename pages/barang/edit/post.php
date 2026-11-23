@@ -116,18 +116,36 @@ function update(): string
         'namaBarang' => trim((string) ($_POST['namaBarang'] ?? '')),
         'kategori' => trim((string) ($_POST['kategori'] ?? '')),
         'harga' => trim((string) ($_POST['harga'] ?? '')),
+        'hargaAsli' => trim((string) ($_POST['hargaAsli'] ?? '')),
         'kondisi' => trim((string) ($_POST['kondisi'] ?? '')),
         'deskripsi' => trim((string) ($_POST['deskripsi'] ?? '')),
     ];
 
-    $validation = Validator::make([
+    // Stored as sanitized HTML; the length limits apply to its text, not markup.
+    $description = sanitize_rich_text($data['deskripsi']);
+    $descriptionText = trim(strip_tags($description));
+    if (mb_strlen($descriptionText) < 5) {
+        throw new InvalidArgumentException('Deskripsi barang minimal 5 karakter.');
+    }
+    if (mb_strlen($descriptionText) > 5000) {
+        throw new InvalidArgumentException('Deskripsi barang maksimal 5000 karakter.');
+    }
+    $data['deskripsi'] = $description;
+
+    $rules = [
         'id' => 'bail|required|numeric',
         'namaBarang' => 'bail|required|string|min:3|max:255',
         'kategori' => 'bail|required|string',
         'harga' => 'bail|required',
         'kondisi' => 'bail|required|string',
-        'deskripsi' => 'bail|required|string|min:5|max:255',
-    ], $data);
+        'deskripsi' => 'bail|required|string',
+    ];
+    // Original price is optional: blank falls back to the selling price below.
+    if ($data['hargaAsli'] !== '') {
+        $rules['hargaAsli'] = 'bail|numeric|min:1';
+    }
+
+    $validation = Validator::make($rules, $data);
 
     if ($validation->isFailed()) {
         throw new InvalidArgumentException(implode(' ', parse_errors($validation)));
@@ -159,6 +177,11 @@ function update(): string
         throw new InvalidArgumentException('Harga barang harus lebih dari Rp. 0.');
     }
 
+    $originalPrice = $data['hargaAsli'] === '' ? $price : (int) $data['hargaAsli'];
+    if ($originalPrice < $price) {
+        throw new InvalidArgumentException('Harga asli tidak boleh lebih rendah dari harga jual.');
+    }
+
     $oldCovers = fetchAll(executeQuery(
         'SELECT file_path FROM attachments WHERE product_id = ? AND attachment_type = 1',
         [$productId]
@@ -186,7 +209,7 @@ function update(): string
             'UPDATE products
              SET category_id = ?, item_name = ?, description = ?, price = ?, original_price = ?, condition = ?, updated_at = CURRENT_TIMESTAMP
              WHERE product_id = ? AND user_id = ?',
-            [$categoryId, $data['namaBarang'], $data['deskripsi'], $price, $price, $conditions[$data['kondisi']], $productId, $userId]
+            [$categoryId, $data['namaBarang'], $data['deskripsi'], $price, $originalPrice, $conditions[$data['kondisi']], $productId, $userId]
         );
 
         if ($cover !== []) {
@@ -211,11 +234,15 @@ function update(): string
         throw $error;
     }
 
-    // Only after the commit: drop the replaced cover files from disk.
-    foreach ($oldCovers as $oldCover) {
-        $relative = upload_path((string) $oldCover['file_path']);
-        if ($relative !== null && checkFile($relative)) {
-            deleteFile($relative);
+    // Only after the commit, and only when a replacement was stored: drop the
+    // cover files it superseded. Without a replacement the existing cover stays
+    // untouched in the database and on disk.
+    if ($cover !== []) {
+        foreach ($oldCovers as $oldCover) {
+            $relative = upload_path((string) $oldCover['file_path']);
+            if ($relative !== null && checkFile($relative)) {
+                deleteFile($relative);
+            }
         }
     }
 

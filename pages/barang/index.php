@@ -3,8 +3,6 @@
 $session = session_include('/login');
 $userId = (int) ($session['user_id'] ?? 0);
 
-require_model('catalog', 'barang');
-
 // GET-driven filtering over the seller's own listings: same shape as the catalog page.
 $getString = static function (string $key): string {
     $value = $_GET[$key] ?? '';
@@ -17,7 +15,7 @@ $categoryInput = is_array($categoryInput) ? $categoryInput : [$categoryInput];
 $statusInput = $getString('status');
 $page = max(1, (int) ($_GET['page'] ?? 1));
 
-$categories = get_catalog_categories();
+$categories = executeQuery('SELECT name FROM v_categories', [], 'fetchAll');
 $categoryOptions = array_map(static fn (array $category): string => (string) $category['name'], $categories);
 $statusOptions = ['Dijual', 'Pemesanan', 'Pengambilan', 'Terjual'];
 
@@ -30,14 +28,16 @@ if (!in_array($statusInput, $statusOptions, true)) {
     $statusInput = '';
 }
 
-// TODO: apply $statusInput to the query once the card status prop is derived.
-
 $perPage = 10;
-$filters = [
-    'q' => $q,
-    'category' => $categoryFilter,
-];
-$total = count_owner_products($userId, $filters);
+$categoryJson = json_encode(array_values($categoryFilter), JSON_UNESCAPED_UNICODE);
+$statusFilter = $statusInput !== '' ? $statusInput : null;
+
+$totalRow = executeQuery(
+    'SELECT count_owner_products(?, ?, CAST(? AS jsonb), ?) AS total',
+    [$userId, $q, $categoryJson, $statusFilter],
+    'fetch'
+);
+$total = is_array($totalRow) ? (int) $totalRow['total'] : 0;
 $totalPages = max(1, (int) ceil($total / $perPage));
 
 $queryBase = [];
@@ -59,10 +59,10 @@ if ($page > $totalPages) {
     redirect('/barang' . ($redirectParams !== [] ? '?' . http_build_query($redirectParams) : ''), 302);
 }
 
-$items = get_owner_products($userId, $filters + [
-    'limit' => $perPage,
-    'offset' => ($page - 1) * $perPage,
-]);
+$items = fetchAll(executeQuery(
+    'SELECT * FROM owner_products(?, ?, CAST(? AS jsonb), ?, ?, ?)',
+    [$userId, $q, $categoryJson, $statusFilter, $perPage, ($page - 1) * $perPage]
+));
 
 $barangUrl = static function (array $overrides = []) use ($queryBase): string {
     $params = array_merge($queryBase, $overrides);
@@ -93,7 +93,31 @@ if ($totalPages <= 7) {
     $pageNumbers[] = $totalPages;
 }
 
-$stats = get_owner_product_stats($userId);
+$statsRow = executeQuery('SELECT * FROM v_owner_product_stats WHERE user_id = ?', [$userId], 'fetch');
+$stats = is_array($statsRow)
+    ? $statsRow
+    : ['barang' => 0, 'dijual' => 0, 'pesanan' => 0, 'terjual' => 0];
+
+// Seller-level activity counters for the strip: open offers of any stage, and
+// purchases that are neither finished nor cancelled.
+$activeOfferRow = fetch(executeQuery(
+    "SELECT COUNT(*) AS total FROM v_offer_inbox WHERE seller_id = ? AND status = 'OPEN'",
+    [$userId]
+));
+$activeOfferCount = (int) ($activeOfferRow['total'] ?? 0);
+
+$activeOrderRow = fetch(executeQuery(
+    "SELECT COUNT(*) AS total FROM v_purchase_history WHERE seller_id = ? AND status IN ('appointment', 'pickup')",
+    [$userId]
+));
+$activeOrderCount = (int) ($activeOrderRow['total'] ?? 0);
+
+$hasActiveActivity = $activeOfferCount > 0 || $activeOrderCount > 0;
+$offerBannerClass = $hasActiveActivity
+    ? 'border-2 border-primary bg-primary-subtle'
+    : 'border bg-body-tertiary';
+$offerButtonClass = $activeOfferCount > 0 ? 'btn-primary' : 'btn-outline-primary';
+$orderButtonClass = $activeOrderCount > 0 ? 'btn-primary' : 'btn-outline-primary';
 ?>
 
 <?php Component::flush() ?>
@@ -150,6 +174,38 @@ $stats = get_owner_product_stats($userId);
                 <div class="card-body d-flex flex-column justify-content-between gap-1">
                     <span class="text-uppercase small fw-bold text-body-secondary">Terjual</span>
                     <strong class="fs-3 fw-bold lh-1 text-body-emphasis"><?= esc((string) $stats['terjual']) ?></strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row row-cols-12 g-3 px-2 mb-4">
+        <div class="col card h-100 rounded-2 <?= esc($offerBannerClass) ?>">
+            <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <?php if ($hasActiveActivity): ?>
+                        <i data-lucide="triangle-exclamation-point" class="pk-icon--md" aria-hidden="true"></i>
+                        <p class="mb-0">Kamu memiliki pesanan/tawaran aktif dari pembeli.</p>
+                    <?php else: ?>
+                        <i data-lucide="history" class="pk-icon--md" aria-hidden="true"></i>
+                        <p class="mb-0">Lihat riwayat tawaran dari pembeli.</p>
+                    <?php endif; ?>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <a class="btn <?= esc($offerButtonClass) ?> position-relative d-inline-flex align-items-center gap-2 px-3" href="<?= esc(route('/tawaran/penjualan')) ?>">
+                        <?php if ($activeOfferCount > 0): ?>
+                            <span class="pk-count-dot badge rounded-pill text-bg-danger position-absolute top-0 start-100 translate-middle"><span class="pk-count-dot__value"><?= (int) $activeOfferCount ?></span><span class="visually-hidden"> tawaran aktif</span></span>
+                        <?php endif; ?>
+                        <i data-lucide="inbox" class="pk-icon" aria-hidden="true"></i>
+                        <span>Lihat Tawaran</span>
+                    </a>
+                    <a class="btn <?= esc($orderButtonClass) ?> position-relative d-inline-flex align-items-center gap-2 px-3" href="<?= esc(route('/riwayat/penjualan')) ?>">
+                        <?php if ($activeOrderCount > 0): ?>
+                            <span class="pk-count-dot badge rounded-pill text-bg-danger position-absolute top-0 start-100 translate-middle"><span class="pk-count-dot__value"><?= (int) $activeOrderCount ?></span><span class="visually-hidden"> pesanan aktif</span></span>
+                        <?php endif; ?>
+                        <i data-lucide="shopping-bag" class="pk-icon" aria-hidden="true"></i>
+                        <span>Daftar Pesanan</span>
+                    </a>
                 </div>
             </div>
         </div>

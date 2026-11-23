@@ -1,6 +1,9 @@
-DROP DATABASE IF EXISTS pasar_kampus;
-CREATE DATABASE pasar_kampus;
-USE pasar_kampus;
+-- Pasar Kampus schema (PostgreSQL only, fresh database).
+-- Target database must be created beforehand; this file never drops or creates databases.
+
+DROP TABLE IF EXISTS invoice, attachments, reports, offer, purchase,
+    products_tags, products, tags, user_preferences, categories,
+    social_media, user_profiles, users CASCADE;
 
 CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,
@@ -63,16 +66,18 @@ CREATE TABLE tags (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- status is listing/moderation only. Belum Terjual / Appointment / Pickup / Done
+-- are derived from purchase + invoice, never stored here.
 CREATE TABLE products (
     product_id SERIAL PRIMARY KEY,
     user_id INT,
     category_id INT,
     item_name VARCHAR(255) NOT NULL,
-    description VARCHAR(255),
+    description TEXT,
     price NUMERIC(19, 0) NOT NULL,
     original_price NUMERIC(19, 0),
     condition INT CHECK (condition BETWEEN 1 AND 4),
-    status VARCHAR(255) DEFAULT 'ONSELL' CHECK (status IN ('ONSELL', 'SOLD')),
+    status VARCHAR(255) DEFAULT 'Tersedia' CHECK (status IN ('Tersedia', 'Ditolak', 'Dihapus')),
     moderation_note VARCHAR(255),
     delivery_methods VARCHAR(255),
     CONSTRAINT fk_products_users FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
@@ -91,18 +96,60 @@ CREATE TABLE products_tags (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE requests (
-    transaction_id SERIAL PRIMARY KEY,
-    user_id INT,
-    product_id INT,
-    completed_date DATE DEFAULT CURRENT_DATE,
-    status VARCHAR(20) NOT NULL CHECK (status IN ('PENDING', 'PROCESS', 'CANCELLED', 'COMPLETED')),
-    meeting_point VARCHAR(255),
-    CONSTRAINT fk_transaction_requests_users FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    CONSTRAINT fk_transaction_requests_products FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE,
+-- One row per purchase attempt. Cancelled rows stay as history, so the partial
+-- unique index only guards the single active purchase per product.
+CREATE TABLE purchase (
+    purchase_id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    product_id INT NOT NULL,
+    amount NUMERIC(19, 0) NOT NULL CHECK (amount >= 0),
+    meeting_lat NUMERIC(9, 6),
+    meeting_lng NUMERIC(9, 6),
+    cancelled_at TIMESTAMP,
+    cancelled_by VARCHAR(10) CHECK (cancelled_by IN ('buyer', 'seller')),
+    cancel_reason VARCHAR(255),
+    CONSTRAINT fk_purchase_users FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    CONSTRAINT fk_purchase_products FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE,
+    CONSTRAINT chk_purchase_meeting_pair CHECK (
+        (meeting_lat IS NULL AND meeting_lng IS NULL)
+        OR (meeting_lat IS NOT NULL AND meeting_lng IS NOT NULL)
+    ),
+    CONSTRAINT chk_purchase_meeting_range CHECK (
+        (meeting_lat IS NULL OR meeting_lat BETWEEN -90 AND 90)
+        AND (meeting_lng IS NULL OR meeting_lng BETWEEN -180 AND 180)
+    ),
+    CONSTRAINT chk_purchase_cancel_pair CHECK (
+        (cancelled_at IS NULL AND cancelled_by IS NULL)
+        OR (cancelled_at IS NOT NULL AND cancelled_by IS NOT NULL)
+    ),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE UNIQUE INDEX uq_purchase_active_product
+    ON purchase (product_id)
+    WHERE cancelled_at IS NULL;
+
+CREATE INDEX idx_purchase_user ON purchase (user_id);
+
+-- One row per (product, buyer). stage 1 = buyer offer, stage 2 = seller counter.
+-- Price bounds depend on products.price, so they are enforced by place_offer /
+-- counter_offer instead of a table CHECK.
+CREATE TABLE offer (
+    offer_id SERIAL PRIMARY KEY,
+    product_id INT NOT NULL,
+    user_id INT NOT NULL,
+    bargain_price NUMERIC(19, 0) NOT NULL CHECK (bargain_price > 0),
+    stage SMALLINT NOT NULL DEFAULT 1 CHECK (stage IN (1, 2)),
+    status VARCHAR(10) NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'CLOSED')),
+    CONSTRAINT fk_offer_products FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE,
+    CONSTRAINT fk_offer_users FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    CONSTRAINT uq_offer_product_user UNIQUE (product_id, user_id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_offer_product_status ON offer (product_id, status);
 
 CREATE TABLE reports (
     report_id SERIAL PRIMARY KEY,
@@ -118,6 +165,8 @@ CREATE TABLE reports (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- attachment_type: 0 avatar, 1 product primary, 2 product secondary, 3 invoice proof.
+-- Invoice proof rows MUST have product_id = NULL and report_id = NULL.
 CREATE TABLE attachments (
     attachment_id SERIAL PRIMARY KEY,
     report_id INT,
@@ -129,7 +178,21 @@ CREATE TABLE attachments (
     file_size INT,
     CONSTRAINT fk_attachments_reports FOREIGN KEY (report_id) REFERENCES reports(report_id) ON DELETE SET NULL,
     CONSTRAINT fk_attachments_products FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE SET NULL,
-    CONSTRAINT fk_user_profiles_attachments FOREIGN KEY (attachment_id) REFERENCES attachments(attachment_id) ON DELETE SET NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Existence of this row is what makes a purchase "Done".
+CREATE TABLE invoice (
+    invoice_id SERIAL PRIMARY KEY,
+    purchase_id INT NOT NULL UNIQUE,
+    attachment_id INT NOT NULL UNIQUE,
+    pay NUMERIC(19, 0) NOT NULL CHECK (pay >= 0),
+    return NUMERIC(19, 0) NOT NULL DEFAULT 0 CHECK (return >= 0),
+    method VARCHAR(20) NOT NULL CHECK (method IN ('Tunai', 'Transfer')),
+    CONSTRAINT fk_invoice_purchase FOREIGN KEY (purchase_id) REFERENCES purchase(purchase_id) ON DELETE CASCADE,
+    CONSTRAINT fk_invoice_attachments FOREIGN KEY (attachment_id) REFERENCES attachments(attachment_id) ON DELETE RESTRICT,
+    CONSTRAINT chk_invoice_change CHECK (pay >= return),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

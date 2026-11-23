@@ -1,8 +1,6 @@
 <?php
 declare(strict_types=1);
 
-require_model('catalog');
-
 $session = get_session();
 
 $getString = static function (string $key): string {
@@ -29,31 +27,35 @@ if ($condition < 1 || $condition > 4) {
     $condition = 0;
 }
 
-$allowedSorts = ['newest', 'price_asc', 'price_desc'];
+$allowedSorts = ['recommended', 'newest', 'price_asc', 'price_desc'];
 if (!in_array($sort, $allowedSorts, true)) {
-    $sort = 'newest';
+    $sort = 'recommended';
 }
 
 $minPrice = ($minPriceInput !== '' && is_numeric($minPriceInput)) ? max(0, (int) $minPriceInput) : null;
 $maxPrice = ($maxPriceInput !== '' && is_numeric($maxPriceInput)) ? max(0, (int) $maxPriceInput) : null;
 
+$seedInput = $getString('seed');
+$seed = ctype_digit($seedInput) ? (int) $seedInput : random_int(100000, 999999);
+
+$hasActiveFilters = $q !== '' || $categoryFilter !== [] || $campus !== ''
+    || $minPrice !== null || $maxPrice !== null || $condition > 0 || $sort !== 'recommended';
+
 $perPage = 12;
-$filters = [
-    'search' => $q,
-    'category' => $categoryFilter,
-    'campus' => $campus,
-    'condition' => $condition,
-    'sort' => $sort,
-];
+$categoryJson = json_encode(array_values($categoryFilter), JSON_UNESCAPED_UNICODE);
+$userId = (int) ($session['user_id'] ?? 0);
 
-if ($minPrice !== null) {
-    $filters['min_price'] = $minPrice;
-}
-if ($maxPrice !== null) {
-    $filters['max_price'] = $maxPrice;
-}
+$preferredRow = executeQuery('SELECT user_preferred_category_ids(?) AS ids', [$userId], 'fetch');
+$preferredIds = is_array($preferredRow) ? (string) $preferredRow['ids'] : '[]';
 
-$total = count_catalog_products($filters);
+$totalRow = executeQuery(
+    'SELECT count_catalog_products(p_search => ?, p_categories => CAST(? AS jsonb),
+        p_campus => ?, p_min_price => ?, p_max_price => ?, p_condition => ?,
+        p_exclude_user_id => ?) AS total',
+    [$q, $categoryJson, $campus, $minPrice, $maxPrice, $condition > 0 ? $condition : null, $userId],
+    'fetch'
+);
+$total = is_array($totalRow) ? (int) $totalRow['total'] : 0;
 $totalPages = max(1, (int) ceil($total / $perPage));
 
 $queryBase = [];
@@ -75,9 +77,10 @@ if ($maxPrice !== null) {
 if ($condition > 0) {
     $queryBase['condition'] = $condition;
 }
-if ($sort !== 'newest') {
+if ($sort !== 'recommended') {
     $queryBase['sort'] = $sort;
 }
+$queryBase['seed'] = $seed;
 
 if ($page > $totalPages) {
     $redirectParams = $queryBase;
@@ -87,19 +90,29 @@ if ($page > $totalPages) {
     redirect('/explore' . ($redirectParams !== [] ? '?' . http_build_query($redirectParams) : ''), 302);
 }
 
-$products = get_catalog_products($filters + [
-    'limit' => $perPage,
-    'offset' => ($page - 1) * $perPage,
-]);
+$products = fetchAll(executeQuery(
+    'SELECT * FROM search_catalog(p_search => ?, p_categories => CAST(? AS jsonb),
+        p_campus => ?, p_min_price => ?, p_max_price => ?, p_condition => ?,
+        p_sort => ?, p_seed => ?, p_exclude_user_id => ?,
+        p_prefer_category_ids => CAST(? AS jsonb), p_limit => ?, p_offset => ?)',
+    [$q, $categoryJson, $campus, $minPrice, $maxPrice, $condition > 0 ? $condition : null,
+     $sort, (string) $seed, $userId, $preferredIds, $perPage, ($page - 1) * $perPage]
+));
 
-$categories = get_catalog_categories();
-$campuses = get_catalog_campuses();
+$categories = executeQuery('SELECT id, name FROM v_categories', [], 'fetchAll');
+$campuses = executeQuery('SELECT campus FROM v_campuses', [], 'fetchAll');
 
 $conditionLabels = [
     1 => 'Bekas',
     2 => 'Cukup',
     3 => 'Baik',
     4 => 'Sangat Bagus',
+];
+
+$sortLabels = [
+    'newest' => 'Terbaru',
+    'price_asc' => 'Harga terendah',
+    'price_desc' => 'Harga tertinggi',
 ];
 
 $catalogUrl = static function (array $overrides = []) use ($queryBase): string {
@@ -263,6 +276,7 @@ if ($totalPages <= 7) {
                             </h3>
                             <div class="collapse show" id="filterUrutkan">
                                 <select class="form-select" id="catalogSort" name="sort">
+                                    <option value="recommended" <?= $sort === 'recommended' ? 'selected' : '' ?>>Rekomendasi</option>
                                     <option value="newest" <?= $sort === 'newest' ? 'selected' : '' ?>>Terbaru</option>
                                     <option value="price_asc" <?= $sort === 'price_asc' ? 'selected' : '' ?>>Harga terendah</option>
                                     <option value="price_desc" <?= $sort === 'price_desc' ? 'selected' : '' ?>>Harga tertinggi</option>
@@ -280,7 +294,7 @@ if ($totalPages <= 7) {
         </aside>
 
         <div class="pk-catalog-main">
-            <?php if ($queryBase !== []): ?>
+            <?php if ($hasActiveFilters): ?>
                 <div class="d-flex flex-wrap gap-2 mb-3">
                     <?php if ($q !== ''): ?>
                         <a class="btn btn-sm btn-outline-primary rounded-pill" href="<?= esc($catalogUrl(['q' => null])) ?>" title="Hapus kata kunci">
@@ -311,9 +325,9 @@ if ($totalPages <= 7) {
                             <?= esc($conditionLabels[$condition]) ?> <span aria-hidden="true">&times;</span>
                         </a>
                     <?php endif; ?>
-                    <?php if ($sort !== 'newest'): ?>
+                    <?php if ($sort !== 'recommended'): ?>
                         <a class="btn btn-sm btn-outline-primary rounded-pill" href="<?= esc($catalogUrl(['sort' => null])) ?>" title="Hapus urutan">
-                            <?= $sort === 'price_asc' ? 'Harga terendah' : 'Harga tertinggi' ?> <span aria-hidden="true">&times;</span>
+                            <?= esc($sortLabels[$sort] ?? $sort) ?> <span aria-hidden="true">&times;</span>
                         </a>
                     <?php endif; ?>
                 </div>
@@ -349,6 +363,7 @@ if ($totalPages <= 7) {
                                 'o_price' => $item['original_price'] ?? '',
                                 'price' => $item['price'] ?? '',
                                 'foto' => $item['image'] ?? '',
+                                'sold' => ($item['lifecycle'] ?? '') === 'Done',
                             ]); ?>
                         </div>
                     <?php endforeach; ?>

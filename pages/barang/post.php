@@ -38,13 +38,6 @@ function hapus(): string
 
     $pdo->beginTransaction();
     try {
-        // requests cascade-delete with the product; cancel open ones first so the
-        // buyer's pending transaction is closed before the row disappears.
-        executeQuery(
-            "UPDATE requests SET status = 'CANCELLED', updated_at = CURRENT_TIMESTAMP
-             WHERE product_id = ? AND status IN ('PENDING', 'PROCESS')",
-            [$productId]
-        );
         // attachments.product_id is ON DELETE SET NULL, so remove the rows explicitly.
         executeQuery('DELETE FROM attachments WHERE product_id = ?', [$productId]);
         executeQuery('DELETE FROM products WHERE product_id = ? AND user_id = ?', [$productId, $userId]);

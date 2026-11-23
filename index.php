@@ -31,7 +31,6 @@ require_once BASE_PATH . '/core/flash.php';
 require_once BASE_PATH . '/core/database.php';
 require_once BASE_PATH . '/core/storage.php';
 require_once BASE_PATH . '/core/component.php';
-require_once BASE_PATH . '/core/models.php';
 
 // Start session
 session_start();
@@ -105,5 +104,9 @@ if ($selectedPage === null) {
     $notFound();
 }
 
+
+// Buffer the page so components can still set response headers after output
+// has been written (the user header emits the CSP this way).
+ob_start();
 
 require_once $selectedPage;
